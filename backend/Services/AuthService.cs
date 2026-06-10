@@ -1,6 +1,8 @@
 using backend.Data;
 using backend.Domain;
 using backend.DTOs;
+using backend.Enums;
+using backend.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Auth
@@ -52,7 +54,7 @@ namespace backend.Auth
                 Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Role = "User"
+                Role = UserRole.User
             };
 
             _context.Users.Add(user);

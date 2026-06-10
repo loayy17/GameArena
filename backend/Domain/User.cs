@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using backend.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend.Domain
 {
@@ -23,13 +24,19 @@ namespace backend.Domain
 
         [MaxLength(100)]
         public string LastName { get; set; } = string.Empty;
-
-        public string? Role { get; set; }
-
+        public UserRole Role { get; set; } = UserRole.User;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<Message> SentMessages { get; set; } = new List<Message>();
+
         public ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();
+        
+        // friends already added 
+        public ICollection<UserFriends> FriendshipsSent  { get; set; } = new List<UserFriends>();
+        public ICollection<UserFriends> FriendshipsReceived { get; set; } = new List<UserFriends>();
+
+        // friend requests sent and received
+        public ICollection<FriendRequest> FriendRequestsSent { get; set; }= new List<FriendRequest>();
+        public ICollection<FriendRequest> FriendRequestsReceived { get; set; } = new List<FriendRequest>();
     }
 }
