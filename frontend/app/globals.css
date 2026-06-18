@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Core backgrounds ── */
+  --color-bg-dark:    #07080f;
+  --color-bg-card:    #0d1022;
+  --color-bg-sidebar: #090c18;
+  --color-surface:    #141830;
+  --color-surface-alt:#1c2240;
+
+  /* ── Primary: Electric Violet ── */
+  --color-primary:       #7c5cfc;
+  --color-primary-hover: #6a47f0;
+  --color-primary-muted: rgba(124, 92, 252, 0.15);
+
+  /* ── Accent neons ── */
+  --color-neon-cyan:    #00d2ff;
+  --color-neon-magenta: #e040fb;
+  --color-neon-green:   #00e5a0;
+  --color-neon-violet:  #9d7ffe;
+
+  /* ── Borders ── */
+  --color-border:      #1e2540;
+  --color-border-light:#2e3760;
+
+  /* ── Text ── */
+  --color-text:           #eef0f8;
+  --color-text-secondary: #7b85a8;
+  --color-text-muted:     #3e4666;
+
+  /* ── Semantic ── */
+  --color-error:    #f87171;
+  --color-error-bg: rgba(248, 113, 113, 0.1);
+  --color-success:  #00e5a0;
+
+  /* ── Fonts ── */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-bg-dark);
+  color: var(--color-text);
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border-light); border-radius: 999px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3e4a78; }
+
+/* Violet glow for active/focused elements */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(124, 92, 252, 0.25); }
+  50%       { box-shadow: 0 0 22px rgba(124, 92, 252, 0.5); }
+}
+.animate-glow { animation: glow 2.4s ease-in-out infinite; }
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+
+/* Login left panel helper */
+.login-panel-bg {
+  background: linear-gradient(145deg, #2a1a6e 0%, #0f0530 55%, #1a0840 100%);
+}
