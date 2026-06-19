@@ -1,5 +1,8 @@
 "use client";
+import { useAuth } from "@/app/AuthProvider";
 import api from "@/app/network";
+import { getLocale, useLocale } from "@/Hooks/useTranslation";
+import { user } from "firebase-functions/v1/auth";
 import {
   Home,
   Users,
@@ -16,11 +19,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-const currentUser = {
-  name: "Loay",
-  level: 42,
-  avatar: "https://i.pravatar.cc/150?img=3",
-};
+// const currentUser = {
+//   name: "Loay",
+//   level: 42,
+//   avatar: "https://i.pravatar.cc/150?img=3",
+// };
 
 const navItems = [
   { id: "home", label: "Home", icon: Home },
@@ -34,8 +37,10 @@ const navItems = [
 ];
 
 function Sidebar() {
+  const { user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
+  const [locale, setLocale] = useLocale();
   const logout = async () => {
     try {
       await api.post("/auth/logout");
@@ -46,9 +51,8 @@ function Sidebar() {
   };
   return (
     <aside
-      className={`shrink-0 bg-gradient-to-b from-bg-sidebar via-bg-sidebar to-bg-dark border-r border-border-light flex flex-col h-full transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
+      className={`shrink-0 bg-gradient-to-b from-bg-sidebar via-bg-sidebar to-bg-dark border-r border-border-light flex flex-col h-full transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"
+        }`}
     >
       {/* Logo */}
       <div className="flex items-center justify-between p-5 h-20 border-b border-border">
@@ -94,11 +98,10 @@ function Sidebar() {
               href={`/${id}`}
               key={id}
               className={`flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all duration-200 group
-                                ${
-                                  isActive
-                                    ? "bg-gradient-to-r from-primary/20 to-neon-purple/10 text-white border border-primary/30"
-                                    : "text-text-secondary hover:bg-surface-alt hover:text-text border border-transparent"
-                                }
+                                ${isActive
+                  ? "bg-gradient-to-r from-primary/20 to-neon-purple/10 text-white border border-primary/30"
+                  : "text-text-secondary hover:bg-surface-alt hover:text-text border border-transparent"
+                }
                                 ${isCollapsed && "justify-center"}`}
             >
               <div
@@ -120,14 +123,17 @@ function Sidebar() {
           );
         })}
       </nav>
-
+      <button className="mx-3 mt-auto mb-4 px-3 py-2 bg-gradient-to-r from-primary to-neon-purple text-white text-sm font-medium rounded-lg hover:from-primary/90 hover:to-neon-purple/90 transition-colors">
+        { }
+      </button>
       {/* User Profile */}
       <div className="p-4 border-t border-border bg-bg-sidebar/50 backdrop-blur-sm">
         <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-alt/60 transition-all group cursor-pointer">
           <div className="relative shrink-0">
             <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
+              // TODO Change Image
+              src={"https://i.pravatar.cc/150?img=3"}
+              alt={user?.firstName + " " + user?.lastName}
               className="w-10 h-10 rounded-xl object-cover border-2 border-border-light group-hover:border-neon-blue transition-colors"
             />
             <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-neon-green border-2 border-bg-sidebar" />
@@ -137,15 +143,23 @@ function Sidebar() {
             <>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-semibold text-text truncate">
-                  {currentUser.name}
+                  {user?.firstName} {user?.lastName}
+                  <button className="ml-2 text-text-secondary hover:text-error" onClick={() => {
+                    const newLocale = locale === "en" ? "ar" : "en";
+                    setLocale(newLocale);
+                  }}
+                  >
+                    {getLocale() === "en" ? "AR" : "EN"}
+
+                  </button>
                 </h4>
                 <p className="text-xs text-neon-blue font-medium">
-                  LVL {currentUser.level}
+                  {user?.userName}
                 </p>
               </div>
-              <button className="p-1.5 text-text-secondary hover:text-error rounded-lg hover:bg-error/10 transition-colors">
+              {/* <button className="p-1.5 text-text-secondary hover:text-error rounded-lg hover:bg-error/10 transition-colors">
                 <LogOut size={16} onClick={logout} />
-              </button>
+              </button> */}
             </>
           )}
         </div>

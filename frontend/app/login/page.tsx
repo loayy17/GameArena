@@ -8,8 +8,12 @@ import SignInAnther from "@/component/sign_in_anther";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import api from "../network";
+import { useTranslation } from "@/Hooks/useTranslation";
+import ar from "./i18n/ar.i18n";
+import en, { LoginTranslation } from "./i18n/en.i18n";
 
 export default function Login() {
+  const t = useTranslation({ en, ar }) as LoginTranslation;
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,26 +40,26 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg">
-      <CustomAnimation title="Welcome Back" pathAnimation="/game.json" />
+      <CustomAnimation title={t.WelcomeBack} pathAnimation="/game.json" />
 
       <div className="flex-1 lg:w-1/2 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-bold text-text mb-1">Sign in</h1>
+          <h1 className="text-3xl font-bold text-text mb-1">{t.signIn}</h1>
           <p className="text-text-secondary mb-8 text-sm">
-            Choose your preferred sign-in method
+            {t.ChooseYourPreferredSignInMethod}
           </p>
           <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
             <CustomTextField
-              label="Email"
+              label={t.email}
               type="email"
-              placeholder="Enter your email"
+              placeholder={t.email}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <CustomTextField
-              label="Password"
+              label={t.password}
               type="password"
-              placeholder="Enter your password"
+              placeholder={t.password}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -65,24 +69,24 @@ export default function Login() {
                 href="#"
                 className="text-sm text-primary font-medium hover:underline"
               >
-                Forgot password?
+                {t.forgotPassword}
               </a>
             </div>
 
             <TButton
-              title={loading ? "Logging in..." : "Sign in"}
+              title={loading ? t.loggingIn : t.signIn}
               disabled={loading}
               onClick={login}
             />
           </form>
 
           <p className="text-center text-sm text-text-secondary mt-8">
-            Don&apos;t have an account?{" "}
+            {t.DontHaveAccount}{" "}
             <a
               href="/register"
               className="text-primary font-medium hover:underline"
             >
-              Register
+              {t.Register}
             </a>
           </p>
           <CustomDivider />

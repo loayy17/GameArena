@@ -11,7 +11,7 @@ export function useConnection(endPoint: string) {
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl(`https://localhost:7127/${endPoint}`, { withCredentials: true })
+      .withUrl(`https://boxed-careful-marcus-plus.trycloudflare.com/${endPoint}`, { withCredentials: true })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)
       .build();

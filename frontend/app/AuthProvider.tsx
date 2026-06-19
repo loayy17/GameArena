@@ -22,7 +22,6 @@ type User = {
     friendshipsReceived: any[];
     friendRequestsSent: any[];
     friendRequestsReceived: any[];
-
 };
 
 const AuthContext = createContext<{
@@ -54,7 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAuthPage = pathname === "/login" || pathname === "/register";
     if (isAuthPage) {
       setUser(null);
-      setLoading(false);
       return;
     }
 
