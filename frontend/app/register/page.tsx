@@ -1,6 +1,6 @@
 "use client";
 
-import CustomTextField from "@/component/custom_text_field";
+import CustomTextField from "@/component/TTextField";
 import TButton from "@/component/TButton";
 import CustomAnimation from "@/component/animation";
 import { useState } from "react";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import CustomTextField from "@/component/custom_text_field";
+import CustomTextField from "@/component/TTextField";
 import TButton from "@/component/TButton";
 import CustomAnimation from "@/component/animation";
 

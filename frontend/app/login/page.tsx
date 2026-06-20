@@ -7,7 +7,7 @@ import Link from "next/link";
 import api from "../network";
 
 import CustomAnimation from "@/component/animation";
-import CustomTextField from "@/component/custom_text_field";
+import CustomTextField from "@/component/TTextField";
 import TButton from "@/component/TButton";
 
 import { useTranslation } from "@/Hooks/useTranslation";
