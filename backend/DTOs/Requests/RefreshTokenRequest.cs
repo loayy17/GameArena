@@ -1,4 +1,4 @@
-﻿namespace backend.DTOs
+﻿namespace backend.DTOs.Requests
 {
     public class RefreshTokenRequest
     {

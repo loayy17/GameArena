@@ -1,4 +1,4 @@
-﻿using backend.Services.Interface;
+using backend.Services.Interface;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -28,16 +28,25 @@ namespace backend.Services
             };
 
             using var smtp = new SmtpClient();
+            smtp.Timeout = 20_000; // 20 second timeout
+
             var hostConfig = _config["EmailSettings:Host"] ?? throw new Exception("Email host not configured");
             var portConfig = _config["EmailSettings:Port"] ?? throw new Exception("Email port not configured");
             var passConfig = _config["EmailSettings:Password"] ?? throw new Exception("Email password not configured");
+
+            // Google App Passwords are displayed with spaces (e.g. "xxxx xxxx xxxx xxxx")
+            // but SMTP authentication requires them stripped.
+            var cleanPassword = passConfig.Replace(" ", "");
+
+            // Use port 465 with implicit SSL — more reliable than 587/StartTls which ISPs often block.
+            // Update appsettings.json Port to 465 accordingly.
             await smtp.ConnectAsync(
                 hostConfig,
-                int.Parse(portConfig),
-                MailKit.Security.SecureSocketOptions.StartTls
+                465,
+                MailKit.Security.SecureSocketOptions.SslOnConnect
             );
 
-            await smtp.AuthenticateAsync(emailConfig, passConfig);
+            await smtp.AuthenticateAsync(emailConfig, cleanPassword);
 
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);

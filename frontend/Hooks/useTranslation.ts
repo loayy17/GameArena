@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TLocale, THashMap, TTranslate } from "@/types";
 
-let currentLocale: TLocale = "en";
+let currentLocale: TLocale =
+  (window.localStorage.getItem("locale") as TLocale) ?? "en";
 
 const listeners = new Set<() => void>();
 
 export function setLocale(locale: TLocale): void {
   if (currentLocale === locale) return;
+  window.localStorage.setItem("locale", locale);
+  window.document.documentElement.lang = locale;
+  window.document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
 
   currentLocale = locale;
 
@@ -18,6 +22,8 @@ export function setLocale(locale: TLocale): void {
 }
 
 export function getLocale(): TLocale {
+  window.document.documentElement.lang = currentLocale;
+  window.document.documentElement.dir = currentLocale === "ar" ? "rtl" : "ltr";
   return currentLocale;
 }
 

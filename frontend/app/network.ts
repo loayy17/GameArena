@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://boxed-careful-marcus-plus.trycloudflare.com/api/",
+  baseURL: "https://localhost:7127/api/",
   withCredentials: true,
 });
 
@@ -69,4 +69,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

@@ -1,8 +1,12 @@
-﻿namespace backend.Services.Interface
+﻿using backend.Enums;
+
+namespace backend.Services.Interface
 {
     public interface IEmailVerificationService
     {
-        Task GenerateAndSendOtpAsync(string email);
-        Task<bool> VerifyOtpAsync(string email, string otp);
+        Task GenerateAndSendOtpAsync(string email, OtpPurpose purpose);
+        Task<bool> VerifyOtpAsync(string email,
+            string otp,
+            OtpPurpose purpose);
     }
 }

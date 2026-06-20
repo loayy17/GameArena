@@ -1,5 +1,7 @@
 using backend.Domain;
 using backend.DTOs;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 
 namespace backend.Services.Interface
 {
@@ -7,7 +9,9 @@ namespace backend.Services.Interface
     {
         Task<AuthResponse?> LoginAsync(LoginRequest request);
         Task RevokeRefreshTokenAsync(string refreshToken);
-        Task<User?> RegisterAsync(RegisterRequest request);
+        Task RegisterAsync(RegisterRequest request);
         Task<AuthResponse?> RefreshAccessTokenAsync(string rawRefreshToken);
+        Task ForgotPassword(string email);
+        Task ResetPasswordAsync(string email, string otp, string newPassword);
     }
 }

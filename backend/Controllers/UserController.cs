@@ -1,4 +1,7 @@
-﻿using backend.Domain;
+﻿using backend.DTOs.Requests;
+using backend.DTOs.Responses;
+using backend.Enums;
+using backend.Mappers;
 using backend.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,20 +19,53 @@ namespace backend.Controllers
         {
             _userService = userService;
         }
+
         [Authorize]
         [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             var user = await _userService.GetUserByIdAsync(id);
-            return user == null ? NotFound(): Ok(user);
+
+            if (user == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    ErrorCode = ErrorCode.UserNotFound,
+                    Message = "User not found"
+                });
+            }
+
+            return Ok(new ApiResponse<UserResponse>
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Data = UserMapper.ToDto(user)
+            });
         }
 
         [Authorize]
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsersAsync() 
-        { 
+        public async Task<IActionResult> GetAllUsersAsync()
+        {
             var users = await _userService.GetAllUsersAsync();
-            return users is null ? NotFound("There is No users Created"): Ok(users);
+
+            if (users == null || !users.Any())
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    ErrorCode = ErrorCode.NoUsersFound,
+                    Message = "No users found"
+                });
+            }
+
+            return Ok(new ApiResponse<List<UserResponse>>
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Data = users.Select(UserMapper.ToDto).ToList()
+            });
         }
 
         [Authorize]
@@ -37,18 +73,62 @@ namespace backend.Controllers
         public async Task<IActionResult> GetUserFriends(Guid id)
         {
             var friends = await _userService.GetUserFriends(id);
-            return friends is null ?  NotFound("This user has no friends") : Ok(friends);
+
+            if (friends == null || !friends.Any())
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    ErrorCode = ErrorCode.NoFriendsFound,
+                    Message = "No friends found"
+                });
+            }
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Data = friends
+            });
         }
 
         [Authorize]
         [HttpGet("profile")]
         public async Task<IActionResult> Profile()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userIdClaim =
+                User.FindFirst(ClaimTypes.NameIdentifier);
+
             if (userIdClaim == null)
-                return Unauthorized();
-            var user = await _userService.GetUserByIdAsync(Guid.Parse(userIdClaim.Value));
-            return user == null ? NotFound() : Ok(user);
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    ErrorCode = ErrorCode.Unauthorized,
+                    Message = "Unauthorized"
+                });
+            }
+
+            var user =
+                await _userService.GetUserByIdAsync(
+                    Guid.Parse(userIdClaim.Value));
+
+            if (user == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    ErrorCode = ErrorCode.UserNotFound,
+                    Message = "User not found"
+                });
+            }
+
+            return Ok(new ApiResponse<UserResponse>
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Data = UserMapper.ToDto(user)
+            });
         }
     }
 }

@@ -4,24 +4,16 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import api from "./network";
 
-// need fix from backend to generate user DTO 
 type User = {
-    id: string;
-    userName: string;
-    email: string;
-    passwordHash: string;
-    firstName: string;
-    lastName: string;
-    role: number;
-    createdAt: string;
-    isVerified: boolean;
-    refreshTokens: any[];
-    sentMessages: any[];
-    receivedMessages: any[];
-    friendshipsSent: any[];
-    friendshipsReceived: any[];
-    friendRequestsSent: any[];
-    friendRequestsReceived: any[];
+  id: string;
+  userName: string;
+  email: string;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  role: number;
+  createdAt: string;
+  isVerified: boolean;
 };
 
 const AuthContext = createContext<{
