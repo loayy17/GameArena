@@ -13,6 +13,7 @@ import { useTranslation } from "@/Hooks/useTranslation";
 import en, { type TLoginTranslation } from "@/app/login/i18n/en.i18n";
 import ar from "@/app/login/i18n/ar.i18n";
 import { emailValidator, passwordValidator } from "@/utils";
+import { useAuth } from "@/app/AuthProvider";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginForm() {
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
   }) as TLoginTranslation;
-
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,17 +58,23 @@ export default function LoginForm() {
       setApiError({ link: "", message: "" });
 
       await authApi.login({ email, password });
+      const currentUser = await refreshUser();
 
-      router.replace("/home");
-    } catch (e: unknown) {
+      if (currentUser) {
+        router.replace("/home");
+      }
+    } catch (e) {
+      console.log("login error", e);
       const err = e as TError;
       const code = err?.response?.data?.errorCode;
 
       if (code === ErrorCode.EmailNotVerified)
         setApiError({
-          link: "/verify-email",
+          link: "/email-verify",
           message:
-            t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum],
+            t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
+            err?.response?.data?.message ||
+            "An error occurred",
         });
       else {
         setApiError({
@@ -84,8 +91,6 @@ export default function LoginForm() {
   };
   return (
     <div className="w-full max-w-sm space-y-5">
-      <h1 className="text-3xl font-bold">{t.login}</h1>
-
       <div className="space-y-4">
         <TTextField
           label={t.email}

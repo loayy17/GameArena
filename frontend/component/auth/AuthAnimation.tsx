@@ -1,58 +1,36 @@
 import dynamic from "next/dynamic";
 import { TAnimationProps } from "./def/TAnimation";
+import { useTranslation } from "@/Hooks/useTranslation";
+import en, { TAuthAnimation } from "../i18n/AuthAnimation/en.i18n";
+import ar from "../i18n/AuthAnimation/ar.i18n";
 
 const LottiePlayer = dynamic(
   () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
   { ssr: false },
 );
 
-function AuthAnimation({ title, className, pathAnimation }: TAnimationProps) {
+function AuthAnimation({ page, className, pathAnimation }: TAnimationProps) {
+  const t = useTranslation({ en, ar }) as TAuthAnimation;
+
   return (
     <div
-      className={`hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center m-6 rounded-2xl ${className || ""}`}
-      style={{
-        background:
-          "linear-gradient(145deg, #2a1a6e 0%, #0f0530 55%, #1a0840 100%)",
-      }}
+      className={`w-full lg:w-1/2 relative overflow-hidden flex flex-col items-center justify-start pt-14 pb-8 lg:justify-center lg:py-0 px-6 rounded-b-2xl lg:rounded-2xl m-0 lg:m-6 ${className || ""}`}
     >
-      {/* Ambient glow orbs */}
-      <div
-        className="absolute -top-24 -right-24 w-96 h-96 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(124,92,252,0.25) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute -bottom-16 -left-16 w-72 h-72 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(224,64,251,0.15) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(0,210,255,0.08) 0%, transparent 70%)",
-        }}
-      />
-
-      <div className="relative z-10 flex flex-col items-center w-full px-16">
-        <div className="w-full max-w-sm">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-md">
+        <div className="w-48 h-48 lg:w-64 lg:h-64">
           <LottiePlayer
             autoplay
             loop
             src={pathAnimation || "/game.json"}
-            className="w-full"
+            className="w-full h-full"
           />
         </div>
-        <div className="text-center mt-8">
-          <h2 className="text-white text-3xl font-bold mb-2">
-            {title || "Join Us Today"}
+        <div className="text-center mt-4 lg:mt-8">
+          <h2 className="text-white text-2xl lg:text-3xl font-bold mb-2">
+            {t.authTitle[page]}
           </h2>
           <p style={{ color: "rgba(255,255,255,0.45)" }} className="text-sm">
-            Create your account and get started
+            {t.authSubtitle[page]}
           </p>
         </div>
       </div>

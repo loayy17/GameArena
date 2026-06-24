@@ -1,5 +1,6 @@
 const en = {
   resetPassword: "Reset Password",
+  makeSureToCheckEmail: "Make sure to check your email",
   enterOtp: "Enter the OTP sent to your email",
   newPassword: "New Password",
   confirmPassword: "Confirm Password",

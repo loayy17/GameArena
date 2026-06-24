@@ -1,8 +1,9 @@
+import { AuthFlowAnimationEnum } from "@/types";
 
 type TAnimationProps = {
-    title: string;
-    className?: string;
-    pathAnimation?: string;
+  page: AuthFlowAnimationEnum;
+  className?: string;
+  pathAnimation?: string;
 };
 
 export type { TAnimationProps };

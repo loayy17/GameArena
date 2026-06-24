@@ -1,10 +1,10 @@
 import { PasswordValidationEnum } from "@/types";
 
 const ar = {
-  required: "مطلوب",
   dynamicFieldRequired: (field: string) => `حقل ${field} مطلوب`,
   invalidEmail: "عنوان البريد الإلكتروني غير صالح",
   invalidNumber: "رقم غير صالح",
+  invalidConfirmPassword: "كلمات المرور غير متطابقة",
   invalidPassword: {
     [PasswordValidationEnum.MinLength]:
       "يجب أن تكون كلمة المرور 8 أحرف على الأقل",

@@ -1,13 +1,11 @@
 const ar = {
-    title: "التحقق من OTP",
-    subtitle: "أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك الإلكتروني",
-    verifying: "جار التحقق...",
-    verify: "تحقق من الرمز",
-    noCode: "لم تستلم الرمز؟",
-    resend: "إعادة إرسال",
-    invalidCode: "رمز غير صالح. حاول مرة أخرى.",
-    enterFull: "أدخل الرمز الكامل المكون من 6 أرقام",
-    verifyTitle: "تحقق من هويتك",
+  otpTitle: "التحقق من OTP",
+  otpSubtitle: "أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك الإلكتروني",
+  enterFullCode: "يرجى إدخال الرمز الكامل",
+  resendCode: "إعادة إرسال الرمز",
+  verify: "تحقق",
+  invalidCode: "رمز غير صالح",
+  resendCodeFailed: "فشل في إعادة إرسال الرمز",
 };
 
 export default ar;

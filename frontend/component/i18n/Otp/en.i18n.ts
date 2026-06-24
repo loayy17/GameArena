@@ -1,13 +1,11 @@
 const en = {
-    title: "Verify OTP",
-    subtitle: "Enter the 6-digit code sent to your email",
-    verifying: "Verifying...",
-    verify: "Verify Code",
-    noCode: "Didn't receive the code?",
-    resend: "Resend",
-    invalidCode: "Invalid code. Try again.",
-    enterFull: "Enter the full 6-digit code",
-    verifyTitle: "Verify It's You",
+  otpTitle: "OTP Verification",
+  otpSubtitle: "Enter the 6-digit code sent to your email",
+  enterFullCode: "Please enter the full code",
+  resendCode: "Resend code",
+  verify: "Verify",
+  invalidCode: "Invalid code",
+  resendCodeFailed: "Failed to resend code",
 };
 
 export default en;

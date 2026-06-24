@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import api from "@/app/network";
 import AuthLayout from "@/component/auth/AuthLayout";
 import TTextField from "@/component/common/TTextField";
 import TButton from "@/component/common/TButton";
@@ -14,6 +13,7 @@ import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
 import { emailValidator } from "@/utils";
 import { authApi } from "@/lib/auth.api";
+import { AuthFlowAnimationEnum } from "@/types";
 
 export default function Page() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function Page() {
   };
 
   return (
-    <AuthLayout title={t.forgotPassword}>
+    <AuthLayout page={AuthFlowAnimationEnum.RESET_PASSWORD}>
       <TTextField
         label={t.email}
         value={email}

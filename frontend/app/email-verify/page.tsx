@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import AuthLayout from "@/component/auth/AuthLayout";
 import OtpForm from "@/component/auth/OtpForm";
 import { authFlow } from "@/lib/authflow";
+import { AuthFlowAnimationEnum } from "@/types";
 
 export default function Page() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function Page() {
   }
 
   return (
-    <AuthLayout title="Verify your email">
+    <AuthLayout page={AuthFlowAnimationEnum.VERIFY_OTP}>
       <OtpForm
         email={email}
         onSuccess={(otp) => {

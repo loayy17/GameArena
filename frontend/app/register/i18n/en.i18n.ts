@@ -1,6 +1,9 @@
+import { ErrorCode } from "@/types";
+
 const en = {
-  title: "Create account",
-  subtitle: "Fill in your details to get started",
+  register: "Register",
+  createAccount: "Create your account and get started",
+  fillRequiredFields: "Please fill in all required fields",
   firstName: "First Name",
   firstNamePlaceholder: "Enter your first name",
   lastName: "Last Name",
@@ -11,11 +14,17 @@ const en = {
   emailPlaceholder: "Enter your email",
   password: "Password",
   passwordPlaceholder: "Create a password",
-  creating: "Creating account...",
+  confirmPassword: "Confirm Password",
+  confirmPasswordPlaceholder: "Re-enter your password",
+  createElipses: "Creating account...",
   create: "Create account",
   haveAccount: "Already have an account?",
   signIn: "Sign in",
   joinUs: "Join Us Today",
+  RegisterErrorCodeEnum: {
+    [ErrorCode.EMailAlreadyExists]: "Email already exists",
+  },
+  goToLogin: "Go to Login",
   dynamicFieldRequired: (field: string) => `${field} is required`,
 };
 

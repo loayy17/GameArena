@@ -1,12 +1,9 @@
 const en = {
-    title: "Friends",
-    message: "Message",
-    invite: "Invite",
-    playing: "Playing Match",
-    lobby: "In Lobby",
-    match: "In Match",
-    online: "Online",
-    offline: "Offline",
+  requests: "Requests",
+  friends: "Friends",
+  message: "Message",
+  invite: "Invite",
+  addFriend: "Add Friend",
 };
 
 export default en;

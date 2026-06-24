@@ -1,10 +1,15 @@
 "use client";
 
+import { THashMap, TLocale, TTranslate } from "@/types";
 import { useEffect, useMemo, useState } from "react";
-import type { TLocale, THashMap, TTranslate } from "@/public/types";
-
 let currentLocale: TLocale =
-  (window.localStorage.getItem("locale") as TLocale) ?? "en";
+  (window.localStorage.getItem("locale") as TLocale) || "ar";
+export async function initLocale() {
+  const locale = (window.localStorage.getItem("locale") as TLocale) || "ar";
+  currentLocale = locale;
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+}
 
 const listeners = new Set<() => void>();
 

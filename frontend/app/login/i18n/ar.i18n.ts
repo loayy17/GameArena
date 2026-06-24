@@ -8,17 +8,17 @@ const ar = {
   signIn: "تسجيل الدخول",
   email: "البريد الإلكتروني",
   password: "كلمة المرور",
-  forgotPassword: "نسيت كلمة المرور?",
-  DontHaveAccount: "ليس لديك حساب؟",
-  Register: "تسجيل",
-  WelcomeBack: "مرحباً بك",
+  forgotPassword: "نسيت كلمة المرور؟",
+  dontHaveAccount: "ليس لديك حساب؟",
+  register: "تسجيل",
+  welcomeBack: "مرحباً بك",
   loadingElipse: "جار التحميل...",
   createAccount: "إنشاء حساب",
   verifyEmail: "تأكيد البريد الإلكتروني",
   loginDescription: "مرحبًا بعودتك. يرجى تسجيل الدخول للمتابعة.",
   switchLanguage: (lang: string) =>
     `التبديل إلى ${lang === "en" ? "العربية" : "الإنجليزية"}`,
-  LoginErrorCodeEnum: {
+  loginErrorCodeEnum: {
     [ErrorCode.InvalidCredentials]:
       "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     [ErrorCode.Unauthorized]: "غير مصرح",

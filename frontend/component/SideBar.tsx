@@ -15,10 +15,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import ar from "./i18n/SideBar/ar.i18n";
 import en, { TSidebarTranslation } from "./i18n/SideBar/en.i18n";
+import { authApi } from "@/lib/auth.api";
 
 const navItems = [
   { id: "home", labelKey: "home", icon: Home },
@@ -31,23 +32,39 @@ const navItems = [
 ];
 
 function Sidebar() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(true);
   const pathname = usePathname();
   const [locale, setLocale] = useLocale();
   const t = useTranslation({ en, ar }) as TSidebarTranslation;
 
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      setUser(null); // clear user state immediately
+      router.replace("/login"); // navigate to login
+    }
+  };
   const isActive = (id: string) => {
     if (id === "home") return pathname === "/home";
     return pathname.startsWith(`/${id}`);
   };
 
   return (
-    <aside className={`shrink-0 bg-bg-sidebar border-r border-border flex flex-col h-full ${collapsed ? "w-20" : "w-64"}`}>
+    <aside
+      className={`shrink-0 bg-bg-sidebar border-r border-border flex flex-col h-full ${collapsed ? "w-20" : "w-64"}`}
+    >
       {/* Logo / Toggle */}
       <div className="flex items-center h-16 px-4 border-b border-border">
         {collapsed ? (
-          <button onClick={() => setCollapsed(false)} className="mx-auto text-text-secondary hover:text-text cursor-pointer">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="mx-auto text-text-secondary hover:text-text cursor-pointer"
+          >
             <ChevronRight className="w-5 h-5" />
           </button>
         ) : (
@@ -60,7 +77,10 @@ function Sidebar() {
                 Game<span className="text-neon-cyan">Arena</span>
               </span>
             </div>
-            <button onClick={() => setCollapsed(true)} className="text-text-secondary hover:text-text cursor-pointer">
+            <button
+              onClick={() => setCollapsed(true)}
+              className="text-text-secondary hover:text-text cursor-pointer"
+            >
               <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
@@ -68,7 +88,9 @@ function Sidebar() {
       </div>
 
       {/* Language Toggle */}
-      <div className={`px-3 pt-3 pb-1 ${collapsed ? "flex justify-center" : ""}`}>
+      <div
+        className={`px-3 pt-3 pb-1 ${collapsed ? "flex justify-center" : ""}`}
+      >
         <button
           onClick={() => setLocale(locale === "en" ? "ar" : "en")}
           className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
@@ -100,7 +122,11 @@ function Sidebar() {
               }`}
             >
               <Icon size={20} />
-              {!collapsed && <span className="truncate">{t[labelKey as keyof TSidebarTranslation]}</span>}
+              {!collapsed && (
+                <span className="truncate">
+                  {t[labelKey as keyof TSidebarTranslation]}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -108,20 +134,22 @@ function Sidebar() {
 
       {/* Logout */}
       <div className={`px-3 mb-2 ${collapsed ? "flex justify-center" : ""}`}>
-        <Link
-          href="/login"
+        <button
+          onClick={handleLogout}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-error-bg hover:text-error transition-colors ${
             collapsed ? "justify-center" : ""
           }`}
         >
           <LogOut size={20} />
           {!collapsed && <span>{t.logout}</span>}
-        </Link>
+        </button>
       </div>
 
       {/* User Profile */}
       <div className="p-4 border-t border-border">
-        <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
+        <div
+          className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}
+        >
           <div className="relative shrink-0">
             <img
               src="https://i.pravatar.cc/150?img=3"

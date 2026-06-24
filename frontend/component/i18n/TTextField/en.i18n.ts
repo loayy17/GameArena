@@ -3,10 +3,12 @@ import { PasswordValidationEnum } from "@/types";
 const en = {
   required: "Required",
   password: "Password",
+  confirmPassword: "Confirm Password",
   email: "Email",
   dynamicFieldRequired: (field: string) => `${field} is required`,
   invalidEmail: "Invalid email address",
   invalidNumber: "Invalid number",
+  invalidConfirmPassword: "Passwords do not match",
   invalidPassword: {
     [PasswordValidationEnum.MinLength]:
       "Password must be at least 8 characters long",

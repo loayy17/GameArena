@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/network";
@@ -15,7 +14,8 @@ import {
 } from "@/component/i18n/TTextField/en.i18n";
 import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
-import { TFieldRegister } from "@/types";
+import { ErrorCode, TError, TFieldRegister } from "@/types";
+import Link from "next/link";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -27,13 +27,19 @@ export default function RegisterForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+  const [apiError, setApiError] = useState({
+    link: "",
+    message: "",
+  });
 
   const [errors, setErrors] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     firstName: "",
     lastName: "",
     username: "",
@@ -48,6 +54,11 @@ export default function RegisterForm() {
     return {
       email: emailValidator(t)(emailVal) || "",
       password: passwordValidator(t)(passwordVal) || "",
+      confirmPassword: !confirmPassword.trim()
+        ? t.dynamicFieldRequired(t.firstName)
+        : passwordVal !== confirmPassword
+          ? t.invalidConfirmPassword
+          : "",
       firstName: firstNameVal.trim() ? "" : t.dynamicFieldRequired(t.firstName),
       lastName: lastNameVal.trim() ? "" : t.dynamicFieldRequired(t.lastName),
       username: usernameVal.trim() ? "" : t.dynamicFieldRequired(t.username),
@@ -59,78 +70,135 @@ export default function RegisterForm() {
     if (field == "firstName") setFirstName(value);
     if (field == "lastName") setLastName(value);
     if (field == "username") setUsername(value);
+    if (field == "confirmPassword") setConfirmPassword(value);
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
   const register = async () => {
-    const nextErrors = validate(email, password, firstName, lastName, username);
-    setErrors(nextErrors);
-    if (Object.values(nextErrors).some((error) => error)) return;
-    setLoading(true);
-    await api.post("/auth/register", {
-      email,
-      password,
-      firstName,
-      lastName,
-      username,
-    });
+    try {
+      const nextErrors = validate(
+        email,
+        password,
+        firstName,
+        lastName,
+        username,
+      );
+      setErrors(nextErrors);
+      if (Object.values(nextErrors).some((error) => error)) return;
+      setLoading(true);
+      await api.post("/auth/register", {
+        email,
+        password,
+        firstName,
+        lastName,
+        username,
+      });
 
-    authFlow.set({
-      email,
-      register: { firstName, lastName, username, password },
-    });
+      authFlow.set({
+        email,
+        register: { firstName, lastName, username, password },
+      });
 
-    router.push("/verify-email");
+      router.push("/email-verify");
+    } catch (e) {
+      const err = e as TError;
+      const code = err?.response?.data?.errorCode;
+
+      if (code === ErrorCode.EMailAlreadyExists)
+        setApiError({
+          link: "/login",
+          message:
+            t.RegisterErrorCodeEnum[
+              code as keyof typeof t.RegisterErrorCodeEnum
+            ] ||
+            err?.response?.data?.message ||
+            "An error occurred",
+        });
+      else {
+        setApiError({
+          link: "",
+          message: err?.response?.data?.message || "An error occurred",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-3">
-      <pre>{JSON.stringify(errors, null, 2)}</pre>
+    <div className="space-y-5">
       <TTextField
-        label="First name"
+        label={t.firstName}
+        placeholder={t.firstNamePlaceholder}
         value={firstName}
-        required
+        onChange={(v) => handleChange("firstName", v)}
         error={errors.firstName}
-        onChange={(value) => handleChange("firstName", value)}
+        required
       />
-
       <TTextField
-        label="Last name"
+        label={t.lastName}
+        placeholder={t.lastNamePlaceholder}
         value={lastName}
-        required
+        onChange={(v) => handleChange("lastName", v)}
         error={errors.lastName}
-        onChange={(value) => handleChange("lastName", value)}
-      />
-
-      <TTextField
-        label="Username"
-        value={username}
         required
-        error={errors.username}
-        onChange={(value) => handleChange("username", value)}
       />
-
       <TTextField
-        label="Email"
+        label={t.email}
+        placeholder={t.emailPlaceholder}
         value={email}
-        required
+        onChange={(v) => handleChange("email", v)}
         error={errors.email}
-        onChange={(value) => handleChange("email", value)}
-      />
-
-      <TTextField
-        label="Password"
-        type="password"
-        value={password}
+        type="email"
         required
+        className="md:col-span-2"
+      />
+      <TTextField
+        label={t.username}
+        placeholder={t.usernamePlaceholder}
+        value={username}
+        onChange={(v) => handleChange("username", v)}
+        error={errors.username}
+        required
+        className="md:col-span-2"
+      />
+      <TTextField
+        label={t.password}
+        placeholder={t.passwordPlaceholder}
+        value={password}
+        onChange={(v) => handleChange("password", v)}
         error={errors.password}
-        onChange={(value) => handleChange("password", value)}
+        type="password"
+        required
+        className="md:col-span-2"
+      />
+      <TTextField
+        label={t.confirmPassword}
+        placeholder={t.confirmPasswordPlaceholder}
+        value={confirmPassword}
+        onChange={(v) => handleChange("confirmPassword", v)}
+        error={errors.confirmPassword}
+        type="password"
+        required
+        className="md:col-span-2"
       />
 
+      <br />
+      {apiError.message && (
+        <div className="text-sm text-red-500">
+          {apiError.message}{" "}
+          {apiError.link && (
+            <Link href={apiError.link} className="text-primary font-medium">
+              {t.goToLogin}
+            </Link>
+          )}
+        </div>
+      )}
       <TButton
-        title={loading ? "Creating..." : "Create"}
+        title={loading ? t.createElipses : t.create}
         loading={loading}
         onClick={register}
       />
+      <br />
       <div className="text-sm text-center">
         {t.haveAccount}{" "}
         <a href="/login" className="text-primary font-medium">

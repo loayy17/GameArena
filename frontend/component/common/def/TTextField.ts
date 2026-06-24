@@ -1,6 +1,7 @@
 interface ITTextFieldProps {
   label: string;
   value: string;
+  className?: string;
   type?: "text" | "email" | "password";
   placeholder?: string;
   required?: boolean;

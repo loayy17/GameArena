@@ -75,14 +75,13 @@ export default function OtpStep({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">{t.verifyYourEmail}</h1>
-      <p className="text-sm text-gray-500 mb-4">{t.enterSixDigit}</p>
-
       <div className="flex gap-2 justify-center mb-4">
         {code.map((c, i) => (
           <input
             key={i}
-            ref={(el) => (inputsRef.current[i] = el)}
+            ref={(el) => {
+              inputsRef.current[i] = el;
+            }}
             value={c}
             maxLength={1}
             onChange={(e) => setDigit(i, e.target.value)}

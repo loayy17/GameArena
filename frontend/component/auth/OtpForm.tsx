@@ -4,12 +4,16 @@ import { useRef, useState } from "react";
 import TButton from "@/component/common/TButton";
 import { IOtpFormProps } from "./def/OtpForm";
 import { emailApi } from "@/lib/email.api";
+import en from "../i18n/Otp/en.i18n";
+import ar from "../i18n/Otp/ar.i18n";
+import { useTranslation } from "@/Hooks/useTranslation";
+import { TOtpTranslation } from "../i18n/Otp/en.i18n";
 
 export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
   const [code, setCode] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState({ verify: false, resend: false });
   const [error, setError] = useState("");
-
+  const t = useTranslation({ en, ar }) as TOtpTranslation;
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   const setDigit = (i: number, value: string) => {
@@ -26,7 +30,7 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
     const otp = code.join("");
 
     if (otp.length !== 6) {
-      setError("Enter full code");
+      setError(t.enterFullCode);
       return;
     }
 
@@ -36,7 +40,7 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
       await emailApi.verifyOtp({ email, otp });
       onSuccess(otp);
     } catch {
-      setError("Invalid code");
+      setError(t.invalidCode);
     } finally {
       setLoading((prev) => ({ ...prev, verify: false }));
     }
@@ -49,7 +53,7 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
       setError("");
       await emailApi.sendOtp({ email });
     } catch {
-      setError("Failed to resend code");
+      setError(t.resendCodeFailed);
     } finally {
       setLoading((prev) => ({ ...prev, resend: false }));
     }
@@ -61,7 +65,9 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
         {code.map((c, i) => (
           <input
             key={i}
-            ref={(el) => (inputsRef.current[i] = el)}
+            ref={(el) => {
+              inputsRef.current[i] = el;
+            }}
             value={c}
             maxLength={1}
             onChange={(e) => setDigit(i, e.target.value)}
@@ -72,8 +78,8 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
 
       {error && <p className="text-red-500 text-center">{error}</p>}
 
-      <TButton title="Verify" loading={loading.verify} onClick={verify} />
-      <TButton title="Resend code" loading={loading.resend} onClick={resend} />
+      <TButton title={t.verify} loading={loading.verify} onClick={verify} />
+      <TButton title={t.resendCode} loading={loading.resend} onClick={resend} />
     </div>
   );
 }

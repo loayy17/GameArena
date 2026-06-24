@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "@/component/SideBar";
 import { SocialPanel } from "@/component/SocialMedia";
-import { getLocale, setLocale } from "@/Hooks/useTranslation";
 
 export default function DashboardLayout({
   children,

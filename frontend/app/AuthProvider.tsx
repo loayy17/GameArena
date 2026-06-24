@@ -3,66 +3,49 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { userApi } from "@/lib/user.api";
-import { getLocale } from "@/Hooks/useTranslation";
-
-type User = {
-  id: string;
-  userName: string;
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: number;
-  createdAt: string;
-  isVerified: boolean;
-};
+import { User } from "@/types";
 
 const AuthContext = createContext<{
   user: User | null;
   loading: boolean;
-  language: string;
+  refreshUser: () => Promise<User | null>;
+  setUser: (user: User | null) => void;
 }>({
   user: null,
   loading: true,
-  language: "en",
+  refreshUser: async () => null,
+  setUser: () => null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
-  const language = getLocale();
-  const loadUser = async () => {
+
+  const loadUser = async (): Promise<User | null> => {
     setLoading(true);
     try {
       const res = await userApi.profile();
-      setUser(res.data);
+      const userData = res.data as User;
+      setUser(userData);
+      return userData;
     } catch {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    const isAuthPage = pathname === "/login" || pathname === "/register";
-    if (isAuthPage) {
-      setUser(null);
-      return;
-    }
-
-    if (user) {
-      setLoading(false);
-      return;
-    }
-
     loadUser();
-    return () => {
-      user && setUser(null);
-    };
-  }, [pathname, user]);
+  }, [pathname]);
 
+  const refreshUser = async (): Promise<User | null> => {
+    return await loadUser();
+  };
   return (
-    <AuthContext.Provider value={{ user, loading, language }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser, setUser }}>
       {children}
     </AuthContext.Provider>
   );

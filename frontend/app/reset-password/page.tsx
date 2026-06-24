@@ -14,6 +14,7 @@ import ar from "./i18n/ar.i18n";
 import { default as EnTextField } from "@/component/i18n/TTextField/en.i18n";
 import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { passwordValidator } from "@/utils";
+import { AuthFlowAnimationEnum } from "@/types";
 export default function Page() {
   const router = useRouter();
   const flow = authFlow.get();
@@ -61,7 +62,13 @@ export default function Page() {
   if (!email) return null;
 
   return (
-    <AuthLayout title="Reset password">
+    <AuthLayout
+      page={
+        step === "otp"
+          ? AuthFlowAnimationEnum.VERIFY_OTP
+          : AuthFlowAnimationEnum.SET_PASSWORD
+      }
+    >
       {step === "otp" && (
         <OtpForm
           email={email}
