@@ -2,25 +2,24 @@
 using backend.Domain;
 using backend.Enums;
 using backend.Services.Interface;
+using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class GameService : IGameService
+    public class GameService(IDbContextFactory<AppDbContext> _contextFactory) : IGameService
     {
-        private readonly IDbContextFactory<AppDbContext> _contextFactory;
-        public GameService(IDbContextFactory<AppDbContext> context)
-        {
-            _contextFactory = context;
-        }
         public async Task SaveMatchHistoryAsync(TicTacTaoRoom room)
         {
-            try
-            {
+            if (room == null) throw new AppException(ErrorCode.RoomNotFound);
 
-            // Save match history to the database thread-safely using a new DbContext instance
+            if (room.Player1Id == null) throw new AppException(ErrorCode.PlayerNotFound);
+
+            if (room.Player2Id == null) throw new AppException(ErrorCode.PlayerNotFound);
+
             using var context = await _contextFactory.CreateDbContextAsync();
-            var historyRecord = new MatchHistory
+
+            context.MatchHistories.Add(new MatchHistory
             {
                 RoomId = room.RoomId,
                 GameType = GamesKind.TicTacTao,
@@ -29,15 +28,8 @@ namespace backend.Services
                 WinnerId = room.WinnerPlayerId,
                 Status = room.WinnerSymbol,
                 CompletedAt = DateTime.UtcNow
-            };
-            context.MatchHistories.Add(historyRecord);
+            });
             await context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                throw; // Rethrow or handle accordingly
-            }
         }
-}
+    }
 }

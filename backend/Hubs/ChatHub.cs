@@ -1,69 +1,43 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
-using backend.Data;
-using backend.Domain;
+﻿using backend.Services;
+using backend.Utils;
+using Microsoft.AspNetCore.SignalR;
 
 namespace backend.Hubs
 {
-    public interface IChatClient
+    public class ChatHub(IChatService chatService) : Hub
     {
-        string type { get; set; }
-        string userId { get; set; }
-        string userName { get; set; }
-        string message { get; set; }
-        DateTime sentAt { get; set; }
-    }
-    public class ChatHub : Hub
-    {
-        private readonly AppDbContext _context;
-
-        public ChatHub(AppDbContext context)
+        public override async Task OnConnectedAsync()
         {
-            _context = context;
-        }
-
-        public async Task SendGlobalMessage(string message)
-        {
-            var payload = new
-            {
-                type = "global",
-
-                message,
-                sentAt = DateTime.UtcNow
-            };
-            await Clients.All.SendAsync("ReceiveMessage", payload);
+            var userId = GetUserId();
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, "GlobalChat");
+            await base.OnConnectedAsync();
         }
 
         public async Task SendPrivateMessage(Guid receiverId, string message)
         {
-            var senderId = Guid.Parse(Context.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var senderId = GetUserId();
+            var msg = await chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
+            var payload = new { senderId, receiverId, message = msg.Content, sentAt = msg.SentAt };
+            var group = ChatHelper.GetPrivateGroup(senderId, receiverId);
+            await Clients.Group(group).SendAsync("chat:private", payload);
+            await Clients.Group($"user:{receiverId}").SendAsync("chat:notification", payload);
+        }
 
-            var chat = new Message
-            {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = message,
-                SentAt = DateTime.UtcNow
-            };
+        public async Task SendGlobalMessage(string message)
+        {
+            var senderId = GetUserId();
+            var msg = await chatService.CreateGlobalMessageAsync(senderId, message);
+            var payload = new { senderId, message = msg.Content, sentAt = msg.SentAt };
+            await Clients.Group("GlobalChat").SendAsync("chat:global", payload);
+        }
 
-            _context.Messages.Add(chat);
-            await _context.SaveChangesAsync();
+        private Guid GetUserId()
+        {
+            if (Context.UserIdentifier == null)
+                throw new HubException("Unauthorized");
 
-            var payload = new
-            {
-                type = "private",
-                senderId,
-                receiverId,
-                message,
-                sentAt = chat.SentAt
-            };
-
-            foreach (var conn in ConnectionManager.GetConnections(receiverId.ToString()))
-            {
-                await Clients.Client(conn).SendAsync("ReceiveMessage", payload);
-            }
-
-            await Clients.Caller.SendAsync("ReceiveMessage", payload);
+            return Guid.Parse(Context.UserIdentifier);
         }
     }
 }

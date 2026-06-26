@@ -1,37 +1,31 @@
 using backend.Domain;
 using backend.Enums;
+using backend.Hubs;
 using backend.Services.Interface;
+using backend.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Abstractions;
 using System.Collections.Concurrent;
 
 namespace ChatWebSignalR.Hubs
 {
     [Authorize]
-    public class GameHub : Hub
+    public class GameHub(IGameService _gameService, IHubContext<ChatHub> _chatHubContext) : Hub
     {
-        private static readonly object _matchLock = new();
+        private static readonly Lock _matchLock = new();
         public static readonly ConcurrentDictionary<string, BaseGameRoom> Rooms = new();
         public static readonly ConcurrentDictionary<string, string> PlayerToRoom = new();
 
-        private readonly IGameService _gameService;
-
-        public GameHub(IGameService gameService)
-        {
-            _gameService = gameService;
-        }
-
         public async Task FindMatch(GamesKind gameType)
         {
-            string playerId = Context.UserIdentifier
-                ?? throw new HubException("Unauthorized user");
+            string playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
 
             BaseGameRoom? room = null;
 
             lock (_matchLock)
             {
-                var openRoom = Rooms.Values.FirstOrDefault(r =>
-                    r.GameType == gameType && !r.IsFull && r.Player1Id != playerId);
+                var openRoom = Rooms.Values.FirstOrDefault(r =>r.GameType == gameType && !r.IsFull && r.Player1Id != playerId);
 
                 if (openRoom != null)
                 {
@@ -49,7 +43,7 @@ namespace ChatWebSignalR.Hubs
                     room = gameType switch
                     {
                         GamesKind.TicTacTao => new TicTacTaoRoom(),
-                        _ => throw new ArgumentException("Unknown Game Type")
+                        _ => throw new AppException(ErrorCode.InvalidGameType)
                     };
 
                     room.Player1Id = playerId;
@@ -141,6 +135,69 @@ namespace ChatWebSignalR.Hubs
             }
 
             await base.OnDisconnectedAsync(exception);
+        }
+        public async Task CancelSearch()
+        {
+            string playerId = Context.UserIdentifier
+                ?? throw new HubException("Unauthorized user");
+
+            if (PlayerToRoom.TryGetValue(playerId, out var roomId) &&
+                Rooms.TryGetValue(roomId, out var room))
+            {
+                if (!room.IsFull)
+                {
+                    Rooms.TryRemove(roomId, out _);
+                    PlayerToRoom.TryRemove(playerId, out _);
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
+                }
+            }
+        }
+        // Invite a friend to a private game
+        public async Task InviteFriend(string friendId, GamesKind gameType)
+        {
+            string playerId = Context.UserIdentifier!;
+            string username = Context.User?.Identity?.Name ?? "Player";
+
+        // Create room, add inviter
+        var room = gameType switch
+            {
+                GamesKind.TicTacTao => new TicTacTaoRoom
+                {
+                    Player1Id = playerId,
+                    Player1Username = username,
+                    RoomId = Guid.NewGuid().ToString("N")
+                },
+                _ => throw new AppException(ErrorCode.InvalidGameType)
+            };
+
+            Rooms[room.RoomId] = room;
+            PlayerToRoom[playerId] = room.RoomId;
+            await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
+            await _chatHubContext.Clients.User(friendId).SendAsync("GameInvite", new
+            {
+                roomId = room.RoomId,
+                gameType,
+                inviterId = playerId,
+                inviterName = username
+            });
+        }
+
+        public async Task AcceptInvite(string roomId)
+        {
+            if(roomId == null) throw new AppException(ErrorCode.InvalidRoomId);
+            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
+            var username = Context.User?.Identity?.Name ;
+
+            if (Rooms.TryGetValue(roomId, out var room) && !room.IsFull && room.Player1Id != playerId)
+            {
+                room.Player2Id = playerId;
+                room.Player2Username = username;
+                room.IsFull = true;
+                if (room.Player1Id != null && room is TicTacTaoRoom xo) xo.CurrentTurnPlayerId = room.Player1Id;
+                PlayerToRoom[playerId] = roomId;
+                await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+                await Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+            }
         }
     }
 }

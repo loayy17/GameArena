@@ -1,100 +1,57 @@
-﻿using backend.Data;
+﻿using backend.Auth;
+using backend.Data;
 using backend.Domain;
 using backend.Enums;
 using backend.Services.Interface;
+using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace backend.Services
 {
-    public class EmailVerificationService : IEmailVerificationService
+    public class EmailVerificationService(AppDbContext _context, IEmailService _emailService) : IEmailVerificationService
     {
-        private readonly AppDbContext _context;
-        private readonly IEmailService _emailService;
-
-        public EmailVerificationService(
-            AppDbContext context,
-            IEmailService emailService)
-        {
-            _context = context;
-            _emailService = emailService;
-        }
-
         public async Task GenerateAndSendOtpAsync(string email, OtpPurpose purpose)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == email);
+            if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
 
-            if (user == null)
-                return;
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email) ?? throw new AppException(ErrorCode.EmailNotFound);
+            var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var body = AuthHelper.GetHtmlTemplate(user.UserName, otp);
 
-            var otp = RandomNumberGenerator
-                .GetInt32(100000, 999999)
-                .ToString();
-
-            var hash = Hash(otp);
 
             _context.EmailVerfications.Add(new EmailVerfication
             {
                 UserId = user.Id,
-                OtpHash = hash,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                OtpHash = AuthHelper.Hash(otp),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15),
                 IsUsed = false,
                 Purpose = purpose
             });
 
             await _context.SaveChangesAsync();
-
-            await _emailService.SendAsync(
-                user.Email,
-                "Verification Code",
-                $"Your code: {otp}"
-            );
+            await _emailService.SendAsync(user.Email, "GameArena OTP Code", body);
         }
 
-        public async Task<bool> VerifyOtpAsync(
-            string email,
-            string otp,
-            OtpPurpose purpose)
+        public async Task VerifyOtpAsync(string email, string otp, OtpPurpose purpose)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == email);
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otp)) throw new AppException(ErrorCode.ValidationError);
 
-            if (user == null)
-                return false;
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email) ?? throw new AppException(ErrorCode.EmailNotFound);
 
             var record = await _context.EmailVerfications
-                .Where(x =>
-                    x.UserId == user.Id &&
-                    !x.IsUsed &&
-                    x.Purpose == purpose)
+                .Where(x => x.UserId == user.Id && !x.IsUsed && x.Purpose == purpose)
                 .OrderByDescending(x => x.ExpiresAt)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                ?? throw new AppException(ErrorCode.OtpInvalid);
 
-            if (record == null)
-                return false;
-
-            if (record.ExpiresAt < DateTime.UtcNow)
-                return false;
-
-            if (record.OtpHash != Hash(otp))
-                return false;
+            if (record.ExpiresAt < DateTime.UtcNow) throw new AppException(ErrorCode.OtpExpired);
+            if (record.OtpHash != AuthHelper.Hash(otp)) throw new AppException(ErrorCode.OtpInvalid);
+            if (purpose == OtpPurpose.EmailVerification && user.IsVerified) throw new AppException(ErrorCode.EmailAlreadyVerified);
+            if (purpose == OtpPurpose.EmailVerification) user.IsVerified = true;
 
             record.IsUsed = true;
-
-            if (purpose == OtpPurpose.EmailVerification)
-                user.IsVerified = true;
-
             await _context.SaveChangesAsync();
-            return true;
-        }
-
-        private string Hash(string otp)
-        {
-            return Convert.ToBase64String(
-                SHA256.HashData(Encoding.UTF8.GetBytes(otp))
-            );
         }
     }
 }

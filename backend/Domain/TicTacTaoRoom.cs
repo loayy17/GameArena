@@ -9,7 +9,8 @@ public class TicTacTaoRoom : BaseGameRoom
     public string[] Board { get; set; } = new string[9];
 
     public string CurrentTurnPlayerId { get; set; } = "";
-    public string? WinnerPlayerId { get; set; }
+    public string CurrentTurnPlayerName { get; set; } = "";
+    public string? WinnerPlayerId { get; set; } // 
     public string? WinnerSymbol { get; set; }
     public override void UpdatePhysics(float deltaTime) { }
     public override object GetStatePayload() => new

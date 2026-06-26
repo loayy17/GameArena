@@ -7,10 +7,10 @@ namespace backend.Services.Interface
 {
     public interface IAuthService
     {
-        Task<AuthResponse?> LoginAsync(LoginRequest request);
-        Task RevokeRefreshTokenAsync(string refreshToken);
+        Task<AuthResponse> LoginAsync(LoginRequest request);
         Task RegisterAsync(RegisterRequest request);
-        Task<AuthResponse?> RefreshAccessTokenAsync(string rawRefreshToken);
+        Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken);
+        Task RevokeRefreshTokenAsync(string refreshToken);
         Task ForgotPassword(string email);
         Task ResetPasswordAsync(string email, string otp, string newPassword);
     }

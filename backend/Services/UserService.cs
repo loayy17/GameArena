@@ -1,35 +1,39 @@
-﻿using Azure.Core;
-using backend.Data;
-using backend.Domain;
+﻿using backend.Data;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
+using backend.Enums;
 using backend.Services.Interface;
-using Microsoft.AspNetCore.Authorization;
+using backend.Utils;
 using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace backend.Services
 {
-    public class UserService : IUserService
+    public class UserService(AppDbContext _context) : IUserService
     {
-        private readonly AppDbContext _context;
-        public UserService(AppDbContext context)
+        public async Task<UserResponse> GetUserByIdAsync(Guid userId)
         {
-            _context = context;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId) ?? throw new AppException(ErrorCode.UserNotFound);
+
+            return MapperHelper.ToDto(user);
         }
-        public async Task<User?> GetUserByIdAsync(Guid userId)
+
+        public async Task<List<UserResponse>> GetUsers(Guid currentUserId, UserFilterRequest? filter)
         {
-            return await _context.Users
-                    .SingleOrDefaultAsync(u => u.Id == userId);
-        }
-        public async Task<List<User>?> GetAllUsersAsync()
-        {
-            return await _context.Users.ToListAsync();
-        }
-        public async Task<List<User>?> GetUserFriends(Guid userId)
-        {
-           return await _context.UserFriends
-                .Where(uf => uf.UserId == userId)
-                .Select(uf => uf.Friend)
-                .ToListAsync();
+            if (string.IsNullOrWhiteSpace(filter?.Name)) return [];
+
+            var name = filter.Name.Trim().ToLower();
+
+            var query = _context.Users
+                .Where(u => u.Id != currentUserId)
+                .Where(u =>
+                    (u.UserName != null && u.UserName.ToLower().Contains(name)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(name))
+                );
+
+            if (filter.UserStatus != UserStatus.All) query = query.Where(u => u.Status == filter.UserStatus);
+
+            var users = await query.ToListAsync();
+            return [.. users.Select(MapperHelper.ToDto)];
         }
     }
 }

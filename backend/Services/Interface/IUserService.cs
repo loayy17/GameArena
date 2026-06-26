@@ -1,11 +1,13 @@
 ﻿using backend.Domain;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 
 namespace backend.Services.Interface
 {
     public interface IUserService
     {
-        public Task<User?> GetUserByIdAsync(Guid userId);
-        public Task<List<User>?> GetAllUsersAsync();
-        public Task<List<User>?> GetUserFriends(Guid userId);
+        Task<UserResponse> GetUserByIdAsync(Guid userId);
+        Task<List<UserResponse>> GetUsers(Guid currentUserId, UserFilterRequest? filter);
+
     }
 }

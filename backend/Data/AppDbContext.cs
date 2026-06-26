@@ -1,15 +1,12 @@
 ﻿
 using backend.Domain;
+using backend.DTOs.Requests;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -33,7 +30,7 @@ namespace backend.Data
             // friends
             // user-friend relationship user -> sent friendships and friend -> received friendships
             modelBuilder.Entity<UserFriends>()
-                .HasKey(uf => new { uf.UserId, uf.FriendId } );
+                .HasKey(uf => new { uf.UserId, uf.FriendId });
             modelBuilder.Entity<UserFriends>()
                 .HasOne(x => x.User)
                 .WithMany(u => u.FriendshipsSent)
@@ -45,10 +42,11 @@ namespace backend.Data
                 .WithMany(u => u.FriendshipsReceived)
                 .HasForeignKey(x => x.FriendId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
+
             // friend requests
             modelBuilder.Entity<FriendRequest>()
-                .HasKey(FR => new { FR.SenderId, FR.ReceiverId } );
+                .HasKey(FR => new { FR.SenderId, FR.ReceiverId });
             modelBuilder.Entity<FriendRequest>()
                 .HasOne(x => x.Sender)
                 .WithMany(u => u.FriendRequestsSent)
@@ -74,7 +72,7 @@ namespace backend.Data
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-        
+
         }
     }
 }

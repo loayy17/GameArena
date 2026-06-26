@@ -61,13 +61,10 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("cors", policy =>
-    {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials()
-            .SetIsOriginAllowed(_ => true);
-    });
+        policy.WithOrigins("http://localhost:3000")   // your Next.js frontend
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials());
 });
 
 // === Application Layer (Feature Services) ===
@@ -76,6 +73,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
 
+builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
 // to avoid thread safety issues, we can use singleton for GameService since it will be used in SignalR hub
 builder.Services.AddScoped<IGameService, GameService>();
 var app = builder.Build();
@@ -85,7 +83,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("cors");
 app.UseAuthentication();
 app.UseAuthorization();
