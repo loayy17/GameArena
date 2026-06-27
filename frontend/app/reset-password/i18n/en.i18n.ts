@@ -9,6 +9,9 @@ const en = {
   otpVerified: "OTP verified successfully",
   passwordResetSuccess: "Password reset successfully",
   passwordResetError: "Failed to reset password",
+  placeholder: {
+    newPassword: "Enter your new password",
+  },
 };
 type TResetPasswordTranslation = typeof en;
 export { en, type TResetPasswordTranslation };

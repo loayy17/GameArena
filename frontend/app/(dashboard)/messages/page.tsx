@@ -17,10 +17,11 @@ import { TTile } from "@/component/common/TTile";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { ar } from "./i18n/ar.i18n";
 import { en, type TMessagesTranslation } from "./i18n/en.i18n";
+import { TButton } from "@/component/common/TButton";
 
 const statusClass: Record<UserStatusEnum, string> = {
   [UserStatusEnum.Online]: "bg-emerald-500",
-  [UserStatusEnum.Offline]: "bg-slate-500",
+  [UserStatusEnum.Offline]: "text-text",
   [UserStatusEnum.InGame]: "bg-cyan-500",
   [UserStatusEnum.All]: "bg-slate-500",
 };
@@ -88,12 +89,12 @@ function MessagesPage() {
   };
 
   return (
-    <div className="flex h-full min-h-0 relative z-10 overflow-hidden bg-linear-to-br from-bg-primary via-bg-secondary to-bg-primary">
-      <aside className="w-80 shrink-0 border-r border-border/70 bg-bg-dark/50 backdrop-blur-xl flex flex-col">
+    <div className="flex h-full min-h-0 relative z-10 overflow-hidden bg-transparent">
+      <aside className="w-80 shrink-0 border-r border-border/70 bg-bg-sidebar/50 flex flex-col">
         <div className="p-4 border-b border-border/70 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-bold text-white">{t.title}</h1>
+              <h1 className="text-xl font-bold text-text">{t.title}</h1>
               <p className="text-xs text-text-muted">{t.subtitle}</p>
             </div>
             <span
@@ -118,7 +119,7 @@ function MessagesPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.search}
-              className="w-full rounded-xl border border-border bg-bg-card/90 py-3 pl-9 pr-3 text-sm text-white outline-none transition focus:border-primary"
+              className="w-full rounded-xl border border-border bg-bg-card/90 py-3 pl-9 pr-3 text-sm text-text outline-none transition focus:border-primary"
             />
           </div>
         </div>
@@ -140,7 +141,7 @@ function MessagesPage() {
                 const active = friend.id === selectedFriendId;
 
                 return (
-                  <button
+                  <TButton
                     key={friend.id}
                     onClick={() => handleSelectFriend(friend.id)}
                     className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
@@ -152,7 +153,7 @@ function MessagesPage() {
                     <TTile user={friend} size="sm" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-white">
+                        <p className="truncate text-sm font-semibold text-text">
                           {displayName(friend)}
                         </p>
                         <span
@@ -163,7 +164,7 @@ function MessagesPage() {
                         {friend.userName ? `@${friend.userName}` : t.noUsername}
                       </p>
                     </div>
-                  </button>
+                  </TButton>
                 );
               })}
             </div>
@@ -174,10 +175,10 @@ function MessagesPage() {
       <section className="flex min-w-0 flex-1 flex-col">
         {selectedFriend ? (
           <>
-            <header className="flex items-center gap-3 border-b border-border/70 bg-bg-dark/40 px-4 py-4 backdrop-blur-xl">
+            <header className="flex items-center gap-3 border-b border-border/70 bg-bg-sidebar/40 px-4 py-4">
               <TTile user={selectedFriend} size="sm" />
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold text-white">
+                <h2 className="truncate text-sm font-semibold text-text">
                   {displayName(selectedFriend)}
                 </h2>
                 <p className="text-xs text-text-muted">
@@ -224,7 +225,7 @@ function MessagesPage() {
                         <div
                           className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
                             outgoing
-                              ? "rounded-br-md bg-primary text-white"
+                              ? "rounded-br-md bg-primary text-text"
                               : "rounded-bl-md border border-border bg-bg-card text-text"
                           }`}
                         >
@@ -234,7 +235,7 @@ function MessagesPage() {
                           <div
                             className={`mt-2 flex items-center gap-2 text-[10px] ${
                               outgoing
-                                ? "justify-end text-white/70"
+                                ? "justify-end text-text/70"
                                 : "text-text-muted"
                             }`}
                           >
@@ -244,7 +245,7 @@ function MessagesPage() {
                                 className={`h-3.5 w-3.5 ${
                                   message.isRead
                                     ? "text-cyan-300"
-                                    : "text-white/40"
+                                    : "text-text/40"
                                 }`}
                               />
                             )}
@@ -257,7 +258,7 @@ function MessagesPage() {
               )}
             </div>
 
-            <footer className="border-t border-border/70 bg-bg-dark/50 px-4 py-4 backdrop-blur-xl">
+            <footer className="border-t border-border/70 bg-bg-sidebar/50 px-4 py-4 ">
               {error && <p className="mb-3 text-sm text-rose-400">{error}</p>}
               <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg-card px-4 py-3">
                 <input
@@ -270,17 +271,16 @@ function MessagesPage() {
                     }
                   }}
                   placeholder={t.placeholder}
-                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-text-muted"
+                  className="flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
                 />
-                <button
-                  type="button"
+                <TButton
                   onClick={() => void sendMessage()}
                   disabled={!draft.trim() || !isConnected}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-text transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
                   {t.send}
-                </button>
+                </TButton>
               </div>
             </footer>
           </>

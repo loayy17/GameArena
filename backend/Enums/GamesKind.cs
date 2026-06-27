@@ -2,7 +2,7 @@
 {
     public enum GamesKind
     {
-        TicTacTao,
+        TicTacToe,
         PingPong,
         Snake
     }

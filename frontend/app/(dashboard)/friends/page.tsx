@@ -39,26 +39,28 @@ function FriendsPage() {
     if (!gameHub) return;
 
     try {
-      await gameHub.invoke("InviteFriend", friendId, GamesKindEnum.TicTacTao);
+      // Corrected spelling from TicTacTao to TicTacToe
+      await gameHub.invoke("InviteFriend", friendId, GamesKindEnum.TicTacToe);
     } catch (error) {
       console.error("Invite failed", error);
     }
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-linear-to-br from-bg-primary via-bg-secondary to-bg-primary px-4 py-6 sm:px-6">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="rounded-3xl border border-border/70 bg-bg-dark/40 px-5 py-5 backdrop-blur-xl sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+    <div className="h-full overflow-y-auto bg-bg custom-scrollbar px-4 py-6 sm:px-6 transition-colors duration-200">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 animate-fade-in">
+        {/* Profile / Context Header */}
+        <header className="rounded-2xl border border-border/60 bg-surface-alt/40 px-5 py-5 sm:px-6 backdrop-blur-md shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between text-start">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-all">
                 <Gamepad2 className="h-3.5 w-3.5" />
                 Community
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
+              <h1 className="text-3xl font-bold tracking-tight text-text">
                 {t.friends}
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-text-muted">
+              <p className="max-w-2xl text-sm text-text-secondary font-medium">
                 Find friends, review incoming requests, and search for new
                 players without leaving the page.
               </p>
@@ -66,14 +68,15 @@ function FriendsPage() {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-border/70 bg-bg-dark/35 p-3 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-4">
+        {/* Dynamic Navigational Tab Deck Container */}
+        <section className="rounded-2xl border border-border/60 bg-surface-alt/20 p-3 shadow-md backdrop-blur-sm sm:p-4">
           <TTabs
             tabs={tabs}
             value={activeTab}
             onChange={(tab) => setActiveTab(tab as TFriendsTab)}
           />
 
-          <div className="pt-5">
+          <div className="pt-5 text-start animate-fade-in">
             {activeTab === "friends" && (
               <FriendsTab
                 onMessage={(id) => router.push(`/messages?friend=${id}`)}
@@ -91,4 +94,5 @@ function FriendsPage() {
     </div>
   );
 }
-export { FriendsPage };
+
+export default FriendsPage;

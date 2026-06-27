@@ -27,6 +27,7 @@ function LoginForm() {
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
   }) as TLoginTranslation & TTextFieldTranslation;
+
   const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,9 +48,10 @@ function LoginForm() {
       password: passwordValidator(t)(passwordVal) || "",
     };
   };
+
   const handleChange = (field: TFieldLogin, value: string) => {
-    if (field == "email") setEmail(value);
-    if (field == "password") setPassword(value);
+    if (field === "email") setEmail(value);
+    if (field === "password") setPassword(value);
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
@@ -63,8 +65,7 @@ function LoginForm() {
     try {
       setLoading(true);
       setApiError({ link: "", message: "" });
-      const result = await authService.login({ email, password });
-      console.log(result);
+      await authService.login({ email, password });
       const currentUser = await refreshUser();
 
       if (currentUser) {
@@ -72,80 +73,100 @@ function LoginForm() {
       }
     } catch (e: unknown) {
       const err = e as AxiosError<IApiResponse<unknown>>;
-      const code =
-        err?.response?.data?.errorCode ?? err?.response?.data?.errorCode;
-      if (code === ErrorCodeEnum.EmailNotVerified)
+      const code = err?.response?.data?.errorCode;
+
+      const errorMessage =
+        t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
+        err?.response?.data?.message ||
+        t.unknownError;
+
+      if (code === ErrorCodeEnum.EmailNotVerified) {
         setApiError({
           link: "/email-verify",
-          message:
-            t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
-            err?.response?.data?.message ||
-            t.unknownError,
+          message: errorMessage,
         });
-      else {
+      } else {
         setApiError({
           link: "",
-          message:
-            t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
-            err?.response?.data?.message ||
-            t.unknownError,
+          message: errorMessage,
         });
       }
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <form onSubmit={submit} className="w-full max-w-sm space-y-5">
-      {" "}
-      <div className="space-y-4">
-        <TTextField
-          label={t.email}
-          placeholder={t.placeholder.email}
-          value={email}
-          type="email"
-          required
-          error={errors.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-        />
+    <div className="w-full max-w-md p-6 sm:p-8 bg-surface-alt/40 border border-border/60 rounded-lg shadow-md ">
+      <form onSubmit={submit} className="space-y-5">
+        <div className="space-y-4">
+          <TTextField
+            label={t.email}
+            placeholder={t.placeholder.email}
+            value={email}
+            type="email"
+            required
+            error={errors.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            className="w-full transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+          />
 
-        <TTextField
-          label={t.password}
-          placeholder={t.placeholder.password}
-          value={password}
-          type="password"
-          required
-          error={errors.password}
-          onChange={(e) => handleChange("password", e.target.value)}
-        />
+          <TTextField
+            label={t.password}
+            placeholder={t.placeholder.password}
+            value={password}
+            type="password"
+            required
+            error={errors.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            className="w-full transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+          />
 
-        {apiError.message && (
-          <div className="text-sm text-red-500">
-            {apiError.message}{" "}
-            {apiError.link && (
-              <Link href={apiError.link} className="text-primary font-medium">
-                {t.verifyEmail}
-              </Link>
-            )}
-          </div>
-        )}
-        <TButton type="submit" loading={loading} className="w-full">
-          {loading ? t.loggingIn : t.login}
-        </TButton>
-      </div>
-      <div className="flex justify-between text-sm pt-2">
-        <Link href="/forgot-password" className="text-primary font-medium mr-2">
-          {t.forgotPassword}
-        </Link>
+          {/* API Error Callout */}
+          {apiError.message && (
+            <div className="text-sm p-3 rounded-md bg-error-bg border border-error/20 text-error animate-fade-in flex flex-col gap-1">
+              <span>{apiError.message}</span>
+              {apiError.link && (
+                <Link
+                  href={apiError.link}
+                  className="text-primary hover:text-primary-hover font-medium underline transition-colors self-start"
+                >
+                  {t.verifyEmail}
+                </Link>
+              )}
+            </div>
+          )}
 
-        <div className="text-text-secondary">
-          {t.dontHaveAccount}{" "}
-          <Link href="/register" className="text-primary font-medium">
-            {t.register}
-          </Link>
+          <TButton
+            type="submit"
+            loading={loading}
+            className="w-full mt-2 shadow-sm hover:shadow-glow"
+          >
+            {loading ? t.loggingIn : t.login}
+          </TButton>
         </div>
-      </div>
-    </form>
+
+        {/* Footer actions with logical multi-directional padding support */}
+        <div className="flex flex-wrap justify-between items-center gap-2 text-xs sm:text-sm pt-4 border-t border-border/40">
+          <Link
+            href="/forgot-password"
+            className="text-primary hover:text-primary-hover font-medium transition-colors"
+          >
+            {t.forgotPassword}
+          </Link>
+
+          <div className="text-text-secondary">
+            {t.dontHaveAccount}{" "}
+            <Link
+              href="/register"
+              className="text-primary hover:text-primary-hover font-semibold transition-colors inline-block px-1"
+            >
+              {t.register}
+            </Link>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }
 

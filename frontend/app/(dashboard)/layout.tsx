@@ -19,7 +19,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen w-screen bg-bg-dark items-center justify-center">
+      <div className="flex h-screen w-screen bg-bg items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -27,7 +27,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <DashboardNotificationsProvider>
-      <div className="flex h-screen w-screen bg-bg-dark text-text overflow-hidden font-sans antialiased">
+      <div className="flex h-screen w-screen bg-bg text-text overflow-hidden font-sans antialiased">
         <Sidebar />
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide relative">
           {/* Shared background layers */}

@@ -13,6 +13,7 @@ import { TBadge } from "./common/TBadge";
 import { TTile } from "./common/TTile";
 import { navItems } from "@/types";
 import { LangTheme } from "./common/LangTheme";
+import { TButton } from "./common/TButton";
 
 function Sidebar() {
   const { user, setUser } = useAuth();
@@ -45,12 +46,12 @@ function Sidebar() {
       {/* Logo / Toggle */}
       <div className="flex items-center h-16 px-4 border-b border-border">
         {collapsed ? (
-          <button
+          <TButton
             onClick={() => setCollapsed(false)}
             className="mx-auto text-text-secondary hover:text-text cursor-pointer"
           >
             <ChevronRight className="w-5 h-5" />
-          </button>
+          </TButton>
         ) : (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
@@ -61,12 +62,12 @@ function Sidebar() {
                 Game<span className="text-neon-cyan">Arena</span>
               </span>
             </div>
-            <button
+            <TButton
               onClick={() => setCollapsed(true)}
               className="text-text-secondary hover:text-text cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
+            </TButton>
           </div>
         )}
       </div>
@@ -115,7 +116,7 @@ function Sidebar() {
 
       {/* Logout */}
       <div className={`px-3 mb-2 ${collapsed ? "flex justify-center" : ""}`}>
-        <button
+        <TButton
           onClick={handleLogout}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-error-bg hover:text-error transition-colors ${
             collapsed ? "justify-center" : ""
@@ -123,7 +124,7 @@ function Sidebar() {
         >
           <LogOut size={20} />
           {!collapsed && <span>{t.logout}</span>}
-        </button>
+        </TButton>
       </div>
 
       {/* User Profile */}

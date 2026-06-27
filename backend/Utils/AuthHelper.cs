@@ -77,7 +77,7 @@ namespace backend.Auth
                       </tr>
                       <tr>
                         <td style="padding:40px 30px;">
-                          <p style="margin:0 0 16px 0; font-size:16px; color:#4b5563;">Hello{userName},</p>
+                          <p style="margin:0 0 16px 0; font-size:16px; color:#4b5563;">Hello {userName},</p>
                           <p style="margin:0 0 24px 0; font-size:16px; line-height:1.5; color:#4b5563;">Use the following One-Time Password (OTP) to complete your verification process. This code is valid for <strong>15 minutes</strong>.</p>
                           <table width="100%" style="margin-bottom:24px;">
                             <tr>

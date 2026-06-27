@@ -22,7 +22,7 @@ namespace backend.Services
             context.MatchHistories.Add(new MatchHistory
             {
                 RoomId = room.RoomId,
-                GameType = GamesKind.TicTacTao,
+                GameType = GamesKind.TicTacToe,
                 Player1Id = room.Player1Id!,
                 Player2Id = room.Player2Id!,
                 WinnerId = room.WinnerPlayerId,

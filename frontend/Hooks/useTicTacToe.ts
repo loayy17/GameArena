@@ -46,7 +46,7 @@ function useTicTacToe() {
     setGameState(null);
     setOpponentDisconnected(false);
     setIsSearching(true);
-    await connection.invoke("FindMatch", GamesKindEnum.TicTacTao);
+    await connection.invoke("FindMatch", GamesKindEnum.TicTacToe);
   };
 
   const makeMove = async (cell: number) => {

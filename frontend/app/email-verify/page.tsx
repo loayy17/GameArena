@@ -10,8 +10,8 @@ import { useEffect } from "react";
 function EmailVerifyPage() {
   const router = useRouter();
   const flow = authFlow.get();
+  const email = flow?.email;
 
-  const email = flow.email;
   useEffect(() => {
     if (!email) {
       router.replace("/register");

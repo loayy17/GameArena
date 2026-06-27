@@ -6,6 +6,7 @@ import { friendService } from "@/services/def/FriendService";
 import { EmptyState } from "@/component/common/TEmpty";
 import { SkeletonRow } from "./SkeletonRow";
 import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceived";
+import { TButton } from "../common/TButton";
 
 function RequestsTab() {
   const [requests, setRequests] = useState<IFriendRequestReceived[]>([]);
@@ -93,13 +94,13 @@ function RequestsTab() {
       <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-5 text-rose-200">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm">{error}</p>
-          <button
+          <TButton
             onClick={() => void loadRequests()}
             className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-500/10"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
-          </button>
+          </TButton>
         </div>
       </div>
     );
@@ -126,13 +127,13 @@ function RequestsTab() {
             className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-card/70 px-4 py-4 transition hover:border-primary/50"
           >
             <div className="min-w-0 flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-neon-cyan/20 text-sm font-bold text-white">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-neon-cyan/20 text-sm font-bold text-text">
                 {req.senderFirstName?.charAt(0).toUpperCase() ??
                   req.senderUserName?.charAt(0).toUpperCase() ??
                   "?"}
               </div>
               <div className="min-w-0">
-                <p className="truncate font-medium text-white">
+                <p className="truncate font-medium text-text">
                   {req.senderFirstName && req.senderLastName
                     ? `${req.senderFirstName} ${req.senderLastName}`
                     : req.senderUserName}
@@ -142,22 +143,22 @@ function RequestsTab() {
             </div>
 
             <div className="flex shrink-0 gap-2">
-              <button
+              <TButton
                 onClick={() => void acceptRequest(req.senderId)}
                 disabled={isBusy}
                 className="inline-flex items-center justify-center rounded-xl bg-emerald-500/15 p-3 text-emerald-300 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-60"
                 aria-label="Accept request"
               >
                 <Check className="h-4 w-4" />
-              </button>
-              <button
+              </TButton>
+              <TButton
                 onClick={() => void declineRequest(req.senderId)}
                 disabled={isBusy}
                 className="inline-flex items-center justify-center rounded-xl bg-rose-500/15 p-3 text-rose-300 transition hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-60"
                 aria-label="Decline request"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </TButton>
             </div>
           </div>
         );

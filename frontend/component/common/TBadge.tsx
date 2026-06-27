@@ -18,7 +18,7 @@ function TBadge({
     <span
       className={clsx(
         "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
-        "bg-rose-500 text-white shadow-sm shadow-rose-500/25",
+        "bg-rose-500 text-text shadow-sm shadow-rose-500/25",
         className,
       )}
     >

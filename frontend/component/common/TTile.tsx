@@ -7,7 +7,7 @@ function TTile({ user, size = "md" }: TTileProps) {
   return (
     <div
       className={clsx(
-        "flex items-center justify-center rounded-full bg-primary text-white font-bold",
+        "flex items-center justify-center rounded-full bg-primary text-text font-bold",
         sizes[size],
       )}
     >

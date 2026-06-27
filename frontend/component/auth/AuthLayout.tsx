@@ -25,7 +25,7 @@ function AuthLayout({
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-bg-dark">
+      <div className="flex h-screen items-center justify-center bg-bg">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
       </div>
     );
@@ -33,17 +33,21 @@ function AuthLayout({
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col lg:flex-row bg-[linear-gradient(145deg,#2a1a6e_0%,#0f0530_55%,#1a0840_100%)] lg:bg-none">
-        {/* Animation – its background is transparent on medium, restored on large */}
-        <LangTheme collapsed={false} className="absolute flex gap-2 right-0 right-2 top-2"/>
+      <div className="min-h-screen flex flex-col lg:flex-row login-panel-bg lg:bg-none relative transition-colors duration-200">
+        <div className="absolute top-4 right-4 z-50">
+          <LangTheme collapsed={false} className="flex gap-2" />
+        </div>
+
+        {/* Dynamic Animation Area */}
         <AuthAnimation
           page={page}
           pathAnimation="/game.json"
-          className="bg-transparent lg:bg-[linear-gradient(145deg,#2a1a6e_0%,#0f0530_55%,#1a0840_100%)]"
+          className="bg-transparent lg:login-panel-bg  lg:shadow-none"
         />
-        {/* Form – no card styling, seamless continuation of the background */}
-        <div className="flex-1 flex items-center justify-center px-6 pb-10 pt-4 lg:p-6">
-          <div>{children}</div>
+
+        {/* Content Panel Box */}
+        <div className="flex-1 flex items-center justify-center lg:bg-bg">
+          <div className="w-full max-w-md animate-fade-in">{children}</div>
         </div>
       </div>
     );

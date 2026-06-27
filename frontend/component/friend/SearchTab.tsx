@@ -7,6 +7,7 @@ import type { IUser } from "@/domain/meta/IUser";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { friendService } from "@/services/def/FriendService";
 import { userService } from "@/services/def/UserService";
+import { TButton } from "../common/TButton";
 
 type TSearchResult = IUser & {
   isSendRequest: boolean;
@@ -104,16 +105,16 @@ function SearchTab() {
             onChange={(e) =>
               setUserFilter((prev) => ({ ...prev, name: e.target.value }))
             }
-            className="w-full rounded-2xl border border-border bg-bg-card px-10 py-3 text-sm text-white outline-none transition focus:border-primary"
+            className="w-full rounded-2xl border border-border bg-bg-card px-10 py-3 text-sm text-text outline-none transition focus:border-primary"
           />
           {userFilter.name && (
-            <button
+            <TButton
               onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition hover:text-text"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
-            </button>
+            </TButton>
           )}
         </div>
 
@@ -128,7 +129,7 @@ function SearchTab() {
                   userStatus: Number(e.target.value) as UserStatusEnum,
                 }))
               }
-              className="min-w-40 appearance-none rounded-2xl border border-border bg-bg-card py-3 pl-9 pr-8 text-sm text-white outline-none transition focus:border-primary"
+              className="min-w-40 appearance-none rounded-2xl border border-border bg-bg-card py-3 pl-9 pr-8 text-sm text-text outline-none transition focus:border-primary"
             >
               <option value={UserStatusEnum.All}>All Statuses</option>
               <option value={UserStatusEnum.Online}>Online</option>
@@ -166,7 +167,7 @@ function SearchTab() {
                 className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-card/70 px-4 py-4"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-white">
+                  <p className="truncate font-medium text-text">
                     {displayName(user)}
                   </p>
                   <p className="truncate text-xs text-text-muted">
@@ -179,13 +180,13 @@ function SearchTab() {
                     Request Sent
                   </span>
                 ) : (
-                  <button
+                  <TButton
                     onClick={() => void handleSendRequest(user.id)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover"
+                    size="sm"
+                    leftIcon={<UserPlus className="h-4 w-4" />}
                   >
-                    <UserPlus className="h-4 w-4" />
                     Add
-                  </button>
+                  </TButton>
                 )}
               </div>
             ))

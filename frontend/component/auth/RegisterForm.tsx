@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TTextField } from "@/component/common/TTextField";
@@ -34,10 +35,7 @@ function RegisterForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [userName, setUserName] = useState("");
-  const [apiError, setApiError] = useState({
-    link: "",
-    message: "",
-  });
+  const [apiError, setApiError] = useState({ link: "", message: "" });
 
   const [errors, setErrors] = useState({
     email: "",
@@ -47,6 +45,7 @@ function RegisterForm() {
     lastName: "",
     userName: "",
   });
+
   const validate = (
     emailVal: string,
     passwordVal: string,
@@ -67,15 +66,17 @@ function RegisterForm() {
       userName: userNameVal.trim() ? "" : t.dynamicFieldRequired(t.userName),
     };
   };
+
   const handleChange = (field: FieldRegisterEnum, value: string) => {
-    if (field == FieldRegisterEnum.email) setEmail(value);
-    if (field == FieldRegisterEnum.password) setPassword(value);
-    if (field == FieldRegisterEnum.firstName) setFirstName(value);
-    if (field == FieldRegisterEnum.lastName) setLastName(value);
-    if (field == FieldRegisterEnum.userName) setUserName(value);
-    if (field == FieldRegisterEnum.confirmPassword) setConfirmPassword(value);
+    if (field === FieldRegisterEnum.email) setEmail(value);
+    if (field === FieldRegisterEnum.password) setPassword(value);
+    if (field === FieldRegisterEnum.firstName) setFirstName(value);
+    if (field === FieldRegisterEnum.lastName) setLastName(value);
+    if (field === FieldRegisterEnum.userName) setUserName(value);
+    if (field === FieldRegisterEnum.confirmPassword) setConfirmPassword(value);
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
   const register = async () => {
     try {
       const nextErrors = validate(
@@ -88,6 +89,7 @@ function RegisterForm() {
       setErrors(nextErrors);
       if (Object.values(nextErrors).some((error) => error)) return;
       setLoading(true);
+
       await authService.register({
         email,
         password,
@@ -95,7 +97,6 @@ function RegisterForm() {
         lastName,
         userName,
       });
-
       authFlow.set({
         email,
         register: { firstName, lastName, userName, password },
@@ -104,24 +105,17 @@ function RegisterForm() {
       router.push("/email-verify");
     } catch (e) {
       const err = e as AxiosError<IApiResponse<unknown>>;
-      const code =
-        err?.response?.data?.errorCode ?? err?.response?.data?.errorCode;
+      const code = err?.response?.data?.errorCode;
 
-      if (code === ErrorCodeEnum.EmailAlreadyExists)
-        setApiError({
-          link: "/login",
-          message:
-            t.RegisterErrorCodeEnum[
-              code as keyof typeof t.RegisterErrorCodeEnum
-            ] ||
-            err?.response?.data?.message ||
-            t.unknownError,
-        });
-      else {
-        setApiError({
-          link: "",
-          message: err?.response?.data?.message || t.unknownError,
-        });
+      const errorMessage =
+        t.RegisterErrorCodeEnum[code as keyof typeof t.RegisterErrorCodeEnum] ||
+        err?.response?.data?.message ||
+        t.unknownError;
+
+      if (code === ErrorCodeEnum.EmailAlreadyExists) {
+        setApiError({ link: "/login", message: errorMessage });
+      } else {
+        setApiError({ link: "", message: errorMessage });
       }
     } finally {
       setLoading(false);
@@ -129,94 +123,114 @@ function RegisterForm() {
   };
 
   return (
-    <div className="space-y-5">
-      <TTextField
-        label={t.firstName}
-        placeholder={t.placeholder.firstName}
-        value={firstName}
-        onChange={(e) =>
-          handleChange(FieldRegisterEnum.firstName, e.target.value)
-        }
-        error={errors.firstName}
-        required
-      />
-      <TTextField
-        label={t.lastName}
-        placeholder={t.placeholder.lastName}
-        value={lastName}
-        onChange={(e) =>
-          handleChange(FieldRegisterEnum.lastName, e.target.value)
-        }
-        error={errors.lastName}
-        required
-      />
-      <TTextField
-        label={t.email}
-        placeholder={t.placeholder.email}
-        value={email}
-        onChange={(e) => handleChange(FieldRegisterEnum.email, e.target.value)}
-        error={errors.email}
-        type="email"
-        required
-        className="md:col-span-2"
-      />
-      <TTextField
-        label={t.userName}
-        placeholder={t.placeholder.userName}
-        value={userName}
-        onChange={(e) =>
-          handleChange(FieldRegisterEnum.userName, e.target.value)
-        }
-        error={errors.userName}
-        required
-        className="md:col-span-2"
-      />
-      <TTextField
-        label={t.password}
-        placeholder={t.placeholder.password}
-        value={password}
-        onChange={(e) =>
-          handleChange(FieldRegisterEnum.password, e.target.value)
-        }
-        error={errors.password}
-        type="password"
-        required
-        className="md:col-span-2"
-      />
-      <TTextField
-        label={t.confirmPassword}
-        placeholder={t.placeholder.confirmPassword}
-        value={confirmPassword}
-        onChange={(e) =>
-          handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
-        }
-        error={errors.confirmPassword}
-        type="password"
-        required
-        className="md:col-span-2"
-      />
+    <div className="w-full max-w-xl p-6 sm:p-8 bg-surface-alt/40 border border-border/60 rounded-lg shadow-md ">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TTextField
+          label={t.firstName}
+          placeholder={t.placeholder.firstName}
+          value={firstName}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.firstName, e.target.value)
+          }
+          error={errors.firstName}
+          required
+          className="transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+        <TTextField
+          label={t.lastName}
+          placeholder={t.placeholder.lastName}
+          value={lastName}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.lastName, e.target.value)
+          }
+          error={errors.lastName}
+          required
+          className="transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+        <TTextField
+          label={t.email}
+          placeholder={t.placeholder.email}
+          value={email}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.email, e.target.value)
+          }
+          error={errors.email}
+          type="email"
+          required
+          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+        <TTextField
+          label={t.userName}
+          placeholder={t.placeholder.userName}
+          value={userName}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.userName, e.target.value)
+          }
+          error={errors.userName}
+          required
+          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+        <TTextField
+          label={t.password}
+          placeholder={t.placeholder.password}
+          value={password}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.password, e.target.value)
+          }
+          error={errors.password}
+          type="password"
+          required
+          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+        <TTextField
+          label={t.confirmPassword}
+          placeholder={t.placeholder.confirmPassword}
+          value={confirmPassword}
+          onChange={(e) =>
+            handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
+          }
+          error={errors.confirmPassword}
+          type="password"
+          required
+          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
+        />
+      </div>
 
       {apiError.message && (
-        <div className="text-sm text-red-500">
-          {apiError.message}{" "}
+        <div className="text-sm mt-4 p-3 rounded-md bg-error-bg border border-error/20 text-error flex flex-col gap-1">
+          <span>{apiError.message}</span>
           {apiError.link && (
-            <Link href={apiError.link} className="text-primary font-medium">
+            <Link
+              href={apiError.link}
+              className="text-primary hover:text-primary-hover font-medium underline transition-colors self-start"
+            >
               {t.goToLogin}
             </Link>
           )}
         </div>
       )}
-      <TButton loading={loading} className="w-full" onClick={register}>
-        {loading ? t.createElipses : t.create}
-      </TButton>
 
-      <div className="text-sm text-center">
-        {t.haveAccount}{" "}
-        <a href="/login" className="text-primary font-medium">
-          {t.signIn}
-        </a>
+      <div className="mt-6 space-y-4">
+        <TButton
+          loading={loading}
+          className="w-full shadow-sm hover:shadow-glow"
+          onClick={register}
+        >
+          {loading ? t.createElipses : t.create}
+        </TButton>
+
+        <div className="text-sm text-center text-text-secondary pt-2 border-t border-border/40">
+          {t.haveAccount}{" "}
+          <Link
+            href="/login"
+            className="text-primary hover:text-primary-hover font-semibold transition-colors px-1"
+          >
+            {t.signIn}
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
+
 export { RegisterForm };

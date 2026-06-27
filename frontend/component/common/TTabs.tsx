@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { TTabsProps } from "./def/TTabs";
+import { TButton } from "./TButton";
 
 function TTabs({ tabs, value, onChange }: TTabsProps) {
   return (
@@ -8,7 +9,7 @@ function TTabs({ tabs, value, onChange }: TTabsProps) {
         const active = value === tab.id;
 
         return (
-          <button
+          <TButton
             key={tab.id}
             role="tab"
             disabled={tab.disabled}
@@ -17,13 +18,13 @@ function TTabs({ tabs, value, onChange }: TTabsProps) {
             className={clsx(
               "flex items-center gap-2 px-4 py-2 rounded-t-xl transition-all",
               active
-                ? "bg-primary text-white"
+                ? "bg-primary text-text"
                 : "text-text-secondary hover:bg-primary/10",
             )}
           >
             {tab.icon}
             {tab.label}
-          </button>
+          </TButton>
         );
       })}
     </div>

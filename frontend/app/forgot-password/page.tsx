@@ -16,13 +16,16 @@ import { AuthFlowAnimationEnum } from "@/types";
 import { authService } from "@/services/def/AuthService";
 import type { TTextFieldTranslation } from "@/component/i18n/TTextField/en.i18n";
 
-function ForgetPassswordPage() {
+function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
   }) as TForgotPasswordTranslation & TTextFieldTranslation;
+
   const [errors, setErrors] = useState({
     email: "",
   });
@@ -41,25 +44,39 @@ function ForgetPassswordPage() {
   const send = async () => {
     const nextErrors = validate(email);
     setErrors(nextErrors);
-    if (Object.values(nextErrors).some((error) => error)) return;
-    await authService.forgotPassword({ email });
-    authFlow.set({ email });
-    router.push("/reset-password");
+    if (Object.values(nextErrors).some((error) => error) || loading) return;
+
+    try {
+      setLoading(true);
+      await authService.forgotPassword({ email });
+      authFlow.set({ email });
+      router.push("/reset-password");
+    } catch (error) {
+      console.error("Forgot password request failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout page={AuthFlowAnimationEnum.RESET_PASSWORD}>
-      <TTextField
-        label={t.email}
-        value={email}
-        type="email"
-        required
-        error={errors.email}
-        onChange={(e) => handleChange(e.target.value)}
-      />
-      <br />
-      <TButton title={t.sendCode} loading={false} onClick={send} />
+      <div className="w-full space-y-5">
+        <TTextField
+          label={t.email}
+          placeholder={t.placeholder.email}
+          value={email}
+          type="email"
+          required
+          error={errors.email}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-full"
+        />
+        <TButton loading={loading} onClick={send} className="w-full shadow-md">
+          {t.sendCode}
+        </TButton>
+      </div>
     </AuthLayout>
   );
 }
-export default ForgetPassswordPage;
+
+export default ForgotPasswordPage;

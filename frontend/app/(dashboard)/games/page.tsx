@@ -34,10 +34,10 @@ function GamesPage() {
       <div className="text-center animate-fade-in">
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-primary via-neon-cyan to-neon-cyan flex items-center justify-center">
-            <Gamepad2 className="w-7 h-7 text-white" />
+            <Gamepad2 className="w-7 h-7 text-text" />
           </div>
         </div>
-        <h1 className="text-4xl font-black tracking-tight mb-2 text-white">
+        <h1 className="text-4xl font-black tracking-tight mb-2 text-text">
           {t.title}
         </h1>
         <p className="text-text-secondary text-sm mb-8">{t.subtitle}</p>
@@ -48,7 +48,7 @@ function GamesPage() {
               href={g.path}
               className="group block bg-bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors"
             >
-              <h3 className="text-lg font-bold text-white mb-1">{g.name}</h3>
+              <h3 className="text-lg font-bold text-text mb-1">{g.name}</h3>
               <p className="text-xs text-text-secondary mb-4">{g.desc}</p>
               <div
                 className={`inline-flex items-center gap-1.5 text-xs font-bold bg-linear-to-r ${g.color} bg-clip-text text-transparent`}
@@ -62,4 +62,4 @@ function GamesPage() {
     </div>
   );
 }
-export { GamesPage };
+export default GamesPage;

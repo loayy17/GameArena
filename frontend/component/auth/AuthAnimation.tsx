@@ -14,10 +14,10 @@ function AuthAnimation({ page, className, pathAnimation }: TAnimationProps) {
 
   return (
     <div
-      className={`w-full lg:w-1/2 relative overflow-hidden flex flex-col items-center justify-start pt-14 pb-8 lg:justify-center lg:py-0 px-6 rounded-b-2xl lg:rounded-2xl m-0 lg:m-6 ${className || ""}`}
+      className={`w-full lg:w-1/2 relative overflow-hidden flex flex-col items-center justify-start lg:justify-center rounded-b-2xl m-0 p-12 ${className || ""}`}
     >
       <div className="relative z-10 flex flex-col items-center w-full max-w-md">
-        <div className="w-48 h-48 lg:w-64 lg:h-64">
+        <div className="w-48 h-48 lg:w-64 lg:h-64 drop-shadow-xl">
           <LottiePlayer
             autoplay
             loop
@@ -25,11 +25,11 @@ function AuthAnimation({ page, className, pathAnimation }: TAnimationProps) {
             className="w-full h-full"
           />
         </div>
-        <div className="text-center mt-4 lg:mt-8">
-          <h2 className="text-white text-2xl lg:text-3xl font-bold mb-2">
+        <div className="text-center mt-6 lg:mt-8 px-4">
+          <h2 className="text-text text-2xl lg:text-3xl font-bold tracking-tight mb-2">
             {t.authTitle[page]}
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.45)" }} className="text-sm">
+          <p className="text-text-secondary text-sm font-medium max-w-xs mx-auto">
             {t.authSubtitle[page]}
           </p>
         </div>

@@ -8,7 +8,7 @@ function SettingsPage() {
   return (
     <div className="flex items-center justify-center h-full relative z-10">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-white mb-2">{t.title}</h1>
+        <h1 className="text-2xl font-bold text-text mb-2">{t.title}</h1>
         <p className="text-text-muted text-sm">{t.comingSoon}</p>
       </div>
     </div>

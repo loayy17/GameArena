@@ -4,11 +4,13 @@ import { forwardRef } from "react";
 import clsx from "clsx";
 import { TButtonProps } from "./def/TButton";
 import { sizes } from "@/types";
-
+import { useTranslation } from "@/Hooks/useTranslation";
+import { en, type TButtonTranslation } from "@/component/i18n/TButton/en.i18n";
+import { ar } from "@/component/i18n/TButton/ar.i18n";
 const variants = {
   primary: "bg-primary text-white hover:bg-primary-hover",
-  secondary: "bg-surface border border-border hover:border-primary",
-  ghost: "hover:bg-primary/10",
+  secondary: "bg-surface border border-border text-text hover:border-primary",
+  ghost: "hover:bg-primary/10 text-text-secondary hover:text-text",
   danger: "bg-red-500 text-white hover:bg-red-600",
 };
 
@@ -28,7 +30,7 @@ const TButton = forwardRef<HTMLButtonElement, TButtonProps>(
     ref,
   ) => {
     const isDisabled = disabled || loading;
-
+    const t = useTranslation({ en, ar }) as TButtonTranslation;
     return (
       <button
         ref={ref}
@@ -42,13 +44,10 @@ const TButton = forwardRef<HTMLButtonElement, TButtonProps>(
         )}
         {...props}
       >
-        {loading && (
-          <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        )}
+        {loading && t.loading}
 
         {!loading && leftIcon}
-
-        {children}
+        {!loading && children}
 
         {!loading && rightIcon}
       </button>

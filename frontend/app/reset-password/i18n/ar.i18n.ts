@@ -9,6 +9,9 @@ const ar = {
   otpVerified: "تم التحقق من رمز التحقق بنجاح",
   passwordResetSuccess: "تم إعادة تعيين كلمة المرور بنجاح",
   passwordResetError: "فشل في إعادة تعيين كلمة المرور",
+  placeholder: {
+    newPassword: "أدخل كلمة المرور الجديدة",
+  },
 };
 
 export { ar };

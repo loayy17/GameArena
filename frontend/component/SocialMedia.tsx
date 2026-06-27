@@ -73,12 +73,14 @@ function SocialPanel() {
       <div
         className={`flex h-16 items-center border-b border-border px-4 ${collapsed ? "justify-center" : "justify-end"}`}
       >
-        <button
+        <TButton
+          variant="secondary"
+          size="sm"
           onClick={() => setCollapsed(!collapsed)}
-          className="cursor-pointer rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text"
+          className="cursor-pointer rounded-lg p-2 transition-colors hover:bg-surface-alt hover:text-text"
         >
           {collapsed ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-        </button>
+        </TButton>
       </div>
 
       {!collapsed && (
@@ -110,7 +112,7 @@ function SocialPanel() {
                       <Gamepad2 className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white">
+                      <p className="truncate text-sm font-semibold text-text">
                         {invite.inviterName || "A friend"}
                       </p>
                       <p className="text-xs text-text-muted">
@@ -154,7 +156,7 @@ function SocialPanel() {
           </p>
         ) : (
           friends.map((friend) => (
-            <button
+            <TButton
               key={friend.id}
               onClick={() => router.push(`/messages?friend=${friend.id}`)}
               className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-surface-alt ${collapsed ? "justify-center" : ""}`}
@@ -179,7 +181,7 @@ function SocialPanel() {
                   </p>
                 </div>
               )}
-            </button>
+            </TButton>
           ))
         )}
       </div>

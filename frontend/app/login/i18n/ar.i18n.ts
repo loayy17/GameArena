@@ -7,9 +7,7 @@ const ar = {
   loggingIn: "جار تسجيل الدخول...",
   signIn: "تسجيل الدخول",
   email: "البريد الإلكتروني",
-  emailPlaceholder: "أدخل بريدك الإلكتروني",
   password: "كلمة المرور",
-  passwordPlaceholder: "أدخل كلمة المرور الخاصة بك",
   forgotPassword: "نسيت كلمة المرور؟",
   dontHaveAccount: "ليس لديك حساب؟",
   register: "تسجيل",
@@ -27,6 +25,10 @@ const ar = {
     [ErrorCodeEnum.TokenExpired]: "انتهت صلاحية الرمز",
     [ErrorCodeEnum.EmailNotVerified]: "البريد الإلكتروني غير مؤكد",
     [ErrorCodeEnum.RefreshTokenInvalid]: "رمز التحديث غير صالح",
+  },
+  placeholder: {
+    email: "أدخل بريدك الإلكتروني",
+    password: "أدخل كلمة المرور الخاصة بك",
   },
 };
 

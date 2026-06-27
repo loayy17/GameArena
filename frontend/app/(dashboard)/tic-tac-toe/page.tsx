@@ -2,6 +2,7 @@
 
 import { useTicTacToe } from "@/Hooks/useTicTacToe";
 import { useAuth } from "@/app/AuthProvider";
+import { TButton } from "@/component/common/TButton";
 import {
   Swords,
   Trophy,
@@ -85,15 +86,15 @@ function TicTacToePage() {
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] w-full py-8 px-4 md:px-8 relative z-10">
       {/* LOBBY / MATCHMAKING CARD */}
       {!roomId && (
-        <div className="w-full max-w-md bg-bg-card/70 backdrop-blur-xl border border-border/80 rounded-3xl p-8 shadow-2xl text-center animate-fade-in relative overflow-hidden">
+        <div className="w-full max-w-md bg-bg-card/70 border border-border/80 rounded-3xl p-8 shadow-2xl text-center animate-fade-in relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-neon-cyan/5 rounded-full blur-2xl" />
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary to-neon-purple flex items-center justify-center shadow-[0_0_25px_-5px_#7c5cfc]">
-              <Swords className="w-8 h-8 text-white" />
+              <Swords className="w-8 h-8 text-text" />
             </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-white">
+          <h1 className="text-3xl font-black tracking-tight mb-2 text-text">
             Tic Tac{" "}
             <span className="bg-linear-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
               Toe
@@ -109,30 +110,30 @@ function TicTacToePage() {
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white animate-pulse">
+                <p className="text-sm font-semibold text-text animate-pulse">
                   Searching for opponent...
                 </p>
                 <p className="text-xs text-text-muted mt-1">
                   Checking GameArena servers
                 </p>
               </div>
-              <button
+              <TButton
                 onClick={resetGame}
-                className="w-full py-3 bg-surface hover:bg-surface-alt text-text-secondary hover:text-white rounded-xl border border-border transition-all text-sm font-bold"
+                className="w-full py-3 bg-surface hover:bg-surface-alt text-text-secondary hover:text-text rounded-xl border border-border transition-all text-sm font-bold"
               >
                 Cancel Search
-              </button>
+              </TButton>
             </div>
           ) : (
             <div className="space-y-4">
-              <button
+              <TButton
                 onClick={findMatch}
                 disabled={!isConnected}
-                className="w-full py-4 bg-linear-to-r from-primary to-primary-hover text-white rounded-xl font-bold shadow-[0_4px_20px_rgba(124,92,252,0.3)] hover:shadow-[0_4px_25px_rgba(124,92,252,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-4 bg-linear-to-r from-primary to-primary-hover text-text rounded-xl font-bold shadow-[0_4px_20px_rgba(124,92,252,0.3)] hover:shadow-[0_4px_25px_rgba(124,92,252,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Sparkles className="w-5 h-5" />
                 Find Match
-              </button>
+              </TButton>
               {!isConnected && (
                 <p className="text-xs text-error bg-error-bg py-2 rounded-lg">
                   Connecting to Game Server...
@@ -146,13 +147,13 @@ function TicTacToePage() {
       {/* WAITING FOR OPPONENT */}
       {roomId && !gameState?.player2Id && (
         <div className="w-full max-w-lg space-y-6 animate-fade-in">
-          <div className="grid grid-cols-7 items-center bg-bg-card/50 backdrop-blur-xl border border-border/60 rounded-2xl p-4 shadow-lg">
+          <div className="grid grid-cols-7 items-center bg-bg-card/50  border border-border/60 rounded-2xl p-4 shadow-lg">
             {/* Player 1 */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
               <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-border-light bg-surface">
                 <User className="w-8 h-8 text-text-secondary" />
               </div>
-              <span className="text-sm font-semibold text-white mt-3 truncate max-w-full">
+              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player1Id === user?.id
                   ? `${myName} (You)`
                   : gameState?.player1Username || "Player 1"}
@@ -168,7 +169,7 @@ function TicTacToePage() {
               <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-border-light bg-surface">
                 <User className="w-8 h-8 text-text-secondary" />
               </div>
-              <span className="text-sm font-semibold text-white mt-3 truncate max-w-full">
+              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player2Id === user?.id
                   ? `${myName} (You)`
                   : gameState?.player2Username || "Player 2"}
@@ -185,7 +186,7 @@ function TicTacToePage() {
       {roomId && gameState?.player2Id && (
         <div className="w-full max-w-lg space-y-6 animate-fade-in">
           {/* PLAYERS PANEL */}
-          <div className="grid grid-cols-7 items-center bg-bg-card/50 backdrop-blur-xl border border-border/60 rounded-2xl p-4 shadow-lg">
+          <div className="grid grid-cols-7 items-center bg-bg-card/50  border border-border/60 rounded-2xl p-4 shadow-lg">
             {/* Player 1 (X) */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
               <div
@@ -201,7 +202,7 @@ function TicTacToePage() {
                   X
                 </span>
               </div>
-              <span className="text-sm font-semibold text-white mt-3 truncate max-w-full">
+              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player1Id === user?.id
                   ? `${myName} (You)`
                   : gameState?.player1Username || "Player 1"}
@@ -231,11 +232,11 @@ function TicTacToePage() {
                 }`}
               >
                 <User className="w-8 h-8 text-text-secondary" />
-                <span className="absolute -bottom-2 -left-2 w-6 h-6 rounded-md bg-neon-magenta text-white font-black text-xs flex items-center justify-center shadow-md">
+                <span className="absolute -bottom-2 -left-2 w-6 h-6 rounded-md bg-neon-magenta text-text font-black text-xs flex items-center justify-center shadow-md">
                   O
                 </span>
               </div>
-              <span className="text-sm font-semibold text-white mt-3 truncate max-w-full">
+              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player2Id === user?.id
                   ? `${myName} (You)`
                   : gameState?.player2Username || "Player 2"}
@@ -254,7 +255,7 @@ function TicTacToePage() {
             <div
               className={`w-full py-3 px-4 rounded-xl border text-center font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
                 isMyTurn
-                  ? "bg-primary-muted border-primary/30 text-white animate-pulse"
+                  ? "bg-primary-muted border-primary/30 text-text animate-pulse"
                   : "bg-surface border-border text-text-secondary"
               }`}
             >
@@ -269,12 +270,12 @@ function TicTacToePage() {
 
           {/* BOARD */}
           <div className="relative">
-            <div className="grid grid-cols-3 gap-3 bg-bg-card/75 backdrop-blur-xl border border-border/80 rounded-3xl p-5 shadow-2xl relative">
+            <div className="grid grid-cols-3 gap-3 bg-bg-card/75 border border-border/80 rounded-3xl p-5 shadow-2xl relative">
               {board.map((cell, i) => {
                 const isCellActive =
                   !cell && isMyTurn && !gameState?.isFinished;
                 return (
-                  <button
+                  <TButton
                     key={i}
                     onClick={() => handleClick(i)}
                     disabled={!isCellActive}
@@ -301,14 +302,14 @@ function TicTacToePage() {
                         {mySymbol}
                       </span>
                     )}
-                  </button>
+                  </TButton>
                 );
               })}
             </div>
 
             {/* END GAME OVERLAY */}
             {gameState?.isFinished && (
-              <div className="absolute inset-0 bg-bg-dark/95 backdrop-blur-sm rounded-3xl border border-border flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+              <div className="absolute inset-0 bg-bg/95 rounded-3xl border border-border flex flex-col items-center justify-center p-6 text-center animate-fade-in">
                 {getWinnerMessage().icon}
                 <h2
                   className={`text-2xl font-black mt-4 ${getWinnerMessage().color}`}
@@ -319,19 +320,19 @@ function TicTacToePage() {
                   {getWinnerMessage().description}
                 </p>
                 <div className="flex gap-4 mt-8 w-full max-w-xs">
-                  <button
+                  <TButton
                     onClick={findMatch}
-                    className="flex-1 py-3 bg-linear-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-white font-bold rounded-xl transition-all shadow-lg text-sm"
+                    className="flex-1 py-3 bg-linear-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-text font-bold rounded-xl transition-all shadow-lg text-sm"
                   >
                     Play Again
-                  </button>
-                  <button
+                  </TButton>
+                  <TButton
                     onClick={resetGame}
-                    className="flex-1 py-3 bg-surface hover:bg-surface-alt border border-border text-text-secondary hover:text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 bg-surface hover:bg-surface-alt border border-border text-text-secondary hover:text-text font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-1.5"
                   >
                     <Home className="w-4 h-4" />
                     Lobby
-                  </button>
+                  </TButton>
                 </div>
               </div>
             )}

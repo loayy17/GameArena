@@ -3,6 +3,7 @@
 import { Gamepad2, MessageSquare } from "lucide-react";
 import type { IFriendCardProps } from "./def/IFriendCard";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import { TButton } from "../common/TButton";
 
 const getStatusColor = (status?: UserStatusEnum) => {
   switch (status) {
@@ -29,24 +30,29 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => (
         className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-bg-card ${getStatusColor(user.status)}`}
       />
     </div>
-    <h3 className="text-white font-semibold mt-2">
+    <h3 className="text-text font-semibold mt-2">
       {user.fullName ??
         [user.firstName, user.lastName].filter(Boolean).join(" ")}
     </h3>
     <p className="text-text-secondary text-sm">@{user.userName}</p>
     <div className="flex gap-2 mt-4 w-full">
-      <button
+      <TButton
         onClick={onMessage}
-        className="flex-1 py-2 bg-primary text-white rounded-lg text-sm flex items-center justify-center gap-1 hover:bg-primary-hover transition"
+        size="sm"
+        className="flex-1"
+        leftIcon={<MessageSquare size={16} />}
       >
-        <MessageSquare size={16} /> Message
-      </button>
-      <button
+        Message
+      </TButton>
+      <TButton
         onClick={onInvite}
-        className="flex-1 py-2 bg-surface border hover:bg-surface-hover border-border text-text rounded-lg text-sm flex items-center justify-center gap-1 transition"
+        variant="secondary"
+        size="sm"
+        className="flex-1"
+        leftIcon={<Gamepad2 size={16} />}
       >
-        <Gamepad2 size={16} /> Invite
-      </button>
+        Invite
+      </TButton>
     </div>
   </div>
 );

@@ -14,11 +14,11 @@ function Home() {
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-neon-magenta flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-white" />
+              <Gamepad2 className="w-5 h-5 text-text" />
             </div>
           </div>
           <h1 className="text-4xl font-bold mb-1">
-            <span className="bg-linear-to-r from-white via-purple-200 to-zinc-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r test-text via-purple-200 to-zinc-400 bg-clip-text text-transparent">
               Game
             </span>
             <span className="bg-linear-to-r from-neon-cyan via-primary to-neon-magenta bg-clip-text text-transparent">
@@ -39,12 +39,10 @@ function Home() {
                 <div
                   className={`w-12 h-12 rounded-xl bg-linear-to-br ${game.gradient} flex items-center justify-center shrink-0`}
                 >
-                  <Icon className="w-6 h-6 text-white" />
+                  <Icon className="w-6 h-6 text-text" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-bold text-base">
-                    {game.name}
-                  </h3>
+                  <h3 className="text-text font-bold text-base">{game.name}</h3>
                   <p className="text-text-secondary text-sm">{game.desc}</p>
                 </div>
                 <ArrowRight className={`w-5 h-5 ${game.color} shrink-0`} />

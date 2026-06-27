@@ -1,5 +1,5 @@
 enum GamesKindEnum {
-  TicTacTao,
+  TicTacToe,
   PingPong,
   Snake,
 }

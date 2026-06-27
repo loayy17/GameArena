@@ -42,7 +42,7 @@ namespace ChatWebSignalR.Hubs
                 {
                     room = gameType switch
                     {
-                        GamesKind.TicTacTao => new TicTacTaoRoom(),
+                        GamesKind.TicTacToe => new TicTacTaoRoom(),
                         _ => throw new AppException(ErrorCode.InvalidGameType)
                     };
 
@@ -160,7 +160,7 @@ namespace ChatWebSignalR.Hubs
 
             var room = gameType switch
             {
-                GamesKind.TicTacTao => new TicTacTaoRoom
+                GamesKind.TicTacToe => new TicTacTaoRoom
                 {
                     Player1Id = playerId,
                     Player1Username = username,

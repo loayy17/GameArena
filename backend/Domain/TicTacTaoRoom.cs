@@ -5,7 +5,7 @@ namespace backend.Domain;
 
 public class TicTacTaoRoom : BaseGameRoom
 {
-    public TicTacTaoRoom() : base(GamesKind.TicTacTao) { }
+    public TicTacTaoRoom() : base(GamesKind.TicTacToe) { }
     public string[] Board { get; set; } = new string[9];
 
     public string CurrentTurnPlayerId { get; set; } = "";

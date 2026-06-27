@@ -8,6 +8,7 @@ import { FriendCard } from "@/component/friend/FriendCard";
 import { EmptyState } from "@/component/common/TEmpty";
 import { SkeletonCard } from "./SkeletonCard";
 import type { IUser } from "@/domain/meta/IUser";
+import { TButton } from "../common/TButton";
 
 interface FriendsTabProps {
   onMessage: (friendId: string) => void;
@@ -86,13 +87,13 @@ function FriendsTab({
       <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-5 text-rose-200">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm">{error}</p>
-          <button
+          <TButton
             onClick={() => void loadFriends()}
             className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-500/10"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
-          </button>
+          </TButton>
         </div>
       </div>
     );
@@ -105,12 +106,12 @@ function FriendsTab({
         title="No friends yet"
         description="Search for users and add them as friends."
       >
-        <button
+        <TButton
           onClick={onNavigateToSearch}
-          className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover"
+          className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-text transition hover:bg-primary-hover"
         >
           Add Friends
-        </button>
+        </TButton>
       </EmptyState>
     );
   }

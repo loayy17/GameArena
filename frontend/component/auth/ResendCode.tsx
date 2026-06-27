@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { IResendCodeProps } from "./def/ResendCode";
+import { TButton } from "../common/TButton";
 
 function ResendCode({ onResend, label }: IResendCodeProps) {
   const [loading, setLoading] = useState(false);
@@ -16,13 +17,14 @@ function ResendCode({ onResend, label }: IResendCodeProps) {
   };
 
   return (
-    <button
+    <TButton
+      variant="ghost"
       disabled={loading}
       onClick={handle}
       className="text-sm text-primary hover:underline disabled:opacity-50"
     >
       {loading ? "..." : label}
-    </button>
+    </TButton>
   );
 }
 

@@ -84,6 +84,7 @@ function ResetPassword() {
         <>
           <TTextField
             label={t.newPassword}
+            placeholder={t.placeholder.newPassword}
             type="password"
             value={newPassword}
             required
@@ -91,7 +92,9 @@ function ResetPassword() {
             onChange={(e) => handleChange(e.target.value)}
           />
           <br />
-          <TButton title={t.resetPassword} onClick={reset} disabled={loading} />
+          <TButton onClick={reset} disabled={loading}>
+            {t.resetPassword}
+          </TButton>
         </>
       )}
     </AuthLayout>
