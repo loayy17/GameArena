@@ -1,6 +1,6 @@
 const ar = {
-    title: "سجل المباريات",
-    comingSoon: "قريباً",
+  title: "سجل المباريات",
+  comingSoon: "قريباً",
 };
 
-export default ar;
+export { ar };

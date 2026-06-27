@@ -13,11 +13,11 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useTranslation } from "@/Hooks/useTranslation";
-import en from "./i18n/en.i18n";
-import ar from "./i18n/ar.i18n";
+// import { useTranslation } from "@/Hooks/useTranslation";
+// import { en, type TicTacToeTranslations } from "./i18n/en.i18n";
+// import { ar } from "./i18n/ar.i18n";
 
-export default function TicTacToePage() {
+function TicTacToePage() {
   const { user } = useAuth();
   const {
     board,
@@ -31,7 +31,7 @@ export default function TicTacToePage() {
     resetGame,
   } = useTicTacToe();
 
-  const t = useTranslation({ en, ar }); // used if you want i18n later
+  //   const t = useTranslation({ en, ar }) as TicTacToeTranslations; // used if you want i18n later
 
   const isMyTurn = gameState?.currentTurnPlayerId === user?.id;
   const mySymbol = gameState?.player1Id === user?.id ? "X" : "O";
@@ -89,13 +89,13 @@ export default function TicTacToePage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-neon-cyan/5 rounded-full blur-2xl" />
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-neon-purple flex items-center justify-center shadow-[0_0_25px_-5px_#7c5cfc]">
+            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary to-neon-purple flex items-center justify-center shadow-[0_0_25px_-5px_#7c5cfc]">
               <Swords className="w-8 h-8 text-white" />
             </div>
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-2 text-white">
             Tic Tac{" "}
-            <span className="bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
               Toe
             </span>
           </h1>
@@ -128,7 +128,7 @@ export default function TicTacToePage() {
               <button
                 onClick={findMatch}
                 disabled={!isConnected}
-                className="w-full py-4 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl font-bold shadow-[0_4px_20px_rgba(124,92,252,0.3)] hover:shadow-[0_4px_25px_rgba(124,92,252,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-4 bg-linear-to-r from-primary to-primary-hover text-white rounded-xl font-bold shadow-[0_4px_20px_rgba(124,92,252,0.3)] hover:shadow-[0_4px_25px_rgba(124,92,252,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Sparkles className="w-5 h-5" />
                 Find Match
@@ -161,7 +161,7 @@ export default function TicTacToePage() {
             {/* VS */}
             <div className="col-span-1 flex flex-col items-center justify-center">
               <span className="text-xs font-bold text-text-muted">VS</span>
-              <div className="w-[1px] h-10 bg-border/40 mt-1" />
+              <div className="w-px h-10 bg-border/40 mt-1" />
             </div>
             {/* Player 2 (waiting) */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
@@ -217,7 +217,7 @@ export default function TicTacToePage() {
             {/* VS */}
             <div className="col-span-1 flex flex-col items-center justify-center">
               <span className="text-xs font-bold text-text-muted">VS</span>
-              <div className="w-[1px] h-10 bg-border/40 mt-1" />
+              <div className="w-px h-10 bg-border/40 mt-1" />
             </div>
 
             {/* Player 2 (O) */}
@@ -321,7 +321,7 @@ export default function TicTacToePage() {
                 <div className="flex gap-4 mt-8 w-full max-w-xs">
                   <button
                     onClick={findMatch}
-                    className="flex-1 py-3 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-white font-bold rounded-xl transition-all shadow-lg text-sm"
+                    className="flex-1 py-3 bg-linear-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-white font-bold rounded-xl transition-all shadow-lg text-sm"
                   >
                     Play Again
                   </button>
@@ -341,3 +341,5 @@ export default function TicTacToePage() {
     </div>
   );
 }
+
+export default TicTacToePage;

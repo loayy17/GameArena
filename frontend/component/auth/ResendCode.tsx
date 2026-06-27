@@ -26,4 +26,4 @@ function ResendCode({ onResend, label }: IResendCodeProps) {
   );
 }
 
-export default ResendCode;
+export { ResendCode };

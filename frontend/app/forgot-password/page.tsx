@@ -2,26 +2,27 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import AuthLayout from "@/component/auth/AuthLayout";
-import TTextField from "@/component/common/TTextField";
-import TButton from "@/component/common/TButton";
-import { authFlow } from "@/lib/authflow";
-import en, { TForgotPasswordTranslation } from "./i18n/en.i18n";
-import ar from "./i18n/ar.i18n";
-import { default as EnTextField } from "@/component/i18n/TTextField/en.i18n";
-import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
+import { AuthLayout } from "@/component/auth/AuthLayout";
+import { TTextField } from "@/component/common/TTextField";
+import { TButton } from "@/component/common/TButton";
+import { authFlow } from "@/repositories/proxy/authflow";
+import { en, type TForgotPasswordTranslation } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
+import { en as EnTextField } from "@/component/i18n/TTextField/en.i18n";
+import { ar as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
 import { emailValidator } from "@/utils";
-import { authApi } from "@/lib/auth.api";
 import { AuthFlowAnimationEnum } from "@/types";
+import { authService } from "@/services/def/AuthService";
+import type { TTextFieldTranslation } from "@/component/i18n/TTextField/en.i18n";
 
-export default function Page() {
+function ForgetPassswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
-  }) as TForgotPasswordTranslation;
+  }) as TForgotPasswordTranslation & TTextFieldTranslation;
   const [errors, setErrors] = useState({
     email: "",
   });
@@ -41,7 +42,7 @@ export default function Page() {
     const nextErrors = validate(email);
     setErrors(nextErrors);
     if (Object.values(nextErrors).some((error) => error)) return;
-    await authApi.forgotPassword(email);
+    await authService.forgotPassword({ email });
     authFlow.set({ email });
     router.push("/reset-password");
   };
@@ -54,10 +55,11 @@ export default function Page() {
         type="email"
         required
         error={errors.email}
-        onChange={handleChange}
+        onChange={(e) => handleChange(e.target.value)}
       />
       <br />
       <TButton title={t.sendCode} loading={false} onClick={send} />
     </AuthLayout>
   );
 }
+export default ForgetPassswordPage;

@@ -1,20 +1,8 @@
-import { CSSProperties, MouseEvent } from "react";
-
-type TButtonProps = {
-  title: string;
-
-  type?: "button" | "submit" | "reset";
-
-  disabled?: boolean;
+interface TButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
-  required?: boolean;
-
-  className?: string;
-  style?: CSSProperties;
-
-  validationMessage?: string;
-
-  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
-};
-
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
+}
 export type { TButtonProps };

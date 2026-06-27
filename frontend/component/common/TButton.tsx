@@ -1,72 +1,61 @@
 "use client";
 
+import { forwardRef } from "react";
+import clsx from "clsx";
 import { TButtonProps } from "./def/TButton";
+import { sizes } from "@/types";
 
-function TButton({
-  title,
-  type = "button",
-  disabled = false,
-  loading = false,
-  required = false,
-  validationMessage,
-  className = "",
-  style,
-  onClick,
-}: TButtonProps) {
-  const isDisabled = disabled || loading;
+const variants = {
+  primary: "bg-primary text-white hover:bg-primary-hover",
+  secondary: "bg-surface border border-border hover:border-primary",
+  ghost: "hover:bg-primary/10",
+  danger: "bg-red-500 text-white hover:bg-red-600",
+};
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (isDisabled) return;
+const TButton = forwardRef<HTMLButtonElement, TButtonProps>(
+  (
+    {
+      children,
+      loading,
+      disabled,
+      variant = "primary",
+      size = "md",
+      className,
+      leftIcon,
+      rightIcon,
+      ...props
+    },
+    ref,
+  ) => {
+    const isDisabled = disabled || loading;
 
-    onClick?.(e);
-  };
-
-  return (
-    <div className="w-full">
+    return (
       <button
-        type={type}
+        ref={ref}
         disabled={isDisabled}
-        onClick={handleClick}
-        style={style}
-        className={`
-          w-full
-          rounded-xl
-          px-5
-          py-3
-          font-medium
-          transition-all
-          duration-200
-          active:scale-[0.98]
-
-          ${
-            isDisabled
-              ? "bg-gray-500/40 text-gray-300 cursor-not-allowed"
-              : "bg-primary text-white hover:bg-primary-hover"
-          }
-
-          ${className}
-        `}
+        className={clsx(
+          "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 active:scale-95",
+          variants[variant],
+          sizes[size],
+          isDisabled && "opacity-50 cursor-not-allowed",
+          className,
+        )}
+        {...props}
       >
-        <div className="flex items-center justify-center gap-2">
-          {loading && (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          )}
+        {loading && (
+          <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        )}
 
-          <span>{title}</span>
+        {!loading && leftIcon}
 
-          {required && (
-            <span className="text-red-400 font-bold" title="Required">
-              *
-            </span>
-          )}
-        </div>
+        {children}
+
+        {!loading && rightIcon}
       </button>
+    );
+  },
+);
 
-      {validationMessage && (
-        <p className="mt-2 text-xs text-red-500">{validationMessage}</p>
-      )}
-    </div>
-  );
-}
+TButton.displayName = "TButton";
 
-export default TButton;
+export { TButton };

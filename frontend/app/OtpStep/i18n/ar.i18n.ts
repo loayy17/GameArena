@@ -6,4 +6,4 @@ const ar = {
   resendCode: "إعادة إرسال الرمز",
 };
 
-export default ar;
+export { ar };

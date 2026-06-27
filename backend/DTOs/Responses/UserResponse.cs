@@ -15,6 +15,7 @@ namespace backend.DTOs.Responses
         public string LastName { get; set; } = string.Empty;
 
         public UserRole Role { get; set; }
+        public UserStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

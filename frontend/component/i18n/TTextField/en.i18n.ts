@@ -26,5 +26,5 @@ const en = {
   },
 };
 
-export default en;
-export type TTextFieldTranslation = typeof en;
+type TTextFieldTranslation = typeof en;
+export { en, type TTextFieldTranslation };

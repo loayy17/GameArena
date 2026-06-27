@@ -158,8 +158,7 @@ namespace ChatWebSignalR.Hubs
             string playerId = Context.UserIdentifier!;
             string username = Context.User?.Identity?.Name ?? "Player";
 
-        // Create room, add inviter
-        var room = gameType switch
+            var room = gameType switch
             {
                 GamesKind.TicTacTao => new TicTacTaoRoom
                 {
@@ -173,6 +172,7 @@ namespace ChatWebSignalR.Hubs
             Rooms[room.RoomId] = room;
             PlayerToRoom[playerId] = room.RoomId;
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
+            await Clients.Group(room.RoomId).SendAsync("gameState", room.GetStatePayload());
             await _chatHubContext.Clients.User(friendId).SendAsync("GameInvite", new
             {
                 roomId = room.RoomId,

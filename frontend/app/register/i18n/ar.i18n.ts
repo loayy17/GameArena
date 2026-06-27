@@ -1,31 +1,33 @@
-import { ErrorCode } from "@/types";
+import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
 
 const ar = {
   register: "تسجيل",
   createAccount: "قم بإنشاء حسابك وابدأ",
   fillRequiredFields: "يرجى تعبئة جميع الحقول المطلوبة",
   firstName: "الاسم الأول",
-  firstNamePlaceholder: "أدخل اسمك الأول",
   lastName: "الاسم الأخير",
-  lastNamePlaceholder: "أدخل اسمك الأخير",
-  username: "اسم المستخدم",
-  usernamePlaceholder: "أدخل اسم المستخدم الخاص بك",
+  userName: "اسم المستخدم",
   email: "البريد الإلكتروني",
-  emailPlaceholder: "أدخل بريدك الإلكتروني",
   password: "كلمة المرور",
-  passwordPlaceholder: "قم بإنشاء كلمة مرور",
   confirmPassword: "تأكيد كلمة المرور",
-  confirmPasswordPlaceholder: "أعد إدخال كلمة المرور الخاصة بك",
   createElipses: "جار إنشاء الحساب...",
   create: "إنشاء الحساب",
   haveAccount: "هل لديك حساب بالفعل؟",
   signIn: "تسجيل الدخول",
   joinUs: "انضم إلينا اليوم",
   RegisterErrorCodeEnum: {
-    [ErrorCode.EMailAlreadyExists]: "البريد الإلكتروني موجود بالفعل",
+    [ErrorCodeEnum.EmailAlreadyExists]: "البريد الإلكتروني موجود بالفعل",
   },
   goToLogin: "الذهاب إلى تسجيل الدخول",
   dynamicFieldRequired: (field: string) => `حقل ${field} مطلوب`,
+  placeholder: {
+    firstName: "أدخل اسمك الأول",
+    lastName: "أدخل اسمك الأخير",
+    userName: "أدخل اسم المستخدم الخاص بك",
+    email: "أدخل بريدك الإلكتروني",
+    password: "قم بإنشاء كلمة مرور",
+    confirmPassword: "أعد إدخال كلمة المرور الخاصة بك",
+  },
 };
 
-export default ar;
+export { ar };

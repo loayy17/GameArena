@@ -8,6 +8,5 @@ const en = {
   resendCodeFailed: "Failed to resend code",
 };
 
-export default en;
-
-export type TOtpTranslation = typeof en;
+type TOtpTranslation = typeof en;
+export { en, type TOtpTranslation };

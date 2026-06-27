@@ -3,7 +3,7 @@ export type AuthFlow = {
   register?: {
     firstName: string;
     lastName: string;
-    username: string;
+    userName: string;
     password: string;
   };
 };

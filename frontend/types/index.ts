@@ -1,31 +1,41 @@
+import type { IApiResponse } from "@/domain/meta/IApiResponse";
+import { IGameInvite } from "@/domain/meta/INotification";
+import {
+  Orbit,
+  Puzzle,
+  Swords,
+  Home,
+  Users,
+  Gamepad2,
+  History,
+  UserCircle,
+  Settings,
+  MessageSquare,
+} from "lucide-react";
+// usage
+
 // types.ts
 export type TLocale = "en" | "ar";
+export type TTheme = "light" | "dark";
 export type TSetLocale = (locale: TLocale) => void;
-export type THashMap = Record<string, unknown>;
+export type TSetTheme = (theme: TTheme) => void;
+export type THashMap<T = unknown> = Record<string, T>;
 export type TTranslate = { en: THashMap; ar: THashMap };
 export type TNullable<T> = T | null;
+export type TClass<T> = new (...args: unknown[]) => T;
+export type TEndpointsMap = THashMap<TEndpoint>;
+export type TEndpoint = {
+  verb: "get" | "post" | "put" | "delete";
+  template: string;
+};
+export type TPromise<T> = Promise<IApiResponse<T>>;
 
-export type Callable<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => string
-    ? (...args: A) => string
-    : T[K] extends string
-      ? () => string
-      : T[K] extends object
-        ? Callable<T[K]>
-        : never;
+export type TProxy<T extends TEndpointsMap> = {
+  [K in keyof T]: <TResult = unknown, TReq = unknown>(
+    payload?: TReq,
+  ) => TPromise<TResult>;
 };
 
-export enum GamesKindEnum {
-  TicTacTao,
-}
-
-export type TFieldRegister =
-  | "email"
-  | "password"
-  | "confirmPassword"
-  | "firstName"
-  | "lastName"
-  | "username";
 export type TFieldLogin = "email" | "password";
 
 export interface TicTacToeGameState {
@@ -41,20 +51,60 @@ export interface TicTacToeGameState {
   player2Username?: string;
 }
 
-export type TError = {
-  response?: {
-    data?: {
-      errorCode: ErrorCode;
-      success: boolean;
-      data?: TNullable<unknown>;
-      message?: TNullable<string>;
-    };
-  };
-  status?: number;
-};
-
 export type Validator = (value: string) => string | null;
+export type TGameInvitePayload = IGameInvite;
+export type TFriendRequestPayload = {
+  senderId: string;
+  receiverId: string;
+};
+export type TChatNotificationPayload = {
+  senderId: string;
+  receiverId: string;
+  content?: string | null;
+  sentAt: string | Date;
+  isRead?: boolean;
+};
+export const navItems = [
+  { id: "home", labelKey: "home", icon: Home },
+  { id: "friends", labelKey: "friends", icon: Users, badge: "friends" },
+  {
+    id: "messages",
+    labelKey: "messages",
+    icon: MessageSquare,
+    badge: "messages",
+  },
+  { id: "games", labelKey: "games", icon: Gamepad2 },
+  { id: "history", labelKey: "history", icon: History },
+  { id: "profile", labelKey: "profile", icon: UserCircle },
+  { id: "settings", labelKey: "settings", icon: Settings },
+];
 
+export const games = [
+  {
+    name: "Snake",
+    path: "/snake",
+    desc: "Classic arcade — eat & survive",
+    icon: Orbit,
+    gradient: "from-emerald-400 via-neon-green to-emerald-300",
+    color: "text-neon-green",
+  },
+  {
+    name: "Tic Tac Toe",
+    path: "/tic-tac-toe",
+    desc: "3×3 tactical duel",
+    icon: Puzzle,
+    gradient: "from-cyan-400 via-neon-cyan to-cyan-300",
+    color: "text-neon-cyan",
+  },
+  {
+    name: "Pong",
+    path: "/pong",
+    desc: "Retro table tennis",
+    icon: Swords,
+    gradient: "from-violet-400 via-neon-magenta to-violet-300",
+    color: "text-neon-magenta",
+  },
+];
 export enum PasswordValidationEnum {
   MinLength,
   MaxLength,
@@ -65,37 +115,14 @@ export enum PasswordValidationEnum {
   NoSpaces,
 }
 
-export type User = {
-  id: string;
-  userName: string;
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: number;
-  createdAt: string;
-  isVerified: boolean;
-};
+// EMPTY_GUID
+export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
-export enum ErrorCode {
-  None = 0,
-  InvalidCredentials = 1001,
-  Unauthorized = 1002,
-  TokenExpired = 1003,
-  EmailNotVerified = 1004,
-  RefreshTokenInvalid = 1005,
-  OtpInvalid = 2001,
-  OtpExpired = 2002,
-  OtpAlreadyUsed = 2003,
-  EmailNotFound = 2004,
-  EMailAlreadyExists = 2005,
-  UserNotFound = 3001,
-  UserAlreadyExists = 3002,
-  NoUsersFound = 3003,
-  NoFriendsFound = 3004,
-  ValidationError = 9001,
-  ServerError = 9002,
-}
+export const sizes = {
+  sm: "h-9 px-3 text-sm",
+  md: "h-11 px-5",
+  lg: "h-12 px-6 text-lg",
+};
 
 export enum AuthFlowAnimationEnum {
   LOGIN = "login",
@@ -104,11 +131,4 @@ export enum AuthFlowAnimationEnum {
   EMAIL_VERIFY = "email-verify",
   VERIFY_OTP = "verify-otp",
   SET_PASSWORD = "set-password",
-}
-
-export interface IApiResponse<T> {
-  success: boolean;
-  data: T;
-  ErrorCode: ErrorCode;
-  message: string;
 }

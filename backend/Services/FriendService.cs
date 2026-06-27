@@ -54,8 +54,15 @@ namespace backend.Services
                 ?? throw new AppException(ErrorCode.FriendRequestNotFound);
 
             request.Status = FriendRequestStatus.Accepted;
-            _context.UserFriends.Add(new UserFriends { UserId = userId, FriendId = senderId });
-            _context.UserFriends.Add(new UserFriends { UserId = senderId, FriendId = userId });
+            if (!await _context.UserFriends.AnyAsync(x => x.UserId == userId && x.FriendId == senderId))
+            {
+                _context.UserFriends.Add(new UserFriends { UserId = userId, FriendId = senderId });
+            }
+
+            if (!await _context.UserFriends.AnyAsync(x => x.UserId == senderId && x.FriendId == userId))
+            {
+                _context.UserFriends.Add(new UserFriends { UserId = senderId, FriendId = userId });
+            }
 
             await _context.SaveChangesAsync();
         }
@@ -73,25 +80,40 @@ namespace backend.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<UserResponse>> GetFriendsAsync(Guid userId, FriendFilterRequest filter)
+        public async Task<List<UserResponse>> GetFriendsAsync(Guid userId, UserFilterRequest filter)
         {
-            var friends = await _context.UserFriends
+            var query = _context.UserFriends
                 .Where(x => x.UserId == userId)
+                .Include(x => x.Friend)
                 .Select(x => x.Friend)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+            {
+                var searchTerm = filter.Name.ToLower();
+
+                query = query.Where(u =>
+                    (u.UserName != null && u.UserName.ToLower().Contains(searchTerm)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(searchTerm))
+                );
+            }
+
+            var friends = await query.ToListAsync();
 
             return friends.Select(MapperHelper.ToDto).ToList();
         }
-        public async Task<List<FriendResponse>> GetFriendRequestsAsync(Guid userId)
+
+        public async Task<List<FriendRequestReceivedResponse>> GetFriendRequestsAsync(Guid userId)
         {
             var requests = await _context.FriendRequests
                 .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
+                .Include(u => u.Sender)
                 .ToListAsync();
 
             return requests.Select(MapperHelper.ToDto).ToList();
         }
 
-        public async Task<List<SentResponse>> GetSentRequestsAsync(Guid userId)
+        public async Task<List<FriendRequestSentResponse>> GetSentRequestsAsync(Guid userId)
         {
             var requests = await _context.FriendRequests
                 .Where(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending)

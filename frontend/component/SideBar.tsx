@@ -1,52 +1,36 @@
 "use client";
 import { useAuth } from "@/app/AuthProvider";
-import { useLocale, useTranslation } from "@/Hooks/useTranslation";
-import {
-  Home,
-  Users,
-  MessageSquare,
-  Gamepad2,
-  History,
-  UserCircle,
-  Settings,
-  LogOut,
-  Hexagon,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { useTranslation } from "@/Hooks/useTranslation";
+import { useDashboardNotifications } from "@/app/(dashboard)/DashboardNotificationsProvider";
+import { LogOut, Hexagon, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import ar from "./i18n/SideBar/ar.i18n";
-import en, { TSidebarTranslation } from "./i18n/SideBar/en.i18n";
-import { authApi } from "@/lib/auth.api";
-
-const navItems = [
-  { id: "home", labelKey: "home", icon: Home },
-  { id: "friends", labelKey: "friends", icon: Users },
-  { id: "messages", labelKey: "messages", icon: MessageSquare },
-  { id: "games", labelKey: "games", icon: Gamepad2 },
-  { id: "history", labelKey: "history", icon: History },
-  { id: "profile", labelKey: "profile", icon: UserCircle },
-  { id: "settings", labelKey: "settings", icon: Settings },
-];
+import { ar } from "./i18n/SideBar/ar.i18n";
+import { en, type TSidebarTranslation } from "./i18n/SideBar/en.i18n";
+import { authService } from "@/services/def/AuthService";
+import { TBadge } from "./common/TBadge";
+import { TTile } from "./common/TTile";
+import { navItems } from "@/types";
+import { LangTheme } from "./common/LangTheme";
 
 function Sidebar() {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(true);
   const pathname = usePathname();
-  const [locale, setLocale] = useLocale();
   const t = useTranslation({ en, ar }) as TSidebarTranslation;
+  const { friendRequestCount, unreadMessageCount } =
+    useDashboardNotifications();
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      await authService.logout();
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
-      setUser(null); // clear user state immediately
-      router.replace("/login"); // navigate to login
+      setUser(null);
+      router.replace("/login");
     }
   };
   const isActive = (id: string) => {
@@ -70,7 +54,7 @@ function Sidebar() {
         ) : (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-neon-magenta flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-neon-magenta flex items-center justify-center">
                 <Hexagon className="w-4 h-4 text-white" />
               </div>
               <span className="font-bold text-white text-base">
@@ -87,28 +71,17 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Language Toggle */}
-      <div
-        className={`px-3 pt-3 pb-1 ${collapsed ? "flex justify-center" : ""}`}
-      >
-        <button
-          onClick={() => setLocale(locale === "en" ? "ar" : "en")}
-          className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-            collapsed ? "w-9 h-9" : "w-full"
-          } ${
-            locale === "en"
-              ? "bg-surface border-neon-cyan/30 text-neon-cyan hover:border-neon-cyan/60"
-              : "bg-surface border-primary/30 text-primary hover:border-primary/60"
-          }`}
-        >
-          {locale === "en" ? "AR" : "EN"}
-        </button>
-      </div>
-
       {/* Nav Items */}
       <nav className="flex-1 py-2 px-3 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
-        {navItems.map(({ id, labelKey, icon: Icon }) => {
+        {navItems.map(({ id, labelKey, icon: Icon, badge }) => {
           const active = isActive(id);
+          const badgeCount =
+            badge === "friends"
+              ? friendRequestCount
+              : badge === "messages"
+                ? unreadMessageCount
+                : 0;
+
           return (
             <Link
               key={id}
@@ -123,8 +96,16 @@ function Sidebar() {
             >
               <Icon size={20} />
               {!collapsed && (
-                <span className="truncate">
-                  {t[labelKey as keyof TSidebarTranslation]}
+                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="truncate">
+                    {t[labelKey as keyof TSidebarTranslation]}
+                  </span>
+                  {badgeCount > 0 && <TBadge count={badgeCount} />}
+                </span>
+              )}
+              {collapsed && badgeCount > 0 && (
+                <span className="absolute right-2 top-2">
+                  <TBadge count={badgeCount} />
                 </span>
               )}
             </Link>
@@ -151,11 +132,7 @@ function Sidebar() {
           className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}
         >
           <div className="relative shrink-0">
-            <img
-              src="https://i.pravatar.cc/150?img=3"
-              alt={user?.firstName || "User"}
-              className="w-9 h-9 rounded-lg object-cover"
-            />
+            {user && <TTile user={user} size="sm" />}
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-neon-green border-2 border-bg-sidebar" />
           </div>
           {!collapsed && (
@@ -170,6 +147,7 @@ function Sidebar() {
           )}
         </div>
       </div>
+      <LangTheme collapsed={collapsed} />
     </aside>
   );
 }

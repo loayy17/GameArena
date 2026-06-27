@@ -1,15 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import TButton from "@/component/common/TButton";
-import { IOtpFormProps } from "./def/OtpForm";
-import { emailApi } from "@/lib/email.api";
-import en from "../i18n/Otp/en.i18n";
-import ar from "../i18n/Otp/ar.i18n";
+import { TButton } from "@/component/common/TButton";
+import { emailVerficationService } from "@/services/def/EmailVerficationService";
+import { en, type TOtpTranslation } from "../i18n/Otp/en.i18n";
+import { ar } from "../i18n/Otp/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
-import { TOtpTranslation } from "../i18n/Otp/en.i18n";
+import type { IOtpFormProps } from "./def/OtpForm";
 
-export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
+function OtpForm({ email, onSuccess }: IOtpFormProps) {
   const [code, setCode] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState({ verify: false, resend: false });
   const [error, setError] = useState("");
@@ -37,7 +36,7 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
     try {
       setLoading((prev) => ({ ...prev, verify: true }));
       setError("");
-      await emailApi.verifyOtp({ email, otp });
+      await emailVerficationService.verifyOtp({ email, otp });
       onSuccess(otp);
     } catch {
       setError(t.invalidCode);
@@ -51,7 +50,7 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
     try {
       setLoading((prev) => ({ ...prev, resend: true }));
       setError("");
-      await emailApi.sendOtp({ email });
+      await emailVerficationService.sendOtp({ email });
     } catch {
       setError(t.resendCodeFailed);
     } finally {
@@ -83,3 +82,5 @@ export default function OtpForm({ email, onSuccess }: IOtpFormProps) {
     </div>
   );
 }
+
+export { OtpForm };

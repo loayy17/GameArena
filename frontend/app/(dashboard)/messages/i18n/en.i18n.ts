@@ -1,13 +1,24 @@
 const en = {
-    title: "Messages",
-    search: "Search conversations...",
-    online: "Online",
-    playing: "Playing",
-    offline: "Offline",
-    placeholder: "Type a message...",
-    empty: "Select a conversation to start chatting",
+  title: "Messages",
+  subtitle: "Talk with your friends in real time",
+  search: "Search friends...",
+  send: "Send",
+  placeholder: "Type a message...",
+  online: "Online",
+  playing: "Playing",
+  offline: "Offline",
+  connected: "Connected",
+  disconnected: "Disconnected",
+  noFriendsTitle: "No friends found",
+  noFriendsDescription: "Add friends first, then start a conversation here.",
+  noMessagesTitle: "No messages yet",
+  noMessagesDescription: "Say hello to start the conversation.",
+  selectConversationTitle: "Pick a conversation",
+  selectConversationDescription:
+    "Choose a friend from the list on the left to open the chat.",
+  noUsername: "No username",
 };
 
-export default en;
+type TMessagesTranslation = typeof en;
 
-export type TMessagesTranslation = typeof en;
+export { en, type TMessagesTranslation };

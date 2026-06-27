@@ -13,6 +13,7 @@ namespace backend.Data
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 var error = ErrorHelper.GetErrorResponse(ex);
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = error.StatusCode;

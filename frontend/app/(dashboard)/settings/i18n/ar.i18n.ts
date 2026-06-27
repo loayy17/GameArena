@@ -1,6 +1,6 @@
 const ar = {
-    title: "الإعدادات",
-    comingSoon: "قريباً",
+  title: "الإعدادات",
+  comingSoon: "قريباً",
 };
 
-export default ar;
+export { ar };

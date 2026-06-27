@@ -1,23 +1,26 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/app/network";
-import TTextField from "@/component/common/TTextField";
-import TButton from "@/component/common/TButton";
-import { authFlow } from "@/lib/authflow";
+import { TTextField } from "@/component/common/TTextField";
+import { TButton } from "@/component/common/TButton";
+import { authFlow } from "@/repositories/proxy/authflow";
 import { emailValidator, passwordValidator } from "@/utils";
-import en, { TRegisterTranslation } from "@/app/register/i18n/en.i18n";
-import ar from "@/app/register/i18n/ar.i18n";
+import { en, type TRegisterTranslation } from "@/app/register/i18n/en.i18n";
+import { ar } from "@/app/register/i18n/ar.i18n";
 import {
-  default as EnTextField,
+  en as EnTextField,
   TTextFieldTranslation,
 } from "@/component/i18n/TTextField/en.i18n";
-import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
+import { ar as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
-import { ErrorCode, TError, TFieldRegister } from "@/types";
 import Link from "next/link";
+import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
+import { authService } from "@/services/def/AuthService";
+import { FieldRegisterEnum } from "@/types/meta/TFieldRegister";
+import { AxiosError } from "axios";
+import { IApiResponse } from "@/domain/meta/IApiResponse";
 
-export default function RegisterForm() {
+function RegisterForm() {
   const router = useRouter();
   const t = useTranslation({
     en: { ...en, ...EnTextField },
@@ -30,7 +33,7 @@ export default function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
+  const [userName, setUserName] = useState("");
   const [apiError, setApiError] = useState({
     link: "",
     message: "",
@@ -42,35 +45,35 @@ export default function RegisterForm() {
     confirmPassword: "",
     firstName: "",
     lastName: "",
-    username: "",
+    userName: "",
   });
   const validate = (
     emailVal: string,
     passwordVal: string,
     firstNameVal: string,
     lastNameVal: string,
-    usernameVal: string,
+    userNameVal: string,
   ) => {
     return {
       email: emailValidator(t)(emailVal) || "",
       password: passwordValidator(t)(passwordVal) || "",
       confirmPassword: !confirmPassword.trim()
-        ? t.dynamicFieldRequired(t.firstName)
+        ? t.dynamicFieldRequired(t.confirmPassword)
         : passwordVal !== confirmPassword
           ? t.invalidConfirmPassword
           : "",
       firstName: firstNameVal.trim() ? "" : t.dynamicFieldRequired(t.firstName),
       lastName: lastNameVal.trim() ? "" : t.dynamicFieldRequired(t.lastName),
-      username: usernameVal.trim() ? "" : t.dynamicFieldRequired(t.username),
+      userName: userNameVal.trim() ? "" : t.dynamicFieldRequired(t.userName),
     };
   };
-  const handleChange = (field: TFieldRegister, value: string) => {
-    if (field == "email") setEmail(value);
-    if (field == "password") setPassword(value);
-    if (field == "firstName") setFirstName(value);
-    if (field == "lastName") setLastName(value);
-    if (field == "username") setUsername(value);
-    if (field == "confirmPassword") setConfirmPassword(value);
+  const handleChange = (field: FieldRegisterEnum, value: string) => {
+    if (field == FieldRegisterEnum.email) setEmail(value);
+    if (field == FieldRegisterEnum.password) setPassword(value);
+    if (field == FieldRegisterEnum.firstName) setFirstName(value);
+    if (field == FieldRegisterEnum.lastName) setLastName(value);
+    if (field == FieldRegisterEnum.userName) setUserName(value);
+    if (field == FieldRegisterEnum.confirmPassword) setConfirmPassword(value);
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
   const register = async () => {
@@ -80,30 +83,31 @@ export default function RegisterForm() {
         password,
         firstName,
         lastName,
-        username,
+        userName,
       );
       setErrors(nextErrors);
       if (Object.values(nextErrors).some((error) => error)) return;
       setLoading(true);
-      await api.post("/auth/register", {
+      await authService.register({
         email,
         password,
         firstName,
         lastName,
-        username,
+        userName,
       });
 
       authFlow.set({
         email,
-        register: { firstName, lastName, username, password },
+        register: { firstName, lastName, userName, password },
       });
 
       router.push("/email-verify");
     } catch (e) {
-      const err = e as TError;
-      const code = err?.response?.data?.errorCode;
+      const err = e as AxiosError<IApiResponse<unknown>>;
+      const code =
+        err?.response?.data?.errorCode ?? err?.response?.data?.errorCode;
 
-      if (code === ErrorCode.EMailAlreadyExists)
+      if (code === ErrorCodeEnum.EmailAlreadyExists)
         setApiError({
           link: "/login",
           message:
@@ -111,12 +115,12 @@ export default function RegisterForm() {
               code as keyof typeof t.RegisterErrorCodeEnum
             ] ||
             err?.response?.data?.message ||
-            "An error occurred",
+            t.unknownError,
         });
       else {
         setApiError({
           link: "",
-          message: err?.response?.data?.message || "An error occurred",
+          message: err?.response?.data?.message || t.unknownError,
         });
       }
     } finally {
@@ -128,44 +132,52 @@ export default function RegisterForm() {
     <div className="space-y-5">
       <TTextField
         label={t.firstName}
-        placeholder={t.firstNamePlaceholder}
+        placeholder={t.placeholder.firstName}
         value={firstName}
-        onChange={(v) => handleChange("firstName", v)}
+        onChange={(e) =>
+          handleChange(FieldRegisterEnum.firstName, e.target.value)
+        }
         error={errors.firstName}
         required
       />
       <TTextField
         label={t.lastName}
-        placeholder={t.lastNamePlaceholder}
+        placeholder={t.placeholder.lastName}
         value={lastName}
-        onChange={(v) => handleChange("lastName", v)}
+        onChange={(e) =>
+          handleChange(FieldRegisterEnum.lastName, e.target.value)
+        }
         error={errors.lastName}
         required
       />
       <TTextField
         label={t.email}
-        placeholder={t.emailPlaceholder}
+        placeholder={t.placeholder.email}
         value={email}
-        onChange={(v) => handleChange("email", v)}
+        onChange={(e) => handleChange(FieldRegisterEnum.email, e.target.value)}
         error={errors.email}
         type="email"
         required
         className="md:col-span-2"
       />
       <TTextField
-        label={t.username}
-        placeholder={t.usernamePlaceholder}
-        value={username}
-        onChange={(v) => handleChange("username", v)}
-        error={errors.username}
+        label={t.userName}
+        placeholder={t.placeholder.userName}
+        value={userName}
+        onChange={(e) =>
+          handleChange(FieldRegisterEnum.userName, e.target.value)
+        }
+        error={errors.userName}
         required
         className="md:col-span-2"
       />
       <TTextField
         label={t.password}
-        placeholder={t.passwordPlaceholder}
+        placeholder={t.placeholder.password}
         value={password}
-        onChange={(v) => handleChange("password", v)}
+        onChange={(e) =>
+          handleChange(FieldRegisterEnum.password, e.target.value)
+        }
         error={errors.password}
         type="password"
         required
@@ -173,16 +185,17 @@ export default function RegisterForm() {
       />
       <TTextField
         label={t.confirmPassword}
-        placeholder={t.confirmPasswordPlaceholder}
+        placeholder={t.placeholder.confirmPassword}
         value={confirmPassword}
-        onChange={(v) => handleChange("confirmPassword", v)}
+        onChange={(e) =>
+          handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
+        }
         error={errors.confirmPassword}
         type="password"
         required
         className="md:col-span-2"
       />
 
-      <br />
       {apiError.message && (
         <div className="text-sm text-red-500">
           {apiError.message}{" "}
@@ -193,12 +206,10 @@ export default function RegisterForm() {
           )}
         </div>
       )}
-      <TButton
-        title={loading ? t.createElipses : t.create}
-        loading={loading}
-        onClick={register}
-      />
-      <br />
+      <TButton loading={loading} className="w-full" onClick={register}>
+        {loading ? t.createElipses : t.create}
+      </TButton>
+
       <div className="text-sm text-center">
         {t.haveAccount}{" "}
         <a href="/login" className="text-primary font-medium">
@@ -208,3 +219,4 @@ export default function RegisterForm() {
     </div>
   );
 }
+export { RegisterForm };

@@ -66,5 +66,6 @@ const en = {
   },
 };
 
-export default en;
-export type TicTacToeTranslations = typeof en;
+type TicTacToeTranslations = typeof en;
+
+export { en, type TicTacToeTranslations };

@@ -1,38 +1,22 @@
 "use client";
 
-import { THashMap, TLocale, TTranslate } from "@/types";
-import { useEffect, useMemo, useState } from "react";
-let currentLocale: TLocale =
-  (window.localStorage.getItem("locale") as TLocale) || "ar";
-export async function initLocale() {
-  const locale = (window.localStorage.getItem("locale") as TLocale) || "ar";
-  currentLocale = locale;
-  document.documentElement.lang = locale;
-  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-}
+import { useMemo, useSyncExternalStore } from "react";
+import type { THashMap, TLocale, TTheme, TTranslate } from "@/types";
+
+/* -------------------------------- */
+/* Global State */
+/* -------------------------------- */
+
+let currentLocale: TLocale = "ar";
+let currentTheme: TTheme = "dark";
 
 const listeners = new Set<() => void>();
 
-export function setLocale(locale: TLocale): void {
-  if (currentLocale === locale) return;
-  window.localStorage.setItem("locale", locale);
-  window.document.documentElement.lang = locale;
-  window.document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-
-  currentLocale = locale;
-
-  listeners.forEach((listener) => {
-    listener();
-  });
+function emit() {
+  listeners.forEach((listener) => listener());
 }
 
-export function getLocale(): TLocale {
-  window.document.documentElement.lang = currentLocale;
-  window.document.documentElement.dir = currentLocale === "ar" ? "rtl" : "ltr";
-  return currentLocale;
-}
-
-export function subscribeLocale(listener: () => void): () => void {
+function subscribe(listener: () => void) {
   listeners.add(listener);
 
   return () => {
@@ -40,46 +24,160 @@ export function subscribeLocale(listener: () => void): () => void {
   };
 }
 
-export function useLocale() {
-  const [locale, setLocaleState] = useState<TLocale>(getLocale());
+/* -------------------------------- */
+/* DOM */
+/* -------------------------------- */
 
-  useEffect(() => {
-    return subscribeLocale(() => {
-      setLocaleState(getLocale());
-    });
-  }, []);
+function updateLocaleDOM(locale: TLocale) {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+}
+
+function updateThemeDOM(theme: TTheme) {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.dataset.theme = theme;
+}
+
+/* -------------------------------- */
+/* Init */
+/* -------------------------------- */
+
+let initialized = false;
+
+function init() {
+  if (initialized || typeof window === "undefined") {
+    return;
+  }
+
+  initialized = true;
+
+  currentLocale = (localStorage.getItem("locale") as TLocale) ?? "ar";
+
+  currentTheme = (localStorage.getItem("theme") as TTheme) ?? "dark";
+
+  updateLocaleDOM(currentLocale);
+  updateThemeDOM(currentTheme);
+}
+
+/* -------------------------------- */
+/* Locale */
+/* -------------------------------- */
+
+export function getLocale(): TLocale {
+  init();
+  return currentLocale;
+}
+
+export function setLocale(locale: TLocale) {
+  init();
+
+  if (locale === currentLocale) {
+    return;
+  }
+
+  currentLocale = locale;
+
+  localStorage.setItem("locale", locale);
+
+  updateLocaleDOM(locale);
+
+  emit();
+}
+
+/* -------------------------------- */
+/* Theme */
+/* -------------------------------- */
+
+export function getTheme(): TTheme {
+  init();
+  return currentTheme;
+}
+
+export function setTheme(theme: TTheme) {
+  init();
+
+  if (theme === currentTheme) {
+    return;
+  }
+
+  currentTheme = theme;
+
+  localStorage.setItem("theme", theme);
+
+  updateThemeDOM(theme);
+
+  emit();
+}
+
+/* -------------------------------- */
+/* Hooks */
+/* -------------------------------- */
+
+export function useLocale() {
+  const locale = useSyncExternalStore(subscribe, getLocale, () => "ar");
 
   return [locale, setLocale] as const;
 }
 
-function resolve(obj: THashMap, path: string[]) {
-  return path.reduce((acc, key) => acc?.[key], obj);
+export function useTheme() {
+  const theme = useSyncExternalStore(subscribe, getTheme, () => "dark");
+
+  return [theme, setTheme] as const;
 }
 
-function createProxy(langs: TTranslate, path: string[] = []) {
+function resolve(obj: THashMap, path: string[]): unknown {
+  return path.reduce((acc: unknown, key) => {
+    if (typeof acc !== "object" || acc === null) {
+      return undefined;
+    }
+
+    return (acc as THashMap)[key];
+  }, obj);
+}
+function createProxy(langs: TTranslate, path: string[] = []): unknown {
   return new Proxy(
     {},
     {
-      get(_, key: string | symbol) {
-        if (typeof key !== "string") return undefined;
+      get(_, key) {
+        if (typeof key !== "string") {
+          return undefined;
+        }
+
+        if (
+          [
+            "$$typeof",
+            "prototype",
+            "constructor",
+            "toJSON",
+            "toString",
+            "valueOf",
+          ].includes(key)
+        ) {
+          return undefined;
+        }
 
         const locale = langs[getLocale()] ?? langs.en;
 
-        const newPath = [...path, key];
+        const nextPath = [...path, key];
 
-        const value = resolve(locale, newPath);
+        const value = resolve(locale as THashMap, nextPath);
 
-        if (value && typeof value === "object") {
-          return createProxy(langs, newPath);
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          return createProxy(langs, nextPath);
         }
 
         if (value !== undefined) {
           return value;
         }
 
-        console.warn(`[i18n] missing key "${newPath.join(".")}"`);
+        if (process.env.NODE_ENV === "development") {
+          console.warn(`[i18n] missing key "${nextPath.join(".")}"`);
+        }
 
-        return newPath.join(".");
+        return nextPath.join(".");
       },
     },
   );
@@ -88,5 +186,5 @@ function createProxy(langs: TTranslate, path: string[] = []) {
 export function useTranslation<T>(langs: TTranslate): T {
   useLocale();
 
-  return useMemo(() => createProxy(langs), [langs]) as T;
+  return useMemo(() => createProxy(langs) as T, [langs]);
 }

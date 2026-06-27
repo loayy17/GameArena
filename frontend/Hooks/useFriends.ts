@@ -1,32 +1,30 @@
-// hooks/useFriends.ts
+// Hooks/useFriends.ts
 "use client";
 
-import { userApi } from "@/lib/user.api";
-import { User } from "@/types";
+import { friendService } from "@/services/def/FriendService";
+import type { IUser } from "@/domain/meta/IUser";
+import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceived";
+import type { IFriendRequestSent } from "@/domain/meta/IFriendRequestSent";
+import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { useState, useEffect, useCallback } from "react";
 
 export function useFriends() {
-  const [friends, setFriends] = useState<User[]>([]);
-  const [requests, setRequests] = useState<any[]>([]); // FriendRequestDto[]
+  const [friends, setFriends] = useState<IUser[]>([]);
+  const [requests, setRequests] = useState<IFriendRequestReceived[]>([]);
+  const [sentRequests, setSentRequests] = useState<IFriendRequestSent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sentRequests, setSentRequests] = useState<any[]>([]);
-
-  const cancelSentRequest = async (receiverId: string) => {
-    await userApi.cancelRequest(receiverId);
-    await load();
-  };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [friendsRes, requestsRes, sentRes] = await Promise.all([
-        userApi.getFriends(),
-        userApi.getRequests(),
-        userApi.getSentRequests(),
+        friendService.getFriends({ name: null, userStatus: UserStatusEnum.All }),
+        friendService.getReceivedFriendRequests(),
+        friendService.getSentFriendRequests(),
       ]);
-      setFriends(friendsRes.data.data || []);
-      setRequests(requestsRes.data.data || []);
-      setSentRequests(sentRes.data.data || []);
+      setFriends(friendsRes.data ?? []);
+      setRequests(requestsRes.data ?? []);
+      setSentRequests(sentRes.data ?? []);
     } catch (error) {
       console.error("Failed to load friends data", error);
     } finally {
@@ -35,13 +33,15 @@ export function useFriends() {
   }, []);
 
   useEffect(() => {
-    load();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   const sendRequest = useCallback(
-    async (receiverId: string) => {
+    async (friendId: string) => {
       try {
-        await userApi.sendRequest(receiverId);
+        await friendService.sendFriendRequest(friendId);
         await load();
       } catch (error) {
         console.error("Failed to send friend request", error);
@@ -53,7 +53,7 @@ export function useFriends() {
   const acceptRequest = useCallback(
     async (senderId: string) => {
       try {
-        await userApi.acceptRequest(senderId);
+        await friendService.acceptFriendRequest(senderId);
         await load();
       } catch (error) {
         console.error("Failed to accept friend request", error);
@@ -65,7 +65,7 @@ export function useFriends() {
   const declineRequest = useCallback(
     async (senderId: string) => {
       try {
-        await userApi.declineRequest(senderId);
+        await friendService.rejectFriendRequest(senderId);
         await load();
       } catch (error) {
         console.error("Failed to decline friend request", error);
@@ -83,6 +83,5 @@ export function useFriends() {
     declineRequest,
     reload: load,
     sentRequests,
-    cancelSentRequest,
   };
 }

@@ -14,16 +14,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: "GameArena",
   description: "Game platform",
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = (await getLocaleFromCookie()) as "en" | "ar";
   const dir = locale === "ar" ? "rtl" : "ltr";
   return (
@@ -31,6 +27,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dir}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme="light"
     >
       <body className="min-h-full bg-slate-950 text-white">
         <AuthProvider>{children}</AuthProvider>
@@ -38,3 +35,6 @@ export default async function RootLayout({
     </html>
   );
 }
+
+export default RootLayout;
+export { metadata };

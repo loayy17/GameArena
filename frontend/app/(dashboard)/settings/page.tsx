@@ -1,17 +1,17 @@
 "use client";
-import { Settings } from "lucide-react";
 import { useTranslation } from "@/Hooks/useTranslation";
-import ar from "./i18n/ar.i18n";
-import en, { TSettingsTranslation } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
+import { en, type TSettingsTranslation } from "./i18n/en.i18n";
 
-export default function SettingsPage() {
-    const t = useTranslation({ en, ar }) as TSettingsTranslation;
-    return (
-        <div className="flex items-center justify-center h-full relative z-10">
-            <div className="text-center">
-                <h1 className="text-2xl font-bold text-white mb-2">{t.title}</h1>
-                <p className="text-text-muted text-sm">{t.comingSoon}</p>
-            </div>
-        </div>
-    );
+function SettingsPage() {
+  const t = useTranslation({ en, ar }) as TSettingsTranslation;
+  return (
+    <div className="flex items-center justify-center h-full relative z-10">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-white mb-2">{t.title}</h1>
+        <p className="text-text-muted text-sm">{t.comingSoon}</p>
+      </div>
+    </div>
+  );
 }
+export default SettingsPage;

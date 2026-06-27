@@ -1,86 +1,187 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Gamepad2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Gamepad2,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/Hooks/useTranslation";
-import ar from "./i18n/SocialMedia/ar.i18n";
-import en, { TSocialTranslation } from "./i18n/SocialMedia/en.i18n";
-
-const friends = [
-  { name: "Ahmed", status: "Playing Match", rank: 1 },
-  { name: "Sara", status: "In Lobby", rank: 2 },
-  { name: "Omar", status: "Playing Match", rank: 3 },
-];
+import { ar } from "./i18n/SocialMedia/ar.i18n";
+import { en, type TSocialTranslation } from "./i18n/SocialMedia/en.i18n";
+import { friendService } from "@/services/def/FriendService";
+import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import { TTile } from "./common/TTile";
+import { TBadge } from "./common/TBadge";
+import { TButton } from "./common/TButton";
+import { useDashboardNotifications } from "@/app/(dashboard)/DashboardNotificationsProvider";
+import type { IUser } from "@/domain/meta/IUser";
 
 const statusColor: Record<string, string> = {
   "Playing Match": "text-neon-cyan",
   "In Lobby": "text-neon-magenta",
   "In Match": "text-primary",
-  "Online": "text-neon-green",
-};
-
-const statusKey: Record<string, keyof TSocialTranslation> = {
-  "Playing Match": "playing",
-  "In Lobby": "lobby",
-  "In Match": "match",
-  "Online": "online",
+  Online: "text-neon-green",
 };
 
 function SocialPanel() {
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
   const t = useTranslation({ en, ar }) as TSocialTranslation;
+  const [friends, setFriends] = useState<IUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { gameInvites, acceptGameInvite, dismissGameInvite } =
+    useDashboardNotifications();
+
+  useEffect(() => {
+    let alive = true;
+
+    void (async () => {
+      setLoading(true);
+      try {
+        const response = await friendService.getFriends({
+          name: null,
+          userStatus: UserStatusEnum.All,
+        });
+
+        if (!alive) return;
+        setFriends(response.data || []);
+      } catch (error) {
+        console.error("Error fetching friends:", error);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleAcceptInvite = async (roomId: string) => {
+    await acceptGameInvite(roomId);
+    router.push("/tic-tac-toe");
+  };
 
   return (
-    <aside className={`hidden lg:flex lg:flex-col shrink-0 bg-bg-sidebar border-l border-border overflow-y-auto ${collapsed ? "w-16" : "w-80"}`}>
-      {/* Toggle */}
-      <div className={`flex items-center h-16 px-4 border-b border-border ${collapsed ? "justify-center" : "justify-end"}`}>
+    <aside
+      className={`hidden shrink-0 overflow-y-auto border-l border-border bg-bg-sidebar lg:flex lg:flex-col ${collapsed ? "w-16" : "w-80"}`}
+    >
+      <div
+        className={`flex h-16 items-center border-b border-border px-4 ${collapsed ? "justify-center" : "justify-end"}`}
+      >
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="text-text-secondary hover:bg-surface-alt hover:text-text p-2 rounded-lg transition-colors cursor-pointer"
+          className="cursor-pointer rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text"
         >
           {collapsed ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
         </button>
       </div>
 
-      {/* Header */}
       {!collapsed && (
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-neon-green" />
-            <h2 className="text-xs font-bold text-text-secondary uppercase">{t.title}</h2>
+        <div className="px-4 pt-4">
+          <div className="mb-4 rounded-2xl border border-border bg-bg-card/60 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-xs font-bold uppercase text-text-secondary">
+                {t.title}
+              </h2>
+              {gameInvites.length > 0 && <TBadge count={gameInvites.length} />}
+            </div>
+
+            <p className="text-[11px] text-text-muted">
+              {friends.filter((f) => f.status === UserStatusEnum.InGame).length}{" "}
+              {t.inMatch}
+            </p>
           </div>
-          <p className="text-[11px] text-text-muted">
-            {friends.filter((f) => f.status === "Playing Match").length} {t.inMatch}
-          </p>
+
+          {gameInvites.length > 0 && (
+            <div className="mb-4 space-y-3">
+              {gameInvites.map((invite) => (
+                <div
+                  key={invite.roomId}
+                  className="rounded-2xl border border-primary/20 bg-primary/10 p-4"
+                >
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20">
+                      <Gamepad2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-white">
+                        {invite.inviterName || "A friend"}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        sent you a game invite
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <TButton
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => void handleAcceptInvite(invite.roomId)}
+                    >
+                      Join
+                    </TButton>
+                    <TButton
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => dismissGameInvite(invite.roomId)}
+                    >
+                      Dismiss
+                    </TButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Friends List */}
-      <div className="space-y-1 px-3 py-2 w-full">
-        {friends.map((friend) => (
-          <button
-            key={friend.rank}
-            onClick={() => router.push(`/messages?friend=${friend.name}`)}
-            className={`flex items-center gap-3 p-2.5 rounded-lg hover:bg-surface-alt transition-colors text-left w-full cursor-pointer ${collapsed ? "justify-center" : ""}`}
-          >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-neon-magenta shrink-0 flex items-center justify-center relative">
-              <span className="text-[10px] text-white font-bold">{friend.rank}</span>
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-neon-green border-2 border-bg-sidebar" />
-            </div>
+      <div className="w-full space-y-1 px-3 py-2">
+        {loading && friends.length === 0 ? (
+          <div className="flex items-center justify-center py-8 text-text-muted">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        ) : friends.length === 0 ? (
+          <p className="px-3 py-4 text-sm text-text-muted">
+            No friends online yet.
+          </p>
+        ) : (
+          friends.map((friend) => (
+            <button
+              key={friend.id}
+              onClick={() => router.push(`/messages?friend=${friend.id}`)}
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-surface-alt ${collapsed ? "justify-center" : ""}`}
+            >
+              <TTile user={friend} size="sm" />
 
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text truncate">{friend.name}</p>
-                <p className={`text-xs truncate ${statusColor[friend.status] || "text-text-secondary"}`}>
-                  {friend.status === "Playing Match" && <Gamepad2 className="inline w-3 h-3 mr-1" />}
-                  {t[statusKey[friend.status]] || friend.status}
-                </p>
-              </div>
-            )}
-          </button>
-        ))}
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-text">
+                    {friend.fullName ??
+                      [friend.firstName, friend.lastName]
+                        .filter(Boolean)
+                        .join(" ")}
+                  </p>
+                  <p
+                    className={`truncate text-xs ${statusColor[friend.status] || "text-text-secondary"}`}
+                  >
+                    {friend.status === UserStatusEnum.InGame && (
+                      <Gamepad2 className="mr-1 inline h-3 w-3" />
+                    )}
+                    {t.userStatus[friend.status as keyof typeof t.userStatus]}
+                  </p>
+                </div>
+              )}
+            </button>
+          ))
+        )}
       </div>
     </aside>
   );

@@ -16,13 +16,14 @@ namespace backend.Utils
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Role = user.Role,
+                Status = user.Status,
                 CreatedAt = user.CreatedAt,
                 IsVerified = user.IsVerified
             };
         }
-        public static FriendResponse ToDto(FriendRequest friendship)
+        public static FriendRequestReceivedResponse ToDto(FriendRequest friendship)
         {
-            return new FriendResponse
+            return new FriendRequestReceivedResponse
             {
                 SenderId = friendship.SenderId,
                 SenderFirstName = friendship.Sender.FirstName,
@@ -31,9 +32,9 @@ namespace backend.Utils
                 SentAt = friendship.CreatedAt
             };
         }
-        public static SentResponse ToDtoSend(FriendRequest friendship)
+        public static FriendRequestSentResponse ToDtoSend(FriendRequest friendship)
         {
-            return new SentResponse
+            return new FriendRequestSentResponse
             {
                 ReceiverId = friendship.ReceiverId,
                 ReceiverFirstName = friendship.Receiver.FirstName,

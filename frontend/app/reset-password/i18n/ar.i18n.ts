@@ -11,4 +11,4 @@ const ar = {
   passwordResetError: "فشل في إعادة تعيين كلمة المرور",
 };
 
-export default ar;
+export { ar };

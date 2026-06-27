@@ -1,54 +1,105 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { userApi } from "@/lib/user.api";
-import { User } from "@/types";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { IUser } from "@/domain/meta/IUser";
+import { userService } from "@/services/def/UserService";
 
-const AuthContext = createContext<{
-  user: User | null;
+/* ---------------- TYPES ---------------- */
+
+type AuthContextType = {
+  user: IUser | null;
   loading: boolean;
-  refreshUser: () => Promise<User | null>;
-  setUser: (user: User | null) => void;
-}>({
-  user: null,
-  loading: true,
-  refreshUser: async () => null,
-  setUser: () => null,
-});
+  refreshUser: () => Promise<IUser | null>;
+  setUser: (user: IUser | null) => void;
+};
+
+/* ---------------- CONTEXT ---------------- */
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+/* ---------------- PROVIDER ---------------- */
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
 
-  const loadUser = async (): Promise<User | null> => {
-    setLoading(true);
+  const loadUser = useCallback(async (): Promise<IUser | null> => {
     try {
-      const res = await userApi.profile();
-      const userData = res.data as User;
+      const res = await userService.profile();
+
+      const userData = res.data ?? null;
+
       setUser(userData);
+
       return userData;
     } catch {
       setUser(null);
       return null;
+    }
+  }, []);
+
+  /* ---------------- INITIAL LOAD ---------------- */
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await userService.profile();
+        if (!ignore) setUser(res.data ?? null);
+      } catch {
+        if (!ignore) setUser(null);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  /* ---------------- REFRESH ---------------- */
+
+  const refreshUser = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      return await loadUser();
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadUser]);
 
-  useEffect(() => {
-    loadUser();
-  }, [pathname]);
+  /* ---------------- CONTEXT VALUE ---------------- */
 
-  const refreshUser = async (): Promise<User | null> => {
-    return await loadUser();
-  };
-  return (
-    <AuthContext.Provider value={{ user, loading, refreshUser, setUser }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      loading,
+      refreshUser,
+      setUser,
+    }),
+    [user, loading, refreshUser],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => useContext(AuthContext);
+/* ---------------- HOOK ---------------- */
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+
+  if (!ctx) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+
+  return ctx;
+};

@@ -68,12 +68,15 @@ builder.Services.AddCors(options =>
 });
 
 // === Application Layer (Feature Services) ===
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
-
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
+builder.Services.AddScoped<IFriendService, FriendService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 // to avoid thread safety issues, we can use singleton for GameService since it will be used in SignalR hub
 builder.Services.AddScoped<IGameService, GameService>();
 var app = builder.Build();

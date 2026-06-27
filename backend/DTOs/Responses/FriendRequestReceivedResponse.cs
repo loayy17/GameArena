@@ -1,6 +1,6 @@
 ﻿namespace backend.DTOs.Responses
 {
-    public class FriendResponse
+    public class FriendRequestReceivedResponse
     {
         public Guid SenderId { get; set; }
         public string SenderUserName { get; set; } = string.Empty;

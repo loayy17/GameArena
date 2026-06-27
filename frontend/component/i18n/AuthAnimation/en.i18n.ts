@@ -22,6 +22,5 @@ const en = {
   },
 };
 
-export default en;
-
-export type TAuthAnimation = typeof en;
+type TAuthAnimation = typeof en;
+export { en, type TAuthAnimation };

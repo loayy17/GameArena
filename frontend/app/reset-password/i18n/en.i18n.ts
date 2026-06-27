@@ -10,7 +10,5 @@ const en = {
   passwordResetSuccess: "Password reset successfully",
   passwordResetError: "Failed to reset password",
 };
-
-export default en;
-
-export type TResetPasswordTranslation = typeof en;
+type TResetPasswordTranslation = typeof en;
+export { en, type TResetPasswordTranslation };

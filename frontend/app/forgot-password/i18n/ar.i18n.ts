@@ -7,4 +7,4 @@ const ar = {
   newPassword: "كلمة المرور الجديدة",
   resetPassword: "إعادة تعيين كلمة المرور",
 };
-export default ar;
+export { ar };

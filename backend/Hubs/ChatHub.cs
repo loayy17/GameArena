@@ -1,5 +1,4 @@
 ﻿using backend.Services;
-using backend.Utils;
 using Microsoft.AspNetCore.SignalR;
 
 namespace backend.Hubs
@@ -18,18 +17,16 @@ namespace backend.Hubs
         {
             var senderId = GetUserId();
             var msg = await chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
-            var payload = new { senderId, receiverId, message = msg.Content, sentAt = msg.SentAt };
-            var group = ChatHelper.GetPrivateGroup(senderId, receiverId);
-            await Clients.Group(group).SendAsync("chat:private", payload);
-            await Clients.Group($"user:{receiverId}").SendAsync("chat:notification", payload);
+            await Clients.Group($"user:{senderId}").SendAsync("chat:private", msg);
+            await Clients.Group($"user:{receiverId}").SendAsync("chat:private", msg);
+            await Clients.Group($"user:{receiverId}").SendAsync("chat:notification", msg);
         }
 
         public async Task SendGlobalMessage(string message)
         {
             var senderId = GetUserId();
             var msg = await chatService.CreateGlobalMessageAsync(senderId, message);
-            var payload = new { senderId, message = msg.Content, sentAt = msg.SentAt };
-            await Clients.Group("GlobalChat").SendAsync("chat:global", payload);
+            await Clients.Group("GlobalChat").SendAsync("chat:global", msg);
         }
 
         private Guid GetUserId()

@@ -3,10 +3,11 @@
 import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/AuthProvider";
-import AuthAnimation from "./AuthAnimation";
+import { AuthAnimation } from "./AuthAnimation";
 import { AuthFlowAnimationEnum } from "@/types";
+import { LangTheme } from "../common/LangTheme";
 
-export default function AuthLayout({
+function AuthLayout({
   page,
   children,
 }: {
@@ -34,6 +35,7 @@ export default function AuthLayout({
     return (
       <div className="min-h-screen flex flex-col lg:flex-row bg-[linear-gradient(145deg,#2a1a6e_0%,#0f0530_55%,#1a0840_100%)] lg:bg-none">
         {/* Animation – its background is transparent on medium, restored on large */}
+        <LangTheme collapsed={false} className="absolute flex gap-2 right-0 right-2 top-2"/>
         <AuthAnimation
           page={page}
           pathAnimation="/game.json"
@@ -49,3 +51,5 @@ export default function AuthLayout({
 
   return null;
 }
+
+export { AuthLayout };

@@ -1,4 +1,4 @@
-import { ErrorCode } from "@/types";
+import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
 
 const ar = {
   login: "تسجيل الدخول",
@@ -7,7 +7,9 @@ const ar = {
   loggingIn: "جار تسجيل الدخول...",
   signIn: "تسجيل الدخول",
   email: "البريد الإلكتروني",
+  emailPlaceholder: "أدخل بريدك الإلكتروني",
   password: "كلمة المرور",
+  passwordPlaceholder: "أدخل كلمة المرور الخاصة بك",
   forgotPassword: "نسيت كلمة المرور؟",
   dontHaveAccount: "ليس لديك حساب؟",
   register: "تسجيل",
@@ -19,13 +21,13 @@ const ar = {
   switchLanguage: (lang: string) =>
     `التبديل إلى ${lang === "en" ? "العربية" : "الإنجليزية"}`,
   loginErrorCodeEnum: {
-    [ErrorCode.InvalidCredentials]:
+    [ErrorCodeEnum.InvalidCredentials]:
       "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-    [ErrorCode.Unauthorized]: "غير مصرح",
-    [ErrorCode.TokenExpired]: "انتهت صلاحية الرمز",
-    [ErrorCode.EmailNotVerified]: "البريد الإلكتروني غير مؤكد",
-    [ErrorCode.RefreshTokenInvalid]: "رمز التحديث غير صالح",
+    [ErrorCodeEnum.Unauthorized]: "غير مصرح",
+    [ErrorCodeEnum.TokenExpired]: "انتهت صلاحية الرمز",
+    [ErrorCodeEnum.EmailNotVerified]: "البريد الإلكتروني غير مؤكد",
+    [ErrorCodeEnum.RefreshTokenInvalid]: "رمز التحديث غير صالح",
   },
 };
 
-export default ar;
+export { ar };

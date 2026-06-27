@@ -8,4 +8,4 @@ const ar = {
   resendCodeFailed: "فشل في إعادة إرسال الرمز",
 };
 
-export default ar;
+export { ar };

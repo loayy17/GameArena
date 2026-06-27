@@ -1,27 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import AuthLayout from "@/component/auth/AuthLayout";
-import OtpForm from "@/component/auth/OtpForm";
-import { authFlow } from "@/lib/authflow";
+import { AuthLayout } from "@/component/auth/AuthLayout";
+import { OtpForm } from "@/component/auth/OtpForm";
+import { authFlow } from "@/repositories/proxy/authflow";
 import { AuthFlowAnimationEnum } from "@/types";
+import { useEffect } from "react";
 
-export default function Page() {
+function EmailVerifyPage() {
   const router = useRouter();
   const flow = authFlow.get();
 
   const email = flow.email;
+  useEffect(() => {
+    if (!email) {
+      router.replace("/register");
+    }
+  }, [email, router]);
 
-  if (!email) {
-    router.replace("/register");
-    return null;
-  }
+  if (!email) return null;
 
   return (
     <AuthLayout page={AuthFlowAnimationEnum.VERIFY_OTP}>
       <OtpForm
         email={email}
-        onSuccess={(otp) => {
+        onSuccess={() => {
           authFlow.clear();
           router.replace("/home");
         }}
@@ -29,3 +32,5 @@ export default function Page() {
     </AuthLayout>
   );
 }
+
+export default EmailVerifyPage;

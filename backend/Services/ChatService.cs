@@ -11,14 +11,27 @@ namespace backend.Services
     {
         public async Task<List<MessageResponse>> GetMessagesAsync(Guid userId, Guid friendId)
         {
-            return await context.Messages
+            var messages = await context.Messages
                 .Where(m =>
                     (m.SenderId == userId && m.ReceiverId == friendId) ||
                     (m.SenderId == friendId && m.ReceiverId == userId))
                 .OrderBy(m => m.SentAt)
-                .Select(m => MapperHelper.ToDto(m))
                 .ToListAsync();
+
+            var unreadMessages = messages
+                .Where(m => m.ReceiverId == userId && !m.IsRead)
+                .ToList();
+
+            if (unreadMessages.Count > 0)
+            {
+                unreadMessages.ForEach(message => message.IsRead = true);
+                await context.SaveChangesAsync();
+            }
+
+            return messages.Select(MapperHelper.ToDto).ToList();
         }
+
+        
 
         public async Task<Message> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message)
         {
@@ -48,12 +61,15 @@ namespace backend.Services
                 Content = message,
                 SentAt = DateTime.UtcNow
             };
-
             context.Messages.Add(msg);
             await context.SaveChangesAsync();
 
             return msg;
         }
 
+        public async Task<int> GetUnreadMessagesCountAsync(Guid userId)
+        {
+            return await context.Messages.CountAsync(m => m.ReceiverId == userId && m.IsRead == false);
+        }
     }
 }

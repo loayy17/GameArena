@@ -7,5 +7,5 @@ const en = {
   newPassword: "New Password",
   resetPassword: "Reset Password",
 };
-export type TForgotPasswordTranslation = typeof en;
-export default en;
+type TForgotPasswordTranslation = typeof en;
+export { en, type TForgotPasswordTranslation };

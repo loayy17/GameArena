@@ -1,12 +1,6 @@
-interface ITTextFieldProps {
-  label: string;
-  value: string;
-  className?: string;
-  type?: "text" | "email" | "password";
-  placeholder?: string;
-  required?: boolean;
+export interface TTextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
   error?: string;
-  onChange: (value: string) => void;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
 }
-
-export type { ITTextFieldProps };

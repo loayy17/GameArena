@@ -6,6 +6,6 @@ const en = {
   resendCode: "Resend code",
 };
 
-export default en;
+type TOtpStepTranslation = typeof en;
 
-export type TOtpStepTranslation = typeof en;
+export { en, type TOtpStepTranslation };

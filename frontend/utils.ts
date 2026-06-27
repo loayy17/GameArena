@@ -1,7 +1,19 @@
 import { PasswordValidationEnum } from "@/types";
 
+type TEmailValidationText = {
+  email: string;
+  invalidEmail: string;
+  dynamicFieldRequired: (field: string) => string;
+};
+
+type TPasswordValidationText = {
+  password: string;
+  invalidPassword: Record<PasswordValidationEnum, string>;
+  dynamicFieldRequired: (field: string) => string;
+};
+
 const emailValidator =
-  (t: any) =>
+  (t: TEmailValidationText) =>
   (value: string): string | null => {
     if (!value.trim()) return t.dynamicFieldRequired(t.email);
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
@@ -10,7 +22,7 @@ const emailValidator =
   };
 
 const passwordValidator =
-  (t: any) =>
+  (t: TPasswordValidationText) =>
   (value: string): string | null => {
     if (!value.trim()) return t.dynamicFieldRequired(t.password);
     const rules: string[] = [];

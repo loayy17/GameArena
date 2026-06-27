@@ -2,26 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthLayout from "@/component/auth/AuthLayout";
-import TTextField from "@/component/common/TTextField";
-import TButton from "@/component/common/TButton";
-import OtpForm from "@/component/auth/OtpForm";
-import { authFlow } from "@/lib/authflow";
-import { authApi } from "@/lib/auth.api";
+import { AuthLayout } from "@/component/auth/AuthLayout";
+import { TTextField } from "@/component/common/TTextField";
+import { TButton } from "@/component/common/TButton";
+import { OtpForm } from "@/component/auth/OtpForm";
+import { authFlow } from "@/repositories/proxy/authflow";
 import { useTranslation } from "@/Hooks/useTranslation";
-import en, { TResetPasswordTranslation } from "./i18n/en.i18n";
-import ar from "./i18n/ar.i18n";
-import { default as EnTextField } from "@/component/i18n/TTextField/en.i18n";
-import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
+import { en, TResetPasswordTranslation } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
+import { en as EnTextField } from "@/component/i18n/TTextField/en.i18n";
+import { ar as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { passwordValidator } from "@/utils";
 import { AuthFlowAnimationEnum } from "@/types";
-export default function Page() {
+import { authService } from "@/services/def/AuthService";
+import type { TTextFieldTranslation } from "@/component/i18n/TTextField/en.i18n";
+
+function ResetPassword() {
   const router = useRouter();
   const flow = authFlow.get();
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
-  }) as TResetPasswordTranslation;
+  }) as TResetPasswordTranslation & TTextFieldTranslation;
   const [step, setStep] = useState<"otp" | "reset">("otp");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,12 +45,11 @@ export default function Page() {
     try {
       setLoading(true);
       const nextErrors = validate(newPassword);
-      console.log("email", email, "otp", otp, "newPassword", newPassword);
       setErrors(nextErrors);
       if (!email || !otp || Object.values(nextErrors).some((error) => error))
         return;
 
-      await authApi.resetPassword({ email, otp, newPassword });
+      await authService.resetPassword({ email, otp, newPassword });
 
       authFlow.clear();
       router.replace("/login");
@@ -87,12 +88,13 @@ export default function Page() {
             value={newPassword}
             required
             error={errors.newPassword}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e.target.value)}
           />
           <br />
-          <TButton title={t.resetPassword} onClick={reset} />
+          <TButton title={t.resetPassword} onClick={reset} disabled={loading} />
         </>
       )}
     </AuthLayout>
   );
 }
+export default ResetPassword;

@@ -1,26 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authApi } from "@/lib/auth.api";
-import { ErrorCode, TError, TFieldLogin } from "@/types";
-import TTextField from "@/component/common/TTextField";
-import TButton from "@/component/common/TButton";
-import { default as EnTextField } from "@/component/i18n/TTextField/en.i18n";
-import { default as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
+import { TTextField } from "@/component/common/TTextField";
+import { TButton } from "@/component/common/TButton";
+import { SubmitEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  en as EnTextField,
+  type TTextFieldTranslation,
+} from "@/component/i18n/TTextField/en.i18n";
+import { ar as ArTextField } from "@/component/i18n/TTextField/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
-import en, { type TLoginTranslation } from "@/app/login/i18n/en.i18n";
-import ar from "@/app/login/i18n/ar.i18n";
+import { en, type TLoginTranslation } from "@/app/login/i18n/en.i18n";
+import { ar } from "@/app/login/i18n/ar.i18n";
 import { emailValidator, passwordValidator } from "@/utils";
 import { useAuth } from "@/app/AuthProvider";
+import { authService } from "@/services/def/AuthService";
+import { AxiosError } from "axios";
+import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
+import type { IApiResponse } from "@/domain/meta/IApiResponse";
+import type { TFieldLogin } from "@/types";
 
-export default function LoginForm() {
+function LoginForm() {
   const router = useRouter();
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
-  }) as TLoginTranslation;
+  }) as TLoginTranslation & TTextFieldTranslation;
   const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +53,8 @@ export default function LoginForm() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const submit = async () => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const nextErrors = validate(email, password);
     setErrors(nextErrors);
 
@@ -56,25 +63,24 @@ export default function LoginForm() {
     try {
       setLoading(true);
       setApiError({ link: "", message: "" });
-
-      await authApi.login({ email, password });
+      const result = await authService.login({ email, password });
+      console.log(result);
       const currentUser = await refreshUser();
 
       if (currentUser) {
         router.replace("/home");
       }
-    } catch (e) {
-      console.log("login error", e);
-      const err = e as TError;
-      const code = err?.response?.data?.errorCode;
-
-      if (code === ErrorCode.EmailNotVerified)
+    } catch (e: unknown) {
+      const err = e as AxiosError<IApiResponse<unknown>>;
+      const code =
+        err?.response?.data?.errorCode ?? err?.response?.data?.errorCode;
+      if (code === ErrorCodeEnum.EmailNotVerified)
         setApiError({
           link: "/email-verify",
           message:
             t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
             err?.response?.data?.message ||
-            "An error occurred",
+            t.unknownError,
         });
       else {
         setApiError({
@@ -82,7 +88,7 @@ export default function LoginForm() {
           message:
             t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
             err?.response?.data?.message ||
-            "An error occurred",
+            t.unknownError,
         });
       }
     } finally {
@@ -90,24 +96,27 @@ export default function LoginForm() {
     }
   };
   return (
-    <div className="w-full max-w-sm space-y-5">
+    <form onSubmit={submit} className="w-full max-w-sm space-y-5">
+      {" "}
       <div className="space-y-4">
         <TTextField
           label={t.email}
+          placeholder={t.placeholder.email}
           value={email}
           type="email"
           required
           error={errors.email}
-          onChange={(value) => handleChange("email", value)}
+          onChange={(e) => handleChange("email", e.target.value)}
         />
 
         <TTextField
           label={t.password}
+          placeholder={t.placeholder.password}
           value={password}
           type="password"
           required
           error={errors.password}
-          onChange={(value) => handleChange("password", value)}
+          onChange={(e) => handleChange("password", e.target.value)}
         />
 
         {apiError.message && (
@@ -120,15 +129,12 @@ export default function LoginForm() {
             )}
           </div>
         )}
-        <TButton
-          title={loading ? t.loggingIn : t.login}
-          loading={loading}
-          onClick={submit}
-        />
+        <TButton type="submit" loading={loading} className="w-full">
+          {loading ? t.loggingIn : t.login}
+        </TButton>
       </div>
-
       <div className="flex justify-between text-sm pt-2">
-        <Link href="/forgot-password" className="text-primary font-medium">
+        <Link href="/forgot-password" className="text-primary font-medium mr-2">
           {t.forgotPassword}
         </Link>
 
@@ -139,6 +145,8 @@ export default function LoginForm() {
           </Link>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
+
+export { LoginForm };

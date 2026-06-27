@@ -23,4 +23,4 @@ const ar = {
   },
 };
 
-export default ar;
+export { ar };

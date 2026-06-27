@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
-import { TAnimationProps } from "./def/TAnimation";
 import { useTranslation } from "@/Hooks/useTranslation";
-import en, { TAuthAnimation } from "../i18n/AuthAnimation/en.i18n";
-import ar from "../i18n/AuthAnimation/ar.i18n";
+import { en, TAuthAnimation } from "../i18n/AuthAnimation/en.i18n";
+import { ar } from "../i18n/AuthAnimation/ar.i18n";
+import type { TAnimationProps } from "./def/TAnimation";
 
 const LottiePlayer = dynamic(
   () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
@@ -38,4 +38,4 @@ function AuthAnimation({ page, className, pathAnimation }: TAnimationProps) {
   );
 }
 
-export default AuthAnimation;
+export { AuthAnimation };

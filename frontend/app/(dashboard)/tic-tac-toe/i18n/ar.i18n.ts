@@ -67,4 +67,4 @@ const ar: TicTacToeTranslations = {
   },
 };
 
-export default ar;
+export { ar };

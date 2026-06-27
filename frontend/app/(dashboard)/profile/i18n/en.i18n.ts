@@ -1,8 +1,8 @@
 const en = {
-    title: "Profile",
-    comingSoon: "Coming soon",
+  title: "Profile",
+  comingSoon: "Coming soon",
 };
 
-export default en;
+type TProfileTranslation = typeof en;
 
-export type TProfileTranslation = typeof en;
+export { en, type TProfileTranslation };

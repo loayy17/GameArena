@@ -1,5 +1,4 @@
-﻿using backend.DTOs;
-using backend.DTOs.Requests;
+﻿using backend.DTOs.Requests;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Services.Interface;
@@ -13,7 +12,7 @@ namespace backend.Controllers
     public class AuthController(IAuthService _authService, IAuthCookieService _authCookiesService) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> Register(RegisterRequest request)
         {
             await _authService.RegisterAsync(request);
 
@@ -21,7 +20,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> Login(LoginRequest request)
         {
             var response = await _authService.LoginAsync(request) ?? throw new AppException(ErrorCode.InvalidCredentials);
 
@@ -31,7 +30,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult<ApiResponse<object>>> Logout()
         {
             var refreshToken = Request.Cookies["refresh_token"] ?? throw new AppException(ErrorCode.Unauthorized);
             await _authService.RevokeRefreshTokenAsync(refreshToken);
@@ -40,7 +39,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh()
+        public async Task<ActionResult<ApiResponse<object>>> Refresh()
         {
             var refreshToken = Request.Cookies["refresh_token"]
                 ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
@@ -52,14 +51,14 @@ namespace backend.Controllers
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> ForgotPassword(ForgotPasswordRequest request)
         {
             await _authService.ForgotPassword(request.Email);
             return Ok(new ApiResponse<object> { Message = "If the email exists, OTP has been sent" });
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> ResetPassword(ResetPasswordRequest request)
         {
             await _authService.ResetPasswordAsync(request.Email, request.Otp, request.NewPassword);
 

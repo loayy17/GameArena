@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import api from "@/app/network";
+import { api } from "@/app/network";
 import { useRouter } from "next/router";
-import TButton from "@/component/common/TButton";
-import en, { TOtpStepTranslation } from "./i18n/en.i18n";
-import ar from "./i18n/ar.i18n";
+import { TButton } from "@/component/common/TButton";
+import { en, type TOtpStepTranslation } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
 import { useTranslation } from "@/Hooks/useTranslation";
 
-type Props = {
+type TOtpStepProps = {
   email: string;
   title: string;
   subtitle: string;
@@ -17,12 +17,12 @@ type Props = {
   onSuccess: () => void;
 };
 
-export default function OtpStep({
+function OtpStep({
   email,
   endpoint,
   resendEndpoint,
   onSuccess,
-}: Props) {
+}: TOtpStepProps) {
   const [code, setCode] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -106,3 +106,5 @@ export default function OtpStep({
     </div>
   );
 }
+
+export default OtpStep;

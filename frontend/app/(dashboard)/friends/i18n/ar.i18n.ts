@@ -6,4 +6,4 @@ const ar = {
   addFriend: "إضافة صديق",
 };
 
-export default ar;
+export { ar };
