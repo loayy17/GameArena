@@ -92,7 +92,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     Console.WriteLine("Running database migrations...");
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
     Console.WriteLine("Database migrations completed.");
 }
 
