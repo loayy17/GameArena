@@ -31,19 +31,30 @@ namespace backend.Services
                 return;
             }
 
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(emailConfig));
-            email.To.Add(MailboxAddress.Parse(to));
-            email.Subject = subject;
-            var bodyBuilder = new BodyBuilder { HtmlBody = body };
-            email.Body = bodyBuilder.ToMessageBody();
+            try
+            {
+                var email = new MimeMessage();
+                email.From.Add(MailboxAddress.Parse(emailConfig));
+                email.To.Add(MailboxAddress.Parse(to));
+                email.Subject = subject;
+                var bodyBuilder = new BodyBuilder { HtmlBody = body };
+                email.Body = bodyBuilder.ToMessageBody();
 
-            using var smtp = new SmtpClient();
-            smtp.Timeout = 20_000;
-            await smtp.ConnectAsync(hostConfig, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
-            await smtp.AuthenticateAsync(emailConfig, passConfig);
-            await smtp.SendAsync(email);
-            await smtp.DisconnectAsync(true);
+                using var smtp = new SmtpClient();
+                smtp.Timeout = 20_000;
+                await smtp.ConnectAsync(hostConfig, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
+                await smtp.AuthenticateAsync(emailConfig, passConfig);
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send email to {Email}. OTP printed to console.", to);
+                Console.WriteLine($"\n=== OTP for {to} ===");
+                Console.WriteLine($"Subject: {subject}");
+                Console.WriteLine($"Body: {body}");
+                Console.WriteLine("=======================\n");
+            }
         }
     }
 }
