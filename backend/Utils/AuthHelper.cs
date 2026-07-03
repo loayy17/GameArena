@@ -42,7 +42,7 @@ namespace backend.Auth
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("JWT:Token")!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var tokenDescriptor = new JwtSecurityToken(
                 issuer: configuration.GetValue<string>("JWT:Issuer"),
                 audience: configuration.GetValue<string>("JWT:Audience"),
