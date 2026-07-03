@@ -13,7 +13,10 @@ namespace backend.Services
             var hostConfig = _config["EmailSettings:Host"];
             var passConfig = _config["EmailSettings:Password"];
             var portConfig = _config["EmailSettings:Port"];
-
+        Console.WriteLine($"EmailSettings:Email = {emailConfig}");
+            Console.WriteLine($"EmailSettings:Host = {hostConfig}");
+            Console.WriteLine($"EmailSettings:Password = {passConfig}");
+            Console.WriteLine($"EmailSettings:Port = {portConfig}");
             if (string.IsNullOrEmpty(emailConfig) || string.IsNullOrEmpty(hostConfig) ||
                 string.IsNullOrEmpty(passConfig) || string.IsNullOrEmpty(portConfig))
             {
@@ -31,6 +34,8 @@ namespace backend.Services
                 return;
             }
 
+            _logger.LogInformation("Attempting SMTP connection to {Host}:{Port} with Auto security", hostConfig, port);
+
             try
             {
                 var email = new MimeMessage();
@@ -41,10 +46,13 @@ namespace backend.Services
                 email.Body = bodyBuilder.ToMessageBody();
 
                 using var smtp = new SmtpClient();
-                smtp.Timeout = 20_000;
+                smtp.Timeout = 30_000;
                 await smtp.ConnectAsync(hostConfig, port, MailKit.Security.SecureSocketOptions.Auto);
+                _logger.LogInformation("Connected to SMTP server, attempting authentication...");
                 await smtp.AuthenticateAsync(emailConfig, passConfig);
+                _logger.LogInformation("SMTP authenticated, sending email...");
                 await smtp.SendAsync(email);
+                _logger.LogInformation("Email sent successfully to {Email}", to);
                 await smtp.DisconnectAsync(true);
             }
             catch (Exception ex)
