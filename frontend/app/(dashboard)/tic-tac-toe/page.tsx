@@ -23,6 +23,7 @@ import {
   Zap,
   Play,
   UserPlus,
+  Bot,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import type { IFriend } from "@/domain/meta/ICommon";
@@ -40,18 +41,22 @@ function TicTacToePage() {
     isSearching,
     isConnected,
     opponentDisconnected,
+    isBotGame,
     isMyTurn,
     mySymbol,
     findMatch,
     inviteFriend,
+    inviteToRoom,
     makeMove,
     resetGame,
     startGame,
+    leaveGame,
   } = useTicTacToe();
 
   // Local UI States
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("quick");
   const [, setLocalGameStarted] = useState(false);
+  const [showInvitePicker, setShowInvitePicker] = useState(false);
 
   // Friend Fetching States
   const [friends, setFriends] = useState<IFriend[]>([]);
@@ -59,9 +64,11 @@ function TicTacToePage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const opponentName =
-    gameState?.player1Id === user?.id
-      ? gameState?.player2Username || t.game.opponent
-      : gameState?.player1Username || t.game.opponent;
+    isBotGame
+      ? "AI Bot"
+      : gameState?.player1Id === user?.id
+        ? gameState?.player2Username || t.game.opponent
+        : gameState?.player1Username || t.game.opponent;
   const myName = user?.userName || t.game.you;
 
   // Fetch friends when invite tab is active
@@ -71,7 +78,7 @@ function TicTacToePage() {
       setLoadingFriends(true);
       friendService
         .getFriends({ name: null, userStatus: UserStatusEnum.All })
-        .then((res) => {
+        .then((res: { data: IFriend[] }) => {
           if (!ignore) setFriends(res.data || []);
         })
         .catch(() => {})
@@ -103,19 +110,13 @@ function TicTacToePage() {
   const handleClick = (index: number) => {
     if (!gameState || gameState.isFinished) return;
     if (!isMyTurn) return;
-    if (board[index]) return;
+    if (board[index] === "X" || board[index] === "O") return;
     makeMove(index);
   };
-  const startGameNew = () => {
-    if (
-      !gameState ||
-      user?.id !== gameState?.player1Id ||
-      !gameState?.player2Id
-    )
-      return;
+  const startGameNew = (friendId: string | null = null) => {
+    if (!gameState || user?.id !== gameState?.player1Id) return;
     setLocalGameStarted(true);
-    startGame(gameState.player2Id);
-    console.log("Game ", gameState);
+    startGame(friendId ?? gameState.player2Id ?? null);
   };
 
   const handleInvite = (friendId: string) => {
@@ -270,46 +271,97 @@ function TicTacToePage() {
         </div>
       )}
 
-      {/* WAITING FOR OPPONENT */}
-      {roomId && !gameState?.player2Id && (
-        <div className="w-full max-w-lg space-y-6 animate-fade-in">
-          <div className="grid grid-cols-7 items-center bg-bg-card/50 border border-border/60 rounded-2xl p-4 shadow-lg">
-            {/* Player 1 */}
-            <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
-              <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-border-light bg-surface shadow-[0_0_15px_rgba(124,92,252,0.15)]">
-                <User className="w-8 h-8 text-primary" />
+          {/* WAITING FOR OPPONENT */}
+          {roomId && !gameState?.player2Id && (
+            <div className="w-full max-w-lg space-y-6 animate-fade-in">
+              <div className="grid grid-cols-7 items-center bg-bg-card/50 border border-border/60 rounded-2xl p-4 shadow-lg">
+                {/* Player 1 */}
+                <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
+                  <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-border-light bg-surface shadow-[0_0_15px_rgba(124,252,0.15)]">
+                    <User className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
+                    {gameState?.player1Id === user?.id
+                      ? `${myName} (You)`
+                      : gameState?.player1Username || t.game.player1}
+                  </span>
+                </div>
+                {/* VS */}
+                <div className="col-span-1 flex flex-col items-center justify-center">
+                  <span className="text-xs font-bold text-text-muted">VS</span>
+                  <div className="w-px h-10 bg-border/40 mt-1" />
+                </div>
+                {/* Player 2 (waiting) */}
+                <div className="col-span-3 flex flex-col items-center text-center p-2 relative opacity-50">
+                  <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-dashed border-border-light bg-surface/50">
+                    <GSpinner size="sm" className="text-text-secondary" />
+                  </div>
+                  <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
+                    {t.game.waiting}
+                  </span>
+                </div>
               </div>
-              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
-                {gameState?.player1Id === user?.id
-                  ? `${myName} (You)`
-                  : gameState?.player1Username || t.game.player1}
-              </span>
-            </div>
-            {/* VS */}
-            <div className="col-span-1 flex flex-col items-center justify-center">
-              <span className="text-xs font-bold text-text-muted">VS</span>
-              <div className="w-px h-10 bg-border/40 mt-1" />
-            </div>
-            {/* Player 2 (waiting) */}
-            <div className="col-span-3 flex flex-col items-center text-center p-2 relative opacity-50">
-              <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-dashed border-border-light bg-surface/50">
-                <GSpinner size="sm" className="text-text-secondary" />
+              <p className="text-center text-text-secondary text-sm animate-pulse">
+                {t.lobby.waitingForOpponent}
+              </p>
+              <div className="flex flex-col gap-3">
+                {gameState?.player1Id === user?.id && (
+                  <>
+                    <GButton
+                      onClick={() => startGameNew(null)}
+                      fullWidth
+                      leftIcon={<Play className="w-5 h-5" />}
+                    >
+                      Start Game (vs AI)
+                    </GButton>
+                    <GButton
+                      onClick={() => setShowInvitePicker(true)}
+                      fullWidth
+                      variant="secondary"
+                      leftIcon={<UserPlus className="w-5 h-5" />}
+                    >
+                      Invite Friend
+                    </GButton>
+                  </>
+                )}
+                <GButton onClick={resetGame} variant="secondary">
+                  {t.lobby.cancelMatch}
+                </GButton>
               </div>
-              <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
-                {t.game.waiting}
-              </span>
+
+              {/* INVITE FRIEND PICKER */}
+              {showInvitePicker && (
+                <div className="bg-surface/50 border border-border/60 rounded-xl p-4 animate-fade-in">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-text">Invite a Friend</h3>
+                    <GButton onClick={() => setShowInvitePicker(false)} variant="secondary" size="sm">
+                      Cancel
+                    </GButton>
+                  </div>
+                  <GInputSearch
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search friends..."
+                  />
+                  <div className="mt-3 max-h-40 overflow-y-auto custom-scrollbar">
+                    {loadingFriends ? (
+                      <GSpinner size="sm" />
+                    ) : filteredFriends.length > 0 ? (
+                      <FriendsList
+                        friends={filteredFriends}
+                        onSelectFriend={(friendId) => {
+                          inviteToRoom(friendId);
+                          setShowInvitePicker(false);
+                        }}
+                      />
+                    ) : (
+                      <p className="text-xs text-text-muted text-center py-4">No friends found</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-          <p className="text-center text-text-secondary text-sm animate-pulse">
-            {t.lobby.waitingForOpponent}
-          </p>
-          <div className="flex justify-center">
-            <GButton onClick={resetGame} variant="secondary">
-              {t.lobby.cancelMatch}
-            </GButton>
-          </div>
-        </div>
-      )}
+          )}
 
       {/* GAME FOUND - PRE-START SCREEN */}
       {roomId && gameState?.player2Id && !gameState.hasStarted && (
@@ -347,7 +399,7 @@ function TicTacToePage() {
 
           <GButton
             disabled={user?.id !== gameState.player1Id}
-            onClick={startGameNew}
+            onClick={() => startGameNew(gameState.player2Id)}
             fullWidth
             size="lg"
             leftIcon={<Play className="w-6 h-6 fill-current" />}
@@ -374,7 +426,11 @@ function TicTacToePage() {
                     : "border-border-light bg-surface"
                 }`}
               >
-                <User className="w-8 h-8 text-text-secondary" />
+                {isBotGame && gameState?.player1Id !== user?.id ? (
+                  <Bot className="w-8 h-8 text-neon-blue" />
+                ) : (
+                  <User className="w-8 h-8 text-text-secondary" />
+                )}
                 <span className="absolute -bottom-2 -right-2 w-6 h-6 rounded-md bg-neon-blue text-black font-black text-xs flex items-center justify-center shadow-md">
                   X
                 </span>
@@ -382,7 +438,9 @@ function TicTacToePage() {
               <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player1Id === user?.id
                   ? `${myName} (You)`
-                  : gameState?.player1Username || t.game.player1}
+                  : isBotGame
+                    ? "AI Bot"
+                    : gameState?.player1Username || t.game.player1}
               </span>
               {gameState?.currentTurnPlayerId === gameState?.player1Id &&
                 !gameState?.isFinished && (
@@ -390,8 +448,7 @@ function TicTacToePage() {
                     Turn
                   </span>
                 )}
-            </div>
-
+            </div>{"\n"}
             {/* VS */}
             <div className="col-span-1 flex flex-col items-center justify-center">
               <span className="text-xs font-bold text-text-muted">VS</span>
@@ -408,7 +465,11 @@ function TicTacToePage() {
                     : "border-border-light bg-surface"
                 }`}
               >
-                <User className="w-8 h-8 text-text-secondary" />
+                {isBotGame && gameState?.player2Id !== user?.id ? (
+                  <Bot className="w-8 h-8 text-neon-magenta" />
+                ) : (
+                  <User className="w-8 h-8 text-text-secondary" />
+                )}
                 <span className="absolute -bottom-2 -left-2 w-6 h-6 rounded-md bg-neon-magenta text-text font-black text-xs flex items-center justify-center shadow-md">
                   O
                 </span>
@@ -416,7 +477,9 @@ function TicTacToePage() {
               <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player2Id === user?.id
                   ? `${myName} (You)`
-                  : gameState?.player2Username || t.game.player2}
+                  : isBotGame
+                    ? <>AI Bot <Bot className="w-3.5 h-3.5 inline text-neon-magenta" /></>
+                    : gameState?.player2Username || t.game.player2}
               </span>
               {gameState?.currentTurnPlayerId === gameState?.player2Id &&
                 !gameState?.isFinished && (
@@ -450,7 +513,7 @@ function TicTacToePage() {
             <div className="grid grid-cols-3 gap-3 bg-bg-card/75 border border-border/80 rounded-3xl p-5 shadow-2xl relative">
               {board.map((cell, i) => {
                 const isCellActive =
-                  !cell && isMyTurn && !gameState?.isFinished;
+                  cell !== "X" && cell !== "O" && isMyTurn && !gameState?.isFinished;
                 return (
                   <GButton
                     key={i}
@@ -512,6 +575,20 @@ function TicTacToePage() {
               </div>
             )}
           </div>
+
+          {/* LEAVE BUTTON */}
+          {!gameState?.isFinished && (
+            <div className="flex justify-center">
+              <GButton
+                onClick={leaveGame}
+                variant="secondary"
+                size="sm"
+                className="text-red-400 border-red-400/30 hover:bg-red-400/10"
+              >
+                Leave Game
+              </GButton>
+            </div>
+          )}
         </div>
       )}
     </div>

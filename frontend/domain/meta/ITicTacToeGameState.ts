@@ -12,5 +12,6 @@ interface ITicTacToeGameState {
   hasStarted: boolean;
   isFull: boolean;
   isPrivate: boolean;
+  isBotGame: boolean;
 }
 export type { ITicTacToeGameState };

@@ -4,145 +4,229 @@ using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
 
 namespace backend.Hubs
 {
     [Authorize]
-    public class GameHub(IGameService _gameService, IHubContext<ChatHub> _chatHubContext) : Hub
+    public class GameHub(IGameRoomService _roomService, IGameService _gameService, IHubContext<ChatHub> _chatHubContext) : Hub
     {
-        private static readonly Lock _matchLock = new();
-        public static readonly ConcurrentDictionary<string, BaseGameRoom> Rooms = new();
-        public static readonly ConcurrentDictionary<string, string> PlayerToRoom = new();
-
-
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            var playerId = Context.UserIdentifier;
+            if (playerId == null) return;
 
-            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-
-            if (PlayerToRoom.TryRemove(playerId, out var roomId) && Rooms.TryGetValue(roomId, out var room))
+            if (_roomService.TryGetPlayerRoom(playerId, out var roomId) && _roomService.TryGetRoom(roomId!, out var room))
             {
-                    Rooms.TryRemove(roomId, out _);
+                room!.DisconnectedPlayerId = playerId;
 
-                    var opponentId = room.Player1Id == playerId ? room.Player2Id : room.Player1Id;
-                    if (opponentId != null)
-                    {
-                        PlayerToRoom.TryRemove(opponentId, out _);
-                    }
+                if (room.IsFinished)
+                {
+                    _roomService.RemoveRoomAndPlayers(roomId!);
+                    return;
+                }
 
-                    if (!room.IsFinished && room.IsFull)
-                    {
-                        room.IsFinished = true;
-                        if (room is TicTacToeRoom xoRoom)
-                        {
-                            xoRoom.WinnerPlayerId = opponentId;
-                            xoRoom.WinnerSymbol = opponentId == xoRoom.Player1Id ? "X" : "O";
-                            await _gameService.SaveMatchHistoryAsync(xoRoom);
-                        }
-                    }
+                if (!room.HasStarted)
+                {
+                    _roomService.RemoveRoomAndPlayers(roomId!);
+                    if (room.IsFull) await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
+                    return;
+                }
 
-                    await Clients.Group(roomId)
-                        .SendAsync("OpponentDisconnected");
+                if (room.IsBotGame)
+                {
+                    room.IsFinished = true;
+                    room.WinnerPlayerId = room.Player1Id == playerId ? room.Player2Id : room.Player1Id;
+                    if (room is TicTacToeRoom xoRoom)
+                        xoRoom.WinnerSymbol = room.WinnerPlayerId == xoRoom.Player1Id ? "X" : "O";
+                    await _gameService.SaveMatchHistoryAsync(room);
+                    _roomService.RemoveRoomAndPlayers(roomId!);
+                    await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
+                    return;
+                }
+
+                room.IsBotGame = true;
+                if (room.Player1Id == playerId)
+                    room.Player1Username = "AI Bot";
+                else
+                    room.Player2Username = "AI Bot";
+
+                if (room is TicTacToeRoom xo && xo.CurrentTurnPlayerId == playerId)
+                {
+                    var botSymbol = xo.Player1Id == playerId ? "X" : "O";
+                    var botMove = TicTacToeMinimax.GetBestMove(xo.Board, botSymbol);
+                    if (botMove >= 0)
+                        room.ProcessInput(playerId, "MAKE_MOVE", botMove.ToString());
+                }
+
+                await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
             }
+
             await base.OnDisconnectedAsync(exception);
         }
 
         public async Task FindMatch(GamesKind gameType)
         {
             string playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-            if ( PlayerToRoom.TryGetValue(playerId,out var existingRoomId)
-                && Rooms.TryGetValue(existingRoomId, out var existingRoom)
-                && !existingRoom.IsFinished
-                )
+
+            if (_roomService.TryGetPlayerRoom(playerId, out var existingRoomId)
+                && _roomService.TryGetRoom(existingRoomId!, out var existingRoom)
+                && !existingRoom!.IsFinished
+            )
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId);
+                existingRoom.DisconnectedPlayerId = null;
+                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
                 await Clients.Caller.SendAsync("gameState", existingRoom.GetStatePayload());
                 return;
             }
-            BaseGameRoom? room = null;
 
-            lock (_matchLock)
-            {
-                var openRoom = Rooms.Values.FirstOrDefault(r =>
-                     r.GameType == gameType &&
-                     !r.IsFull &&
-                     !r.IsPrivate &&
-                     r.Player1Id != playerId);
-
-                if (openRoom != null)
-                {
-                    openRoom.Player2Id = playerId;
-                    openRoom.Player2Username = Context.User?.Identity?.Name ?? "Player 2";
-                    openRoom.IsFull = true;
-
-                    if (openRoom is TicTacToeRoom xo)
-                        xo.CurrentTurnPlayerId = openRoom.Player1Id!;
-
-                    room = openRoom;
-                }
-                else
-                {
-                    room = gameType switch
-                    {
-                        GamesKind.TicTacToe => new TicTacToeRoom(),
-                        _ => throw new AppException(ErrorCode.InvalidGameType)
-                    };
-
-                    room.Player1Id = playerId;
-                    room.Player1Username = Context.User?.Identity?.Name ?? "Player 1";
-                    Rooms[room.RoomId] = room;
-                }
-
-                PlayerToRoom[playerId] = room.RoomId;
-            }
+            var username = Context.User?.Identity?.Name ?? "Player 1";
+            var (room, _) = _roomService.FindOrCreateRoom(gameType, playerId, username);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
-
             await Clients.Group(room.RoomId)
                 .SendAsync("gameState", room.GetStatePayload());
         }
 
         public async Task SendAction(string inputType, string payload)
         {
-
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-            if ( !PlayerToRoom.TryGetValue(playerId, out var roomId)
-                || !Rooms.TryGetValue(roomId, out var room) 
-                || room.IsFinished 
-                || (room.Player1Id != playerId && room.Player2Id != playerId)
-                || (room is TicTacToeRoom xoRoom && xoRoom.CurrentTurnPlayerId != playerId)
-                ) return;
 
+            if (!_roomService.TryGetPlayerRoom(playerId, out var roomId)
+                || !_roomService.TryGetRoom(roomId!, out var room)
+                || room!.IsFinished
+                || (room.Player1Id != playerId && room.Player2Id != playerId)
+            )
+                return;
 
             room.ProcessInput(playerId, inputType, payload);
 
-            await Clients.Group(roomId)
-                        .SendAsync("gameState", room.GetStatePayload());
-
-            if (room is TicTacToeRoom game && game.IsFinished)
+            if (!room.IsFinished && room.IsBotGame && room is TicTacToeRoom xoRoom)
             {
-                await _gameService.SaveMatchHistoryAsync(game);
-
-                Rooms.TryRemove(roomId, out _);
-
-                if (game.Player1Id != null)
-                    PlayerToRoom.TryRemove(game.Player1Id, out _);
-
-                if (game.Player2Id != null)
-                    PlayerToRoom.TryRemove(game.Player2Id, out _);
+                var botId = room.Player1Id == playerId ? room.Player2Id! : room.Player1Id!;
+                var botSymbol = botId == xoRoom.Player1Id ? "X" : "O";
+                var botMove = TicTacToeMinimax.GetBestMove(xoRoom.Board, botSymbol);
+                if (botMove >= 0)
+                {
+                    room.ProcessInput(botId, "MAKE_MOVE", botMove.ToString());
+                }
             }
+
+            await Clients.Group(roomId!)
+                .SendAsync("gameState", room.GetStatePayload());
+
+            if (room.IsFinished)
+            {
+                await _gameService.SaveMatchHistoryAsync(room);
+                _roomService.RemoveRoomAndPlayers(roomId!);
+            }
+        }
+
+        public async Task StartGame(string? friendId, GamesKind gameKind)
+        {
+            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
+            if (!_roomService.TryGetPlayerRoom(playerId, out var roomId)
+                || !_roomService.TryGetRoom(roomId!, out var room)
+                || room!.GameType != gameKind
+                || room.Player1Id != playerId
+                || room.HasStarted)
+                return;
+
+            if (room.Player2Id == null)
+            {
+                room.Player2Id = "__BOT__";
+                room.Player2Username = "AI Bot";
+                room.IsFull = true;
+                room.IsBotGame = true;
+            }
+            else if (friendId != null && room.Player2Id != friendId)
+            {
+                return;
+            }
+
+            room.HasStarted = true;
+            if (room is TicTacToeRoom xo)
+                xo.CurrentTurnPlayerId = room.Player1Id!;
+
+            await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
+        }
+
+        public async Task LeaveGame()
+        {
+            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
+
+            if (!_roomService.TryGetPlayerRoom(playerId, out var roomId)
+                || !_roomService.TryGetRoom(roomId!, out var room)
+                || room!.IsFinished)
+                return;
+
+            if (!room.HasStarted || room.Player2Id == null)
+            {
+                _roomService.RemoveRoomAndPlayers(roomId!);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
+                return;
+            }
+
+            _roomService.TryRemovePlayer(playerId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
+
+            if (room.IsBotGame)
+            {
+                room.IsFinished = true;
+                room.WinnerPlayerId = room.Player1Id == playerId ? room.Player2Id : room.Player1Id;
+                if (room is TicTacToeRoom xo)
+                    xo.WinnerSymbol = room.WinnerPlayerId == xo.Player1Id ? "X" : "O";
+                await _gameService.SaveMatchHistoryAsync(room);
+                _roomService.RemoveRoomAndPlayers(roomId!);
+            }
+            else
+            {
+                room.IsBotGame = true;
+                if (room.Player1Id == playerId)
+                    room.Player1Username = "AI Bot";
+                else
+                    room.Player2Username = "AI Bot";
+
+                if (room is TicTacToeRoom xo && xo.CurrentTurnPlayerId == playerId)
+                {
+                    var botSymbol = xo.Player1Id == playerId ? "X" : "O";
+                    var botMove = TicTacToeMinimax.GetBestMove(xo.Board, botSymbol);
+                    if (botMove >= 0)
+                        room.ProcessInput(playerId, "MAKE_MOVE", botMove.ToString());
+                }
+            }
+
+            await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
+        }
+
+        public async Task InviteToRoom(string friendId)
+        {
+            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
+
+            if (!_roomService.TryGetPlayerRoom(playerId, out var roomId)
+                || !_roomService.TryGetRoom(roomId!, out var room)
+                || room!.IsFinished || room.IsFull)
+                return;
+
+            room.InvitedPlayerId = friendId;
+
+            var username = Context.User?.Identity?.Name ?? "Player";
+            await _chatHubContext.Clients.User(friendId).SendAsync("GameInvite", new
+            {
+                roomId = room.RoomId,
+                gameType = room.GameType,
+                inviterId = playerId,
+                inviterName = username
+            });
         }
 
         public Task<object?> GetCurrentState()
         {
-
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
 
-            if ( PlayerToRoom.TryGetValue(playerId, out var roomId) 
-                && Rooms.TryGetValue(roomId, out var room))
+            if (_roomService.TryGetPlayerRoom(playerId, out var roomId)
+                && _roomService.TryGetRoom(roomId!, out var room))
             {
-                return Task.FromResult<object?>(room.GetStatePayload());
+                return Task.FromResult<object?>(room!.GetStatePayload());
             }
 
             return Task.FromResult<object?>(null);
@@ -150,62 +234,37 @@ namespace backend.Hubs
 
         public async Task CancelSearch()
         {
-
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
 
-            if (PlayerToRoom.TryGetValue(playerId, out var roomId) &&
-                Rooms.TryGetValue(roomId, out var room))
+            if (_roomService.TryGetPlayerRoom(playerId, out var roomId) &&
+                _roomService.TryGetRoom(roomId!, out var room))
             {
-                if (!room.IsFull)
+                if (!room!.IsFull)
                 {
-                    Rooms.TryRemove(roomId, out _);
-                    PlayerToRoom.TryRemove(playerId, out _);
-                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
+                    _roomService.TryRemoveRoom(roomId!);
+                    _roomService.TryRemovePlayer(playerId);
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
                 }
             }
         }
-        public async Task StartGame(string friendId, GamesKind gameKind)
-        {
-            var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-            if ( !PlayerToRoom.TryGetValue(playerId, out var roomId)
-                || !Rooms.TryGetValue(roomId, out var room)
-                || room.GameType != gameKind
-                || room.Player1Id != playerId
-                || room.Player2Id != friendId) return;
 
-                room.HasStarted = true;
-                await Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
-        }
-        
         public async Task InviteFriend(string friendId, GamesKind gameType)
         {
-
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
             string username = Context.User?.Identity?.Name ?? "Player";
 
-            if (PlayerToRoom.TryGetValue(playerId, out var existingRoomId) 
-                && Rooms.TryGetValue(existingRoomId, out var existingRoom) 
-                && !existingRoom.IsFinished)
+            if (_roomService.TryGetPlayerRoom(playerId, out var existingRoomId)
+                && _roomService.TryGetRoom(existingRoomId!, out var existingRoom)
+                && !existingRoom!.IsFinished)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId);
+                existingRoom.DisconnectedPlayerId = null;
+                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
                 await Clients.Caller.SendAsync("gameState", existingRoom.GetStatePayload());
                 return;
             }
 
-            var room = gameType switch
-            {
-                GamesKind.TicTacToe => new TicTacToeRoom
-                {
-                    Player1Id = playerId,
-                    Player1Username = username,
-                    RoomId = Guid.NewGuid().ToString("N"),
-                    IsPrivate = true,
-                    InvitedPlayerId = friendId,
-                },
-                _ => throw new AppException(ErrorCode.InvalidGameType)
-            };
-            Rooms[room.RoomId] = room;
-            PlayerToRoom[playerId] = room.RoomId;
+            var room = _roomService.CreatePrivateRoom(gameType, playerId, username, friendId);
+
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
             await Clients.Group(room.RoomId).SendAsync("gameState", room.GetStatePayload());
             await _chatHubContext.Clients.User(friendId).SendAsync("GameInvite", new
@@ -220,22 +279,16 @@ namespace backend.Hubs
         public async Task AcceptInvite(string roomId)
         {
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-            if(roomId == null) throw new AppException(ErrorCode.InvalidRoomId);
-            var username = Context.User?.Identity?.Name ;
+            if (roomId == null) throw new AppException(ErrorCode.InvalidRoomId);
+            var username = Context.User?.Identity?.Name;
 
-            if (Rooms.TryGetValue(roomId, out var room)
-                && !room.IsFull
-                && room.Player1Id != playerId
-                && (room.InvitedPlayerId is null 
-                    || room.InvitedPlayerId == playerId))
+            if (_roomService.TryJoinRoom(roomId, playerId, username))
             {
-                room.Player2Id = playerId;
-                room.Player2Username = username;
-                room.IsFull = true;
-                if (room.Player1Id != null && room is TicTacToeRoom xo) xo.CurrentTurnPlayerId = room.Player1Id;
-                PlayerToRoom[playerId] = roomId;
                 await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-                await Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+                if (_roomService.TryGetRoom(roomId, out var room))
+                {
+                    await Clients.Group(roomId).SendAsync("gameState", room!.GetStatePayload());
+                }
             }
         }
     }

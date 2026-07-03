@@ -15,11 +15,10 @@ builder.Services.AddControllers();
 
 // Database
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")),
-    ServiceLifetime.Scoped); // Force the factory options to match the scoped context
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped(sp =>
+    sp.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
 // Authentication & Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -76,7 +75,7 @@ builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>(
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
 builder.Services.AddScoped<IFriendService, FriendService>();
 builder.Services.AddScoped<IChatService, ChatService>();
-// to avoid thread safety issues, we can use singleton for GameService since it will be used in SignalR hub
+builder.Services.AddSingleton<IGameRoomService, GameRoomService>();
 builder.Services.AddScoped<IGameService, GameService>();
 var app = builder.Build();
 

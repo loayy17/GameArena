@@ -18,6 +18,8 @@ namespace backend.Domain
         public bool HasStarted { get; set; } = false;
         public string? WinnerPlayerId { get; set; }
         public string? WinnerSymbol { get; set; }
+        public string? DisconnectedPlayerId { get; set; }
+        public bool IsBotGame { get; set; } = false;
         // methods
         public abstract void UpdatePhysics(float deltaTime); // for ping pong & snake 
         public abstract object GetStatePayload(); // for sending to clients

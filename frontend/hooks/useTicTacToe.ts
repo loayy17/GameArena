@@ -103,13 +103,25 @@ export function useTicTacToe() {
     if (!connection || !gameState || gameState.isFinished) return;
     await connection.invoke("SendAction", "MAKE_MOVE", cell.toString());
   };
-  const startGame = async (friendId: string) => {
+  const startGame = async (friendId: string | null) => {
     if (!connection || !isConnected) return;
     await connection.invoke("StartGame", friendId, GamesKindEnum.TicTacToe);
   };
   const inviteFriend = async (friendId: string) => {
     if (!connection || !isConnected) return;
     await connection.invoke("InviteFriend", friendId, GamesKindEnum.TicTacToe);
+  };
+  const inviteToRoom = async (friendId: string) => {
+    if (!connection || !isConnected) return;
+    await connection.invoke("InviteToRoom", friendId);
+  };
+  const leaveGame = async () => {
+    if (!connection) return;
+    await connection.invoke("LeaveGame");
+    setRoomId(null);
+    setGameState(null);
+    setIsSearching(false);
+    setOpponentDisconnected(false);
   };
   const resetGame = async () => {
     if (isSearching && connection) {
@@ -129,6 +141,8 @@ export function useTicTacToe() {
   // ======================
   // return API
   // ======================
+  const isBotGame = gameState?.isBotGame ?? false;
+
   return {
     board,
     roomId,
@@ -136,6 +150,7 @@ export function useTicTacToe() {
     isConnected,
     isSearching,
     opponentDisconnected,
+    isBotGame,
     isMyTurn,
     mySymbol,
     result,
@@ -143,6 +158,8 @@ export function useTicTacToe() {
     makeMove,
     resetGame,
     inviteFriend,
+    inviteToRoom,
     startGame,
+    leaveGame,
   };
 }
