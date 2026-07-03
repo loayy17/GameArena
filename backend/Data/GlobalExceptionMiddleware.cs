@@ -18,6 +18,7 @@ namespace backend.Data
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = error.StatusCode;
                 var json = JsonSerializer.Serialize(error.value);
+                json += $"\n{ex.Message}\n{ex.StackTrace}";
                 await context.Response.WriteAsync(json);
             }
         }

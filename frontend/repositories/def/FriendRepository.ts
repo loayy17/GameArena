@@ -1,5 +1,6 @@
 import { friendsApi } from "../proxy/friends.api";
-import type { TPromise } from "@/types";
+import type { TPromise } from "@/domain/type/TCommon";
+
 import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceived";
 import type { IFriendRequestSent } from "@/domain/meta/IFriendRequestSent";
 import type { IUser } from "@/domain/meta/IUser";

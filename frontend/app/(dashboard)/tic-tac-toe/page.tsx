@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import type { IFriend } from "@/domain/meta/ICommon";
+import type { IApiResponse } from "@/domain/meta/IApiResponse";
+import type { IUser } from "@/domain/meta/IUser";
 import { FriendsList } from "@/component/SocialPanel/FriendsList";
 
 type LobbyTab = "quick" | "invite";
@@ -78,8 +80,8 @@ function TicTacToePage() {
       setLoadingFriends(true);
       friendService
         .getFriends({ name: null, userStatus: UserStatusEnum.All })
-        .then((res: { data: IFriend[] }) => {
-          if (!ignore) setFriends(res.data || []);
+        .then((res: IApiResponse<IUser[]>) => {
+          if (!ignore) setFriends((res.data ?? []) as IFriend[]);
         })
         .catch(() => {})
         .finally(() => {

@@ -1,5 +1,6 @@
 import type { IUser } from "@/domain/meta/IUser";
-import type { TPromise } from "@/types";
+import type { TPromise } from "@/domain/type/TCommon";
+
 import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
 import type { IUserService } from "../meta/IUserService";
 import { userRepository } from "@/repositories/def/UserRepository";

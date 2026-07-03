@@ -1,7 +1,8 @@
 import { emailVerficationRepository } from "@/repositories/def/EmailVerficationRepository";
 import type { ISendOtpRequest } from "@/domain/meta/ISendOtpRequest";
 import type { IVerifyOtpRequest } from "@/domain/meta/IVerifyOtpRequest";
-import type { TPromise } from "@/types";
+import type { TPromise } from "@/domain/type/TCommon";
+
 import type { IEmailVerficationService } from "../meta/IEmailVerficationService";
 import type { IEmailVerficationRepository } from "@/repositories/meta/IEmailVerficationRepository";
 

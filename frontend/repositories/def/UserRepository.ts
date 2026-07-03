@@ -1,7 +1,8 @@
 import { userApi } from "../proxy/user.api";
 import type { IUser } from "@/domain/meta/IUser";
 import type { IUserRepository } from "../meta/IUserRepository";
-import type { TPromise } from "@/types";
+import type { TPromise } from "@/domain/type/TCommon";
+
 import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
 
 class UserRepository implements IUserRepository {

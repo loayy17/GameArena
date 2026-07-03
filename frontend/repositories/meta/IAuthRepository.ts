@@ -2,7 +2,7 @@ import type { IForgotPasswordRequest } from "@/domain/meta/IForgotPasswordReques
 import type { ILoginRequest } from "@/domain/meta/ILoginRequest";
 import type { IRegisterRequest } from "@/domain/meta/IRegisterRequest";
 import type { IResetPasswordRequest } from "@/domain/meta/IResetPasswordRequest";
-import type { TPromise } from "@/types";
+import type { TPromise } from "@/domain/type/TCommon";
 
 interface IAuthRepository {
   login(data: ILoginRequest): TPromise<void>;
