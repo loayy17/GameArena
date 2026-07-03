@@ -20,7 +20,7 @@ import {
 } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
 import type { IUser } from "@/domain/meta/IUser";
-import type { TPromise } from "@/domain/type/TCommon";
+import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
 interface Friend {
   id: string;
@@ -47,7 +47,7 @@ export function SocialPanel() {
     let ignore = false;
     friendService
       .getFriends({ name: null, userStatus: UserStatusEnum.All })
-      .then((res: TPromise<IUser[]>) => {
+      .then((res: IApiResponse<IUser[]>) => {
         if (!ignore) setFriends(res.data || []);
       })
       .catch(() => {})

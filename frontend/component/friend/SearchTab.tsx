@@ -63,12 +63,12 @@ function SearchTab() {
         ]);
 
         const sentIds = new Set(
-          (sentRes.data ?? []).map((request) => request.receiverId),
+          (sentRes.data ?? []).map((request: { receiverId: string }) => request.receiverId),
         );
 
         if (!ignore) {
           setSearchResults(
-            (usersRes.data ?? []).map((user) => ({
+            (usersRes.data ?? []).map((user: IUser) => ({
               ...user,
               isSendRequest: sentIds.has(user.id),
             })),

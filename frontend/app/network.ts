@@ -8,7 +8,7 @@ import type {
 } from "@/domain/type/TCommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
-export const baseURL = "https://localhost:7127/api/";
+export const baseURL = "https://gamearena-ppnc.onrender.com/api/";
 
 export const api = axios.create({
   baseURL,

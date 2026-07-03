@@ -3,8 +3,8 @@ import type { IForgotPasswordRequest } from "@/domain/meta/IForgotPasswordReques
 import type { IRegisterRequest } from "@/domain/meta/IRegisterRequest";
 import type { IResetPasswordRequest } from "@/domain/meta/IResetPasswordRequest";
 import type { ILoginRequest } from "@/domain/meta/ILoginRequest";
-import type { TPromise } from "@/types";
 import type { IAuthRepository } from "../meta/IAuthRepository";
+import type { TPromise } from "@/domain/type/TCommon";
 
 class AuthRepository implements IAuthRepository {
   private static instance: AuthRepository;

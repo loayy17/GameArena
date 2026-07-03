@@ -8,7 +8,8 @@ import {
 } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:7127";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
 
 export function useConnection(endPoint: string) {
   const [connection, setConnection] = useState<HubConnection | null>(null);
