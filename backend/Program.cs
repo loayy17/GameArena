@@ -86,6 +86,13 @@ builder.Services.AddSingleton<IGameRoomService, GameRoomService>();
 builder.Services.AddScoped<IGameService, GameService>();
 var app = builder.Build();
 
+// Auto-apply pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    using var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+    db.Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
