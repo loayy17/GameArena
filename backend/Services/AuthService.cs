@@ -1,4 +1,3 @@
-using backend.Auth;
 using backend.Data;
 using backend.Domain;
 using backend.DTOs.Requests;
@@ -105,7 +104,7 @@ namespace backend.Services
             _context.RefreshTokens.Remove(storedToken);
             await _context.SaveChangesAsync();
         }
-        public async Task ForgotPassword(string email)
+        public async Task ForgotPasswordAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
 

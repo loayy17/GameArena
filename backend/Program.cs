@@ -1,4 +1,3 @@
-using backend.Auth;
 using backend.Data;
 using backend.Hubs;
 using backend.Services;
@@ -14,12 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Database
-builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsql => npgsql.MigrationsAssembly(typeof(Program).Assembly.GetName().Name!)));
-
-builder.Services.AddScoped(sp =>
-    sp.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Authentication & Authorization
 var jwtKey = builder.Configuration["JWT:Token"]
     ?? throw new InvalidOperationException("JWT:Token is not configured");

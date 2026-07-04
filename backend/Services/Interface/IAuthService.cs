@@ -9,7 +9,7 @@ namespace backend.Services.Interface
         Task RegisterAsync(RegisterRequest request);
         Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken);
         Task RevokeRefreshTokenAsync(string refreshToken);
-        Task ForgotPassword(string email);
+        Task ForgotPasswordAsync(string email);
         Task ResetPasswordAsync(string email, string otp, string newPassword);
     }
 }

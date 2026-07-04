@@ -7,7 +7,7 @@ namespace backend.Services.Interface
     public interface IUserService
     {
         Task<UserResponse> GetUserByIdAsync(Guid userId);
-        Task<List<UserResponse>> GetUsers(Guid currentUserId, UserFilterRequest? filter);
+        Task<List<UserResponse>> GetUsersAsync(Guid currentUserId, UserFilterRequest? filter);
 
     }
 }

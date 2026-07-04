@@ -1,17 +1,13 @@
 using backend.Domain;
-using backend.Enums;
-using backend.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Buffers.Text;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
-namespace backend.Auth
+namespace backend.Utils
 {
     public static class AuthHelper
     {

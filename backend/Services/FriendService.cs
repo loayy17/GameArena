@@ -15,23 +15,20 @@ namespace backend.Services
         {
             if (senderId == receiverId) throw new AppException(ErrorCode.InvalidRequest);
 
-            var exists = await _context.Users.AnyAsync(x => x.Id == senderId || x.Id == receiverId);
+            var existing = await _context.UserFriends
+                .Where(x => (x.UserId == senderId && x.FriendId == receiverId) || (x.UserId == receiverId && x.FriendId == senderId))
+                .Select(x => 1)
+                .AnyAsync();
 
-            if (!exists) throw new AppException(ErrorCode.UserNotFound);
+            if (existing) throw new AppException(ErrorCode.AlreadyFriends);
 
-            var alreadyFriends = await _context.UserFriends.AnyAsync(x =>
-                (x.UserId == senderId && x.FriendId == receiverId) ||
-                (x.UserId == receiverId && x.FriendId == senderId));
+            var request = await _context.FriendRequests
+                .Where(fr => (fr.SenderId == senderId && fr.ReceiverId == receiverId) || (fr.SenderId == receiverId && fr.ReceiverId == senderId))
+                .Select(fr => fr.SenderId == senderId ? 1 : 2)
+                .FirstOrDefaultAsync();
 
-            if (alreadyFriends) throw new AppException(ErrorCode.AlreadyFriends);
-
-            var requestExists = await _context.FriendRequests.AnyAsync(fr => fr.SenderId == senderId && fr.ReceiverId == receiverId);
-
-            if (requestExists) throw new AppException(ErrorCode.RequestAlreadyExists);
-
-            var reverseRequest = await _context.FriendRequests.AnyAsync(fr => fr.SenderId == receiverId && fr.ReceiverId == senderId);
-
-            if (reverseRequest) throw new AppException(ErrorCode.ReceiverHasAlreadySentRequest);
+            if (request == 1) throw new AppException(ErrorCode.RequestAlreadyExists);
+            if (request == 2) throw new AppException(ErrorCode.ReceiverHasAlreadySentRequest);
 
             _context.FriendRequests.Add(new FriendRequest
             {
@@ -80,7 +77,7 @@ namespace backend.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<UserResponse>> GetFriendsAsync(Guid userId, UserFilterRequest filter)
+        public async Task<List<UserResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter)
         {
             var query = _context.UserFriends
                 .Where(x => x.UserId == userId)
@@ -88,7 +85,7 @@ namespace backend.Services
                 .Select(x => x.Friend)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(filter.Name))
+            if (filter != null && !string.IsNullOrWhiteSpace(filter.Name))
             {
                 var searchTerm = filter.Name.ToLower();
 

@@ -103,12 +103,12 @@ function RegisterForm() {
     } catch (e) {
       const err = e as AxiosError<IApiResponse<unknown>>;
       const data = err?.response?.data;
-      const code = data?.ErrorCode;
+      const code = data?.errorCode;
 
       const errorMessage =
         code !== undefined && t.RegisterErrorCodeEnum[code as keyof typeof t.RegisterErrorCodeEnum]
           ? t.RegisterErrorCodeEnum[code as keyof typeof t.RegisterErrorCodeEnum]
-          : data?.Message || t.unknownError;
+          : data?.message || t.unknownError;
 
       if (code === ErrorCodeEnum.EmailAlreadyExists) {
         setApiError({ link: "/login", message: errorMessage });

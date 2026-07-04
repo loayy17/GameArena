@@ -2,6 +2,7 @@
 using backend.Domain;
 using backend.DTOs.Responses;
 using backend.Enums;
+using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,22 +12,23 @@ namespace backend.Services
     {
         public async Task<List<MessageResponse>> GetMessagesAsync(Guid userId, Guid friendId)
         {
+            var unreadMessages = await context.Messages
+                .Where(m => m.ReceiverId == userId && m.SenderId == friendId && !m.IsRead)
+                .ToListAsync();
+
+            if (unreadMessages.Count > 0)
+            {
+                foreach (var msg in unreadMessages)
+                    msg.IsRead = true;
+                await context.SaveChangesAsync();
+            }
+
             var messages = await context.Messages
                 .Where(m =>
                     (m.SenderId == userId && m.ReceiverId == friendId) ||
                     (m.SenderId == friendId && m.ReceiverId == userId))
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
-
-            var unreadMessages = messages
-                .Where(m => m.ReceiverId == userId && !m.IsRead)
-                .ToList();
-
-            if (unreadMessages.Count > 0)
-            {
-                unreadMessages.ForEach(message => message.IsRead = true);
-                await context.SaveChangesAsync();
-            }
 
             return messages.Select(MapperHelper.ToDto).ToList();
         }

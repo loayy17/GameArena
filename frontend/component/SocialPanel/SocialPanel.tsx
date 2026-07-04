@@ -48,7 +48,7 @@ export function SocialPanel() {
     friendService
       .getFriends({ name: null, userStatus: UserStatusEnum.All })
       .then((res: IApiResponse<IUser[]>) => {
-        if (!ignore) setFriends(res.Data || []);
+        if (!ignore) setFriends(res.data || []);
       })
       .catch(() => {})
       .finally(() => {

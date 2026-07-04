@@ -15,7 +15,7 @@ namespace backend.Services.Interface
         Task DeclineFriendRequestAsync(Guid userId, Guid senderId);
 
         // get fiends for users with filter (all, online, offline)
-        Task<List<UserResponse>> GetFriendsAsync(Guid userId, UserFilterRequest filter);
+        Task<List<UserResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter);
 
         // get all requests that receive for users
         Task<List<FriendRequestReceivedResponse>> GetFriendRequestsAsync(Guid userId);

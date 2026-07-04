@@ -1,4 +1,4 @@
-﻿using backend.Services;
+﻿using backend.Services.Interface;
 using Microsoft.AspNetCore.SignalR;
 
 namespace backend.Hubs

@@ -1,7 +1,7 @@
 ﻿using backend.Domain;
 using backend.DTOs.Responses;
 
-namespace backend.Services
+namespace backend.Services.Interface
 {
     public interface IChatService
     {

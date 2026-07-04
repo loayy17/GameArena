@@ -17,7 +17,7 @@ namespace backend.Services
             return MapperHelper.ToDto(user);
         }
 
-        public async Task<List<UserResponse>> GetUsers(Guid currentUserId, UserFilterRequest? filter)
+        public async Task<List<UserResponse>> GetUsersAsync(Guid currentUserId, UserFilterRequest? filter)
         {
             if (string.IsNullOrWhiteSpace(filter?.Name)) return [];
 

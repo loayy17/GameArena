@@ -73,12 +73,11 @@ function LoginForm() {
       }
     } catch (e: unknown) {
       const err = e as AxiosError<IApiResponse<unknown>>;
-      const code = err?.response?.data?.ErrorCode;
-      console.log(err?.response?.data);
-      console.log(code);
+      const data = err?.response?.data;
+      const code = data?.errorCode;
       const errorMessage =
         t.loginErrorCodeEnum[code as keyof typeof t.loginErrorCodeEnum] ||
-        err?.response?.data?.Message ||
+        data?.message ||
         t.unknownError;
 
       if (code === ErrorCodeEnum.EmailNotVerified) {

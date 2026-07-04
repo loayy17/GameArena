@@ -53,7 +53,7 @@ namespace backend.Controllers
         [HttpPost("forgot-password")]
         public async Task<ActionResult<ApiResponse<object>>> ForgotPassword(ForgotPasswordRequest request)
         {
-            await _authService.ForgotPassword(request.Email);
+            await _authService.ForgotPasswordAsync(request.Email);
             return Ok(new ApiResponse<object> { Message = "If the email exists, OTP has been sent" });
         }
 

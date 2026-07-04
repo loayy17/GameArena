@@ -29,7 +29,7 @@ namespace backend.Controllers
         [HttpPost("search")]
         public async Task<ActionResult<ApiResponse<List<UserResponse>>>> GetUsers([FromBody] UserFilterRequest filter)
         {
-            var users = await _userService.GetUsers(_currentUser.UserId, filter);
+            var users = await _userService.GetUsersAsync(_currentUser.UserId, filter);
             return Ok(new ApiResponse<List<UserResponse>> { Data = users });
         }
     }

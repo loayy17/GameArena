@@ -80,7 +80,7 @@ function TicTacToePage() {
       friendService
         .getFriends({ name: null, userStatus: UserStatusEnum.All })
         .then((res: IApiResponse<IUser[]>) => {
-          if (!ignore) setFriends((res.Data ?? []) as IFriend[]);
+          if (!ignore) setFriends((res.data ?? []) as IFriend[]);
         })
         .catch(() => {})
         .finally(() => {

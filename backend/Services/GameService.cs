@@ -3,31 +3,25 @@ using backend.Domain;
 using backend.Enums;
 using backend.Services.Interface;
 using backend.Utils;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class GameService(IDbContextFactory<AppDbContext> _contextFactory) : IGameService
+    public class GameService(AppDbContext _context) : IGameService
     {
         public async Task SaveMatchHistoryAsync(BaseGameRoom room)
         {
-            if (room == null) throw new AppException(ErrorCode.RoomNotFound);
+            if (room?.Player1Id == null || room.Player2Id == null)
+                throw new AppException(room == null ? ErrorCode.RoomNotFound : ErrorCode.PlayerNotFound);
 
-            if (room.Player1Id == null) throw new AppException(ErrorCode.PlayerNotFound);
-
-            if (room.Player2Id == null) throw new AppException(ErrorCode.PlayerNotFound);
-
-            using var context = await _contextFactory.CreateDbContextAsync();
-
-            context.MatchHistories.Add(new MatchHistory
+            _context.MatchHistories.Add(new MatchHistory
             {
                 RoomId = room.RoomId,
                 GameType = room.GameType,
-                Player1Id = room.Player1Id!,
-                Player2Id = room.Player2Id!,
+                Player1Id = room.Player1Id,
+                Player2Id = room.Player2Id,
                 CompletedAt = DateTime.UtcNow
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
     }
 }

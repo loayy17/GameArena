@@ -1,5 +1,4 @@
-﻿using backend.Auth;
-using backend.Data;
+﻿using backend.Data;
 using backend.Domain;
 using backend.Enums;
 using backend.Services.Interface;
