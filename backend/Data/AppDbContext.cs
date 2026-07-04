@@ -13,6 +13,7 @@ namespace backend.Data
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<MatchHistory> MatchHistories { get; set; }
+        public DbSet<Block> Blocks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // tokens
@@ -56,6 +57,20 @@ namespace backend.Data
                 .HasOne(x => x.Receiver)
                 .WithMany(u => u.FriendRequestsReceived)
                 .HasForeignKey(x => x.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // blocks same as friends but with different entity
+            modelBuilder.Entity<Block>()
+                .HasKey(b => new { b.BlockerId, b.BlockedId });
+            modelBuilder.Entity<Block>()
+                .HasOne(b => b.Blocker)
+                .WithMany()
+                .HasForeignKey(b => b.BlockerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Block>()
+                .HasOne(b => b.Blocked)
+                .WithMany()
+                .HasForeignKey(b => b.BlockedId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // chat

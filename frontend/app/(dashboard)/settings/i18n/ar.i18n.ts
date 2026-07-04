@@ -3,7 +3,6 @@ const ar = {
   settings: {
     profile: {
       title: "الملف الشخصي",
-      description: "حدّث معلوماتك الشخصية وإعدادات حسابك.",
       firstName: "الاسم الأول",
       lastName: "اسم العائلة",
       username: "اسم المستخدم",
@@ -15,7 +14,6 @@ const ar = {
     },
     notifications: {
       title: "الإشعارات",
-      description: "إدارة تفضيلات الإشعارات والتنبيهات.",
       save: "حفظ التفضيلات",
       push: "إشعارات الدفع",
       email: "إشعارات البريد الإلكتروني",
@@ -24,7 +22,6 @@ const ar = {
     },
     privacy: {
       title: "الخصوصية",
-      description: "تحكم في إعدادات الخصوصية ومشاركة البيانات.",
       save: "تحديث الخصوصية",
       showOnline: "إظهار حالة الاتصال",
       allowFriendRequests: "السماح بطلبات الصداقة من الجميع",

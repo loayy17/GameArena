@@ -24,7 +24,7 @@ import { GButton } from "./common/GButton";
 import { GTabItem } from "./common/def/GTabs";
 import { GStatusDot } from "./common/GStatusDot";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { sidebarNav } from "@/domain/constant/sidebar_nav";
+import { sidebarNav } from "@/domain/constant/sidebarNav";
 
 function Sidebar() {
   const { user, setUser } = useAuth();

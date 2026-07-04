@@ -34,6 +34,18 @@ class FriendService implements IFriendService {
   rejectFriendRequest(senderId: string): TPromise<void> {
     return this.repo.rejectFriendRequest(senderId);
   }
+
+  removeFriend(friendId: string): TPromise<void> {
+    return this.repo.removeFriend(friendId);
+  }
+
+  blockUser(blockedId: string): TPromise<void> {
+    return this.repo.blockUser(blockedId);
+  }
+
+  unblockUser(blockedId: string): TPromise<void> {
+    return this.repo.unblockUser(blockedId);
+  }
 }
 
 const friendService = new FriendService(friendRepository);

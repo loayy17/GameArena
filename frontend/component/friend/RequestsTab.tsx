@@ -1,14 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, UserCheck, X } from "lucide-react";
-import { friendService } from "@/services/def/FriendService";
-import { EmptyState } from "@/component/common/GEmpty";
-import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceived";
+import { GEmpty } from "@/component/common/GEmpty";
 import { GButton } from "../common/GButton";
-import { GErrorBanner } from "../common/GErrorBanner";
 import { GSkeleton } from "../common/GSkeleton";
 import { useTranslation } from "@/hooks/useSetting";
+import { useFriendRequests } from "@/hooks/useFriends";
 import {
   en,
   type TFriendsTranslation,
@@ -17,56 +15,8 @@ import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
 
 function RequestsTab() {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
-  const [requests, setRequests] = useState<IFriendRequestReceived[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { requests, loading, accept, decline } = useFriendRequests();
   const [actionId, setActionId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await friendService.getReceivedFriendRequests();
-      setRequests(response.data ?? []);
-    } catch (err) {
-      console.error("Failed to load friend requests", err);
-      setError(t.requestsTab.loadError);
-      setRequests([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [t.requestsTab.loadError]);
-
-  useEffect(() => {
-    void loadRequests();
-  }, [loadRequests]);
-
-  const acceptRequest = async (senderId: string) => {
-    setActionId(senderId);
-    try {
-      await friendService.acceptFriendRequest(senderId);
-      await loadRequests();
-    } catch (err) {
-      console.error("Failed to accept friend request", err);
-      setError(t.requestsTab.acceptError);
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const declineRequest = async (senderId: string) => {
-    setActionId(senderId);
-    try {
-      await friendService.rejectFriendRequest(senderId);
-      await loadRequests();
-    } catch (err) {
-      console.error("Failed to decline friend request", err);
-      setError(t.requestsTab.declineError);
-    } finally {
-      setActionId(null);
-    }
-  };
 
   if (loading) {
     return (
@@ -93,19 +43,9 @@ function RequestsTab() {
     );
   }
 
-  if (error) {
-    return (
-      <GErrorBanner
-        message={error}
-        onRetry={() => void loadRequests()}
-        retryLabel={t.retry}
-      />
-    );
-  }
-
   if (requests.length === 0) {
     return (
-      <EmptyState
+      <GEmpty
         icon={<UserCheck className="h-12 w-12 text-text-muted" />}
         title={t.requestsTab.emptyTitle}
         description={t.requestsTab.emptyDescription}
@@ -145,7 +85,10 @@ function RequestsTab() {
               <GButton
                 variant="ghost"
                 size="icon"
-                onClick={() => void acceptRequest(req.senderId)}
+                onClick={() => {
+                  setActionId(req.senderId);
+                  accept(req.senderId).finally(() => setActionId(null));
+                }}
                 disabled={isBusy}
                 className="bg-neon-green/15 text-neon-green hover:bg-neon-green/25"
                 aria-label={t.requestsTab.accept}
@@ -155,7 +98,10 @@ function RequestsTab() {
               <GButton
                 variant="ghost"
                 size="icon"
-                onClick={() => void declineRequest(req.senderId)}
+                onClick={() => {
+                  setActionId(req.senderId);
+                  decline(req.senderId).finally(() => setActionId(null));
+                }}
                 disabled={isBusy}
                 className="bg-error/15 text-error hover:bg-error/25"
                 aria-label={t.requestsTab.decline}

@@ -21,7 +21,7 @@ import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
 import { authService } from "@/services/def/AuthService";
 import { FieldRegisterEnum } from "@/domain/enum/FieldRegisterEnum";
 import { AxiosError } from "axios";
-import { IApiResponse } from "@/domain/meta/IApiResponse";
+import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
 function RegisterForm() {
   const router = useRouter();

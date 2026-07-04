@@ -2,9 +2,14 @@
 
 import { Gamepad2 } from "lucide-react";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import type { IFriend } from "@/domain/meta/ICommon";
 import { GTile } from "../common/GTile";
 import { GStatusDot } from "../common/GStatusDot";
-import { IFriendsListProps } from "./def/FriendsList";
+
+interface IFriendsListProps {
+  friends: IFriend[];
+  onSelectFriend: (id: string) => void;
+}
 
 export function FriendsList({ friends, onSelectFriend }: IFriendsListProps) {
   return (

@@ -1,3 +1,5 @@
+"use client";
+
 import { Globe, Sun, Moon } from "lucide-react";
 import { GButton } from "./GButton";
 import clsx from "clsx";

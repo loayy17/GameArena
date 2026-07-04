@@ -7,7 +7,6 @@ const en = {
   email: "Email",
   dynamicFieldRequired: (field: string) => `${field} is required`,
   invalidEmail: "Invalid email address",
-  invalidNumber: "Invalid number",
   invalidConfirmPassword: "Passwords do not match",
   invalidPassword: {
     [PasswordValidationEnum.MinLength]:

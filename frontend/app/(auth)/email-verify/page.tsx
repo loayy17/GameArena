@@ -7,7 +7,7 @@ import { OtpForm } from "@/component/auth/OtpForm";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
 import { AuthFlowAnimationEnum } from "@/domain/enum/AuthFlowAnimationEnum";
-import { emailVerficationService } from "@/services/def/EmailVerficationService";
+import { emailVerificationService } from "@/services/def/EmailVerificationService";
 import { emailValidator } from "@/utils";
 import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
@@ -58,7 +58,7 @@ function EmailVerifyPage() {
     try {
       setLoading(true);
       setError("");
-      await emailVerficationService.sendOtp({ email });
+      await emailVerificationService.sendOtp({ email });
       setStep("otp");
     } catch {
       setError(t.errorSendFailed);

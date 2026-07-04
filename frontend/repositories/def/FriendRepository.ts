@@ -34,6 +34,19 @@ class FriendRepository implements IFriendRepository {
   rejectFriendRequest(senderId: string): TPromise<void> {
     return this.api.rejectFriendRequest({ senderId });
   }
+
+  removeFriend(friendId: string): TPromise<void> {
+    return this.api.removeFriend({ friendId });
+  }
+
+  blockUser(blockedId: string): TPromise<void> {
+    return this.api.blockUser({ blockedId });
+  }
+
+  unblockUser(blockedId: string): TPromise<void> {
+    return this.api.unblockUser({ blockedId });
+  }
+
   static getInstance() {
     if (!FriendRepository.instance) {
       FriendRepository.instance = new FriendRepository();

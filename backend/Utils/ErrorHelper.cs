@@ -5,13 +5,13 @@ namespace backend.Utils
 {
     public interface IErrorResponse
     {
-        ApiResponse<object> value { get; set; }
+        ApiResponse<object> Value { get; set; }
         int StatusCode { get; set; }
     }
 
     public class ErrorResponse : IErrorResponse
     {
-        public ApiResponse<object> value { get; set; } = null!;
+        public ApiResponse<object> Value { get; set; } = null!;
         public int StatusCode { get; set; }
     }
     public record ErrorDefinition(
@@ -77,8 +77,17 @@ namespace backend.Utils
              [ErrorCode.NoUsersFound] =
              (404, "No users found"),
 
-             [ErrorCode.NoFriendsFound] =
-             (404, "No friends found"),
+              [ErrorCode.AlreadyBlocked] =
+              (400, "User is already blocked"),
+
+              [ErrorCode.NotBlocked] =
+              (400, "User is not blocked"),
+
+              [ErrorCode.CannotSelfBlock] =
+              (400, "Cannot block yourself"),
+
+              [ErrorCode.UserBlockedYou] =
+              (403, "User has blocked you"),
 
              // FRIEND SYSTEM
 
@@ -161,7 +170,7 @@ namespace backend.Utils
             return new ErrorResponse
             {
                 StatusCode = statusCode,
-                value = new ApiResponse<object>
+                Value = new ApiResponse<object>
                 {
                     Success = false,
                     ErrorCode = code,

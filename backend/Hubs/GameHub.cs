@@ -1,5 +1,6 @@
 using backend.Domain;
 using backend.Enums;
+using backend.Events;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,11 @@ using Microsoft.AspNetCore.SignalR;
 namespace backend.Hubs
 {
     [Authorize]
-    public class GameHub(IGameRoomService _roomService, IGameService _gameService, INotificationService _notificationService, IGameBotService _botService) : Hub
+    public class GameHub(
+        IGameRoomService _roomService,
+        IGameService _gameService,
+        IGameBotService _botService,
+        IEventBus _eventBus) : Hub
     {
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -38,6 +43,7 @@ namespace backend.Hubs
                     room.WinnerPlayerId = room.Player1Id == playerId ? room.Player2Id : room.Player1Id;
                     if (room is TicTacToeRoom xoRoom)
                         xoRoom.WinnerSymbol = room.WinnerPlayerId == xoRoom.Player1Id ? "X" : "O";
+                    await _eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
                     await _gameService.SaveMatchHistoryAsync(room);
                     _roomService.RemoveRoomAndPlayers(roomId!);
                     await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
@@ -116,6 +122,7 @@ namespace backend.Hubs
 
             if (room.IsFinished)
             {
+                await _eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
                 await _gameService.SaveMatchHistoryAsync(room);
                 _roomService.RemoveRoomAndPlayers(roomId!);
             }
@@ -147,6 +154,8 @@ namespace backend.Hubs
             if (room is TicTacToeRoom xo)
                 xo.CurrentTurnPlayerId = room.Player1Id!;
 
+            await _eventBus.PublishAsync(new GameStartedEvent(playerId, room.Player2Id!));
+
             await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
         }
 
@@ -175,6 +184,7 @@ namespace backend.Hubs
                 room.WinnerPlayerId = room.Player1Id == playerId ? room.Player2Id : room.Player1Id;
                 if (room is TicTacToeRoom xo)
                     xo.WinnerSymbol = room.WinnerPlayerId == xo.Player1Id ? "X" : "O";
+                await _eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
                 await _gameService.SaveMatchHistoryAsync(room);
                 _roomService.RemoveRoomAndPlayers(roomId!);
             }
@@ -193,9 +203,10 @@ namespace backend.Hubs
                         room.ProcessInput(playerId, "MAKE_MOVE", botMove.ToString());
                 }
 
+                await _eventBus.PublishAsync(new GameLeftEvent(playerId));
             }
 
-                await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
+            await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
         }
 
         public async Task InviteToRoom(string friendId)
@@ -210,10 +221,10 @@ namespace backend.Hubs
             room.InvitedPlayerId = friendId;
 
             var username = Context.User?.Identity?.Name ?? "Player";
-            await _notificationService.SendToUserAsync(friendId, "GameInvite", new
+            await Clients.User(friendId).SendAsync("game:invite", new
             {
                 roomId = room.RoomId,
-                gameType = room.GameType,
+                gameType = (int)room.GameType,
                 inviterId = playerId,
                 inviterName = username
             });
@@ -267,10 +278,10 @@ namespace backend.Hubs
 
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
             await Clients.Group(room.RoomId).SendAsync("gameState", room.GetStatePayload());
-            await _notificationService.SendToUserAsync(friendId, "GameInvite", new
+            await Clients.User(friendId).SendAsync("game:invite", new
             {
                 roomId = room.RoomId,
-                gameType,
+                gameType = (int)gameType,
                 inviterId = playerId,
                 inviterName = username
             });

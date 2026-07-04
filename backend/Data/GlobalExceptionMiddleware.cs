@@ -23,7 +23,7 @@ namespace backend.Data
                 var error = ErrorHelper.GetErrorResponse(ex);
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = error.StatusCode;
-                var json = JsonSerializer.Serialize(error.value, _jsonOptions);
+                var json = JsonSerializer.Serialize(error.Value, _jsonOptions);
                 await context.Response.WriteAsync(json);
             }
         }

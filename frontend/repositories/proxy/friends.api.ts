@@ -27,6 +27,18 @@ const friendsApi = clientFactory(
       verb: "post",
       template: "/decline/{senderId}",
     },
+    removeFriend: {
+      verb: "post",
+      template: "/remove/{friendId}",
+    },
+    blockUser: {
+      verb: "post",
+      template: "/block/{blockedId}",
+    },
+    unblockUser: {
+      verb: "post",
+      template: "/unblock/{blockedId}",
+    },
   },
   undefined,
   (data) => data,

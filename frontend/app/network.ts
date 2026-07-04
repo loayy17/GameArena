@@ -8,7 +8,8 @@ import type {
 } from "@/domain/type/TCommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
-export const baseURL = "https://gamearena-ppnc.onrender.com/api/";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
+export const baseURL = `${API_BASE}/api/`;
 
 export const api = axios.create({
   baseURL,
@@ -83,7 +84,7 @@ api.interceptors.response.use(
 
 /* ---------------- URL ---------------- */
 
-export function buildUrl(template: string, payload?: THashMap) {
+export function buildUrl(template: string, payload?: THashMap): { url: string; leftover: THashMap } {
   if (payload == null) return { url: template, leftover: {} };
 
   if (typeof payload !== "object") {
@@ -149,7 +150,7 @@ export function clientFactory<T extends TEndpointsMap>(
   endpoints: T,
   config?: AxiosRequestConfig,
   resolver?: (data: unknown) => unknown,
-) {
+): { api: TProxy<T> } {
   const proxy = {} as TProxy<T>;
 
   for (const key in endpoints) {

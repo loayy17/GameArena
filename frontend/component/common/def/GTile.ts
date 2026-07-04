@@ -1,8 +1,8 @@
 import type { IFriend } from "@/domain/meta/ICommon";
 import type { IUser } from "@/domain/meta/IUser";
 
-interface IGTileProps {
+interface GTileProps {
   user: IUser | IFriend;
   size?: "sm" | "md" | "lg";
 }
-export type { IGTileProps };
+export type { GTileProps };

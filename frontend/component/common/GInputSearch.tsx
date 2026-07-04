@@ -2,6 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import { GTextField } from "./GTextField";
+import type { GInputSearchProps } from "./def/GInputSearch";
 
 export function GInputSearch({
   value,
@@ -10,14 +11,7 @@ export function GInputSearch({
   label,
   onClear,
   clearLabel,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  label?: string;
-  onClear?: () => void;
-  clearLabel?: string;
-}) {
+}: GInputSearchProps) {
   return (
     <div className="relative">
       {label && (

@@ -8,15 +8,12 @@ interface GTabItem<T extends string | number = string> {
   disabled?: boolean;
 }
 
-type GTabsDirection = "H" | "V";
-type GTabsVariant = "default" | "pills" | "sidebar" | "underline";
-
 interface GTabsProps<T extends string | number> {
   tabs: GTabItem<T>[];
   value: T;
   onChange: (tabId: T) => void;
-  direction?: GTabsDirection;
-  variant?: GTabsVariant;
+  direction?: "H" | "V";
+  variant?: "default" | "pills" | "sidebar" | "underline";
   className?: string;
   tabClassName?: string;
   fullWidth?: boolean;
@@ -26,4 +23,4 @@ interface GTabsProps<T extends string | number> {
   children?: ReactNode;
 }
 
-export type { GTabItem, GTabsDirection, GTabsProps, GTabsVariant };
+export type { GTabItem, GTabsProps };

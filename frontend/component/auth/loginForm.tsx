@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
-import { SubmitEvent, useState } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   en as EnTextField,

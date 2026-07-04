@@ -9,6 +9,7 @@ import type { IMessage } from "@/domain/meta/IMessage";
 import type { IUser } from "@/domain/meta/IUser";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IPrivateMessagePayload } from "@/domain/meta/IPrivateMessagePayload";
+import { useFetch } from "./useFetch";
 
 const normalizeMessage = (payload: IPrivateMessagePayload): IMessage => ({
   senderId: payload.senderId,
@@ -39,37 +40,29 @@ export function useMessages(initialFriendId?: string | null) {
   );
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [draft, setDraft] = useState("");
-  const [loadingMessages, setLoadingMessages] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { data: apiMessages, loading: loadingMessages, error } = useFetch(
+    () => {
+      if (!selectedFriendId) return Promise.resolve([] as IMessage[]);
+      return chatService
+        .getMessagesByFriendId(selectedFriendId)
+        .then((res) => (res.data ?? []).map(normalizeHistoryMessage));
+    },
+    [selectedFriendId],
+  );
+
+  useEffect(() => {
+    if (error) return;
+    if (loadingMessages) return;
+    if (!apiMessages) return;
+    setMessages(apiMessages);
+    refreshUnreadMessages();
+  }, [apiMessages, error, loadingMessages, refreshUnreadMessages]);
 
   const selectedFriend = useMemo<IUser | null>(() => {
     if (!selectedFriendId) return null;
     return friends.find((f) => f.id === selectedFriendId) ?? null;
   }, [friends, selectedFriendId]);
-
-  useEffect(() => {
-    if (!selectedFriendId) return;
-
-    let alive = true;
-    setError(null);
-
-    chatService.getMessagesByFriendId(selectedFriendId)
-      .then(response => {
-        if (!alive) return;
-        setMessages((response.data ?? []).map(normalizeHistoryMessage));
-        return refreshUnreadMessages();
-      })
-      .catch(() => {
-        if (!alive) return;
-        setMessages([]);
-        setError("Failed to load messages. Please try again.");
-      })
-      .finally(() => {
-        if (alive) setLoadingMessages(false);
-      });
-
-    return () => { alive = false; };
-  }, [refreshUnreadMessages, selectedFriendId]);
 
   useEffect(() => {
     if (!connection) return;
@@ -100,7 +93,6 @@ export function useMessages(initialFriendId?: string | null) {
 
   const selectFriend = useCallback((friendId: TNullable<string>) => {
     setSelectedFriendId(friendId);
-    if (friendId) setLoadingMessages(true);
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -113,7 +105,6 @@ export function useMessages(initialFriendId?: string | null) {
       setDraft("");
     } catch (err) {
       console.error("Failed to send message", err);
-      setError("Failed to send message. Please try again.");
     }
   }, [connection, draft, selectedFriendId]);
 

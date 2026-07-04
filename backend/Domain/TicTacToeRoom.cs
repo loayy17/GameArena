@@ -44,7 +44,7 @@ public class TicTacToeRoom : BaseGameRoom
 
         Board[cell] = playerId == Player1Id ? "X" : "O";
 
-        if (GameHelper.CheckWinTicTacTao(Board))
+        if (GameHelper.CheckWinTicTacToe(Board))
         {
             IsFinished = true;
             WinnerPlayerId = playerId;

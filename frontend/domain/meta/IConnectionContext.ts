@@ -4,10 +4,10 @@ import type { TNullable } from "../type/TCommon";
 interface IConnectionContext {
   chatConnection: TNullable<HubConnection>;
   gameConnection: TNullable<HubConnection>;
-  notificationConnection: TNullable<HubConnection>;
+  socialConnection: TNullable<HubConnection>;
   isChatConnected: boolean;
   isGameConnected: boolean;
-  isNotificationConnected: boolean;
+  isSocialConnected: boolean;
 }
 
 export type { IConnectionContext };

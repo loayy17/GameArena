@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace backend.Hubs
 {
     [Authorize]
-    public class ChatHub(IChatService chatService) : Hub
+    public class ChatHub(IChatService _chatService) : Hub
     {
         public override async Task OnConnectedAsync()
         {
@@ -18,7 +18,7 @@ namespace backend.Hubs
         public async Task SendPrivateMessage(Guid receiverId, string message)
         {
             var senderId = GetUserId();
-            var msg = await chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
+            var msg = await _chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
             await Clients.Group($"user:{senderId}").SendAsync("chat:private", msg);
             await Clients.Group($"user:{receiverId}").SendAsync("chat:private", msg);
         }
@@ -26,7 +26,7 @@ namespace backend.Hubs
         public async Task SendGlobalMessage(string message)
         {
             var senderId = GetUserId();
-            var msg = await chatService.CreateGlobalMessageAsync(senderId, message);
+            var msg = await _chatService.CreateGlobalMessageAsync(senderId, message);
             await Clients.Group("GlobalChat").SendAsync("chat:global", msg);
         }
 

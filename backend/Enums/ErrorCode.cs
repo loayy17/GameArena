@@ -26,7 +26,6 @@
         UserNotFound = 3001,
         UserAlreadyExists = 3002,
         NoUsersFound = 3003,
-        NoFriendsFound = 3004,
 
         // Friend
         RequestAlreadyExists = 4001,
@@ -34,6 +33,12 @@
         ReceiverHasAlreadySentRequest = 4003,
         FriendRequestNotFound = 4004,
         IsNotFriend = 4005,
+
+        // Block
+        AlreadyBlocked = 4006,
+        NotBlocked = 4007,
+        CannotSelfBlock = 4008,
+        UserBlockedYou = 4009,
 
         // Game
         RoomNotFound = 5001,

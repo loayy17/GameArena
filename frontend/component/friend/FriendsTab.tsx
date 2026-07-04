@@ -1,16 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { Users } from "lucide-react";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { friendService } from "@/services/def/FriendService";
 import { FriendCard } from "@/component/friend/FriendCard";
-import { EmptyState } from "@/component/common/GEmpty";
-import type { IUser } from "@/domain/meta/IUser";
+import { GEmpty } from "@/component/common/GEmpty";
 import { GButton } from "../common/GButton";
-import { GErrorBanner } from "../common/GErrorBanner";
 import { GSkeleton } from "../common/GSkeleton";
 import { useTranslation } from "@/hooks/useSetting";
+import { useFriendList } from "@/hooks/useFriends";
 import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
 
@@ -26,33 +22,7 @@ function FriendsTab({
   onNavigateToSearch,
 }: FriendsTabProps) {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
-  const [friends, setFriends] = useState<IUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadFriends = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await friendService.getFriends({
-        name: null,
-        userStatus: UserStatusEnum.All,
-      });
-
-      setFriends(response.data ?? []);
-    } catch (err) {
-      console.error("Failed to load friends", err);
-      setError(t.loadError);
-      setFriends([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [t.loadError]);
-
-  useEffect(() => {
-    void loadFriends();
-  }, [loadFriends]);
+  const { friends, loading, reload } = useFriendList();
 
   if (loading) {
     return (
@@ -72,13 +42,9 @@ function FriendsTab({
     );
   }
 
-  if (error) {
-    return <GErrorBanner message={error} onRetry={() => void loadFriends()} retryLabel={t.retry} />;
-  }
-
   if (friends.length === 0) {
     return (
-      <EmptyState
+      <GEmpty
         icon={<Users className="h-12 w-12 text-text-muted" />}
         title={t.noFriendsTitle}
         description={t.noFriendsDescription}
@@ -86,7 +52,7 @@ function FriendsTab({
         <GButton onClick={onNavigateToSearch} className="mt-4">
           {t.addFriend}
         </GButton>
-      </EmptyState>
+      </GEmpty>
     );
   }
 

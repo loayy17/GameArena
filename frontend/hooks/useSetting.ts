@@ -125,7 +125,7 @@ function createProxy(langs: TTranslate, path: string[] = []): unknown {
 }
 
 export function useTranslation<T>(langs: TTranslate): T {
-  useLocale();
+  const [locale] = useLocale();
 
-  return useMemo(() => createProxy(langs) as T, [langs]);
+  return useMemo(() => createProxy(langs) as T, [locale]);
 }

@@ -1,6 +1,4 @@
-﻿using backend.Domain;
-
-namespace backend.DTOs.Responses
+﻿namespace backend.DTOs.Responses
 {
     public class MessageResponse
     {

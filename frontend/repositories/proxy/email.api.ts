@@ -15,11 +15,4 @@ const emailApi = clientFactory(
   (data) => data,
 );
 
-// {
-//   send: (data: ISendOtpRequest) => api.post(`/email-verification/send?`, data),
-
-//   verify: (data: IVerifyOtpRequest) =>
-//     api.post("/email-verification/verify", data),
-// };
-
 export { emailApi };

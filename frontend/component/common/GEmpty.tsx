@@ -1,16 +1,11 @@
-interface EmptyStateProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  children?: React.ReactNode;
-}
+import type { GEmptyProps } from "./def/GEmpty";
 
-const EmptyState = ({
+const GEmpty = ({
   icon,
   title,
   description,
   children,
-}: EmptyStateProps) => (
+}: GEmptyProps) => (
   <div className="flex flex-col items-center justify-center py-12 text-center">
     <div className="text-text-muted mb-4">{icon}</div>
     <h3 className="text-text text-lg font-semibold mb-1">{title}</h3>
@@ -19,4 +14,4 @@ const EmptyState = ({
   </div>
 );
 
-export { EmptyState };
+export { GEmpty };

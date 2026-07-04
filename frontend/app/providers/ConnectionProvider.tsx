@@ -14,26 +14,26 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
   const { connection: gameConnection, isConnected: isGameConnected } =
     useConnection("gameHub");
   const {
-    connection: notificationConnection,
-    isConnected: isNotificationConnected,
-  } = useConnection("notificationHub");
+    connection: socialConnection,
+    isConnected: isSocialConnected,
+  } = useConnection("socialHub");
 
   const value = useMemo<IConnectionContext>(
     () => ({
       chatConnection,
       gameConnection,
-      notificationConnection,
+      socialConnection,
       isChatConnected,
       isGameConnected,
-      isNotificationConnected,
+      isSocialConnected,
     }),
     [
       chatConnection,
       gameConnection,
-      notificationConnection,
+      socialConnection,
       isChatConnected,
       isGameConnected,
-      isNotificationConnected,
+      isSocialConnected,
     ],
   );
 

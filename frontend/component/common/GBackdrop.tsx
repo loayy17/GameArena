@@ -1,6 +1,6 @@
-import type { IGBackdropProps } from "./def/GBackdrop";
+import type { GBackdropProps } from "./def/GBackdrop";
 
-function GBackdrop({ onClick }: IGBackdropProps) {
+function GBackdrop({ onClick }: GBackdropProps) {
   return <div className="drawer-backdrop" onClick={onClick} />;
 }
 export { GBackdrop };

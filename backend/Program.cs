@@ -1,4 +1,6 @@
 using backend.Data;
+using backend.Events;
+using backend.Events.Handlers;
 using backend.Hubs;
 using backend.Services;
 using backend.Services.Interface;
@@ -80,10 +82,22 @@ builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>(
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
 builder.Services.AddScoped<IFriendService, FriendService>();
 builder.Services.AddScoped<IChatService, ChatService>();
-builder.Services.AddSingleton<IGameRoomService, GameRoomService>();
 builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IGameBotService, GameBotService>();
+
+// Event bus this for notification system like friend request, game invitation, message notification, user online/offline status.
+builder.Services.AddSingleton<IEventBus, EventBus>();
+builder.Services.AddScoped<SocialNotificationHandler>();
+builder.Services.AddScoped<IEventHandler<FriendRequestSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<FriendRequestAcceptedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<FriendRequestDeclinedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<FriendRemovedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<ChatMessageSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<GameStartedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<GameFinishedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<GameLeftEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddSingleton<IUserPresenceService, UserPresenceService>();
+builder.Services.AddSingleton<IGameRoomService, GameRoomService>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -101,6 +115,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub");
 app.MapHub<GameHub>("/gameHub");
-app.MapHub<NotificationHub>("/notificationHub");
+app.MapHub<SocialHub>("/socialHub");
 
 app.Run();

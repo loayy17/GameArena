@@ -1,12 +1,14 @@
 "use client";
 
 import {
-  HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import { useEffect, useRef, useState } from "react";
+import type {
+  HubConnection,
+} from "@microsoft/signalr";
+import { useEffect, useState } from "react";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
@@ -14,8 +16,6 @@ const BASE_URL =
 export function useConnection(endPoint: string) {
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  // Keep a ref so the cleanup closure always sees the latest instance.
-  const connectionRef = useRef<HubConnection | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,8 +29,6 @@ export function useConnection(endPoint: string) {
           : LogLevel.Error,
       )
       .build();
-
-    connectionRef.current = conn;
 
     conn.onreconnecting(() => {
       if (!cancelled) setIsConnected(false);
@@ -69,7 +67,6 @@ export function useConnection(endPoint: string) {
     void start();
     return () => {
       cancelled = true;
-      connectionRef.current = null;
       if (conn.state !== HubConnectionState.Disconnected) {
         conn.stop().catch(() => {
           console.error(`SignalR: Failed to stop connection to /${endPoint}`);

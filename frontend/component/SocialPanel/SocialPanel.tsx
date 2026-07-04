@@ -2,10 +2,8 @@
 
 import { Users, X, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { friendService } from "@/services/def/FriendService";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { GameInvitesList } from "./GameInvitesList";
 import { GInputSearch } from "@/component/common/GInputSearch";
 import { FriendsList } from "./FriendsList";
@@ -13,22 +11,13 @@ import { GTabs } from "@/component/common/GTabs";
 import { GTabItem } from "@/component/common/def/GTabs";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
+import { useFriendList } from "@/hooks/useFriends";
 import { GSpinner } from "@/component/common/GSpinner";
 import {
   en,
   type TSocialPanelTranslation,
 } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
-import type { IUser } from "@/domain/meta/IUser";
-import type { IApiResponse } from "@/domain/meta/IApiResponse";
-
-interface Friend {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  userName: string | null;
-  status: UserStatusEnum;
-}
 
 type SocialPanelTab = "friends" | "invites";
 
@@ -36,28 +25,11 @@ export function SocialPanel() {
   const router = useRouter();
   const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
   const { gameInvites } = useDashboardNotifications();
+  const { friends, loading, onlineCount } = useFriendList();
 
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SocialPanelTab>("friends");
-
-  useEffect(() => {
-    let ignore = false;
-    friendService
-      .getFriends({ name: null, userStatus: UserStatusEnum.All })
-      .then((res: IApiResponse<IUser[]>) => {
-        if (!ignore) setFriends(res.data || []);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   const filteredFriends = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -91,10 +63,6 @@ export function SocialPanel() {
     router.push(`/messages?friend=${id}`);
     setOpen(false);
   };
-
-  const onlineCount = friends.filter(
-    (f) => f.status !== UserStatusEnum.Offline,
-  ).length;
 
   const panel = (
     <aside className="w-full sm:w-80 lg:w-72 h-dvh-safe bg-bg-sidebar flex flex-col">

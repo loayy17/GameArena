@@ -1,12 +1,12 @@
 import type { ISendOtpRequest } from "@/domain/meta/ISendOtpRequest";
-import type { IEmailVerficationRepository } from "../meta/IEmailVerficationRepository";
+import type { IEmailVerificationRepository } from "../meta/IEmailVerificationRepository";
 import type { TPromise } from "@/domain/type/TCommon";
 
 import type { IVerifyOtpRequest } from "@/domain/meta/IVerifyOtpRequest";
 import { emailApi } from "../proxy/email.api";
 
-class EmailVerficationRepository implements IEmailVerficationRepository {
-  private static instance: EmailVerficationRepository;
+class EmailVerificationRepository implements IEmailVerificationRepository {
+  private static instance: EmailVerificationRepository;
   private api = emailApi.api;
 
   sendOtp(data: ISendOtpRequest): TPromise<void> {
@@ -18,12 +18,12 @@ class EmailVerficationRepository implements IEmailVerficationRepository {
   }
 
   static getInstance() {
-    if (!EmailVerficationRepository.instance) {
-      EmailVerficationRepository.instance = new EmailVerficationRepository();
+    if (!EmailVerificationRepository.instance) {
+      EmailVerificationRepository.instance = new EmailVerificationRepository();
     }
-    return EmailVerficationRepository.instance;
+    return EmailVerificationRepository.instance;
   }
 }
 
-export const emailVerficationRepository =
-  EmailVerficationRepository.getInstance();
+export const emailVerificationRepository =
+  EmailVerificationRepository.getInstance();

@@ -1,5 +1,4 @@
-﻿using backend.DTOs.Requests;
-using backend.Enums;
+﻿using backend.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace backend.Domain

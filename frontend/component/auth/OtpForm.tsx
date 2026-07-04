@@ -10,10 +10,10 @@ import { GButton } from "@/component/common/GButton";
 import { en, type TOtpTranslation } from "../i18n/Otp/en.i18n";
 import { ar } from "../i18n/Otp/ar.i18n";
 import { useTranslation } from "@/hooks/useSetting";
-import type { IOtpFormProps } from "./def/OtpForm";
-import { emailVerficationService } from "@/services/def/EmailVerficationService";
+import type { OtpFormProps } from "./def/OtpForm";
+import { emailVerificationService } from "@/services/def/EmailVerificationService";
 
-function OtpForm({ email, onSuccess }: IOtpFormProps) {
+function OtpForm({ email, onSuccess }: OtpFormProps) {
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
   const [loading, setLoading] = useState({ verify: false, resend: false });
   const [error, setError] = useState("");
@@ -68,7 +68,7 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
     try {
       setLoading((prev) => ({ ...prev, verify: true }));
       setError("");
-      await emailVerficationService.verifyOtp({ email, otp });
+      await emailVerificationService.verifyOtp({ email, otp });
       onSuccess(otp);
     } catch {
       setError(t.invalidCode);
@@ -82,7 +82,7 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
     try {
       setLoading((prev) => ({ ...prev, resend: true }));
       setError("");
-      await emailVerficationService.sendOtp({ email });
+      await emailVerificationService.sendOtp({ email });
     } catch {
       setError(t.resendCodeFailed);
     } finally {

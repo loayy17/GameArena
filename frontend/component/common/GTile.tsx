@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import type { IGTileProps } from "./def/GTile";
+import type { GTileProps } from "./def/GTile";
 import { sizes } from "@/domain/constant/sizes";
 
-function GTile({ user, size = "md" }: IGTileProps) {
+function GTile({ user, size = "md" }: GTileProps) {
   return (
     <div
       className={clsx(

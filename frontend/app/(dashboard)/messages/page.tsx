@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useSetting";
 import { useMessages } from "@/hooks/useMessages";
-import { EmptyState } from "@/component/common/GEmpty";
+import { GEmpty } from "@/component/common/GEmpty";
 import { GTile } from "@/component/common/GTile";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { ar } from "./i18n/ar.i18n";
@@ -135,7 +135,7 @@ function MessagesPage() {
             </div>
           ) : filteredFriends.length === 0 ? (
             <div className="py-10 opacity-70">
-              <EmptyState
+              <GEmpty
                 icon={<MessagesSquare className="h-10 w-10 text-text-muted" />}
                 title={t.noFriendsTitle}
                 description={t.noFriendsDescription}
@@ -215,7 +215,7 @@ function MessagesPage() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center opacity-60">
-                  <EmptyState
+                  <GEmpty
                     icon={
                       <MessagesSquare className="h-12 w-12 text-text-muted mb-4" />
                     }

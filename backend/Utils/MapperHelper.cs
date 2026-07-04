@@ -31,7 +31,7 @@ namespace backend.Utils
                 SentAt = friendship.CreatedAt
             };
         }
-        public static FriendRequestSentResponse ToDtoSend(FriendRequest friendship)
+        public static FriendRequestSentResponse ToSentRequestDto(FriendRequest friendship)
         {
             return new FriendRequestSentResponse
             {

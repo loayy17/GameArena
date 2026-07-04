@@ -2,13 +2,14 @@
 using backend.Domain;
 using backend.DTOs.Responses;
 using backend.Enums;
+using backend.Events;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class ChatService(AppDbContext _context, INotificationService _notification) : IChatService
+    public class ChatService(AppDbContext _context, IEventBus _eventBus) : IChatService
     {
         public async Task<List<MessageResponse>> GetMessagesAsync(Guid userId, Guid friendId)
         {
@@ -25,8 +26,6 @@ namespace backend.Services
 
             return messages.Select(MapperHelper.ToDto).ToList();
         }
-
-
 
         public async Task<Message> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message)
         {
@@ -45,7 +44,7 @@ namespace backend.Services
             _context.Messages.Add(msg);
             await _context.SaveChangesAsync();
 
-            await _notification.SendToUserAsync(receiverId.ToString(), "chat:notification", msg);
+            await _eventBus.PublishAsync(new ChatMessageSentEvent(senderId, receiverId, message, msg.SentAt));
 
             return msg;
         }

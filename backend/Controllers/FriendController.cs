@@ -16,49 +16,64 @@ namespace backend.Controllers
         [HttpPost("request/{receiverId}")]
         public async Task<ActionResult<ApiResponse<object>>> SendRequest(Guid receiverId)
         {
-            var senderId = _currentUser.UserId;
-            await _friendService.SendFriendRequestAsync(senderId, receiverId);
+            await _friendService.SendRequestAsync(_currentUser.UserId, receiverId);
             return Ok(new ApiResponse<object> { Message = "Friend request sent" });
         }
 
-        [HttpGet("requests")]
-        public async Task<ActionResult<ApiResponse<List<FriendRequestReceivedResponse>>>> GetRequests()
+        [HttpPost("accept/{senderId}")]
+        public async Task<ActionResult<ApiResponse<object>>> AcceptRequest(Guid senderId)
         {
-            var senderId = _currentUser.UserId;
-            var requests = await _friendService.GetFriendRequestsAsync(senderId);
+            await _friendService.AcceptRequestAsync(_currentUser.UserId, senderId);
+            return Ok(new ApiResponse<object> { Message = "Friend request accepted" });
+        }
+
+        [HttpPost("decline/{senderId}")]
+        public async Task<ActionResult<ApiResponse<object>>> DeclineRequest(Guid senderId)
+        {
+            await _friendService.DeclineRequestAsync(_currentUser.UserId, senderId);
+            return Ok(new ApiResponse<object> { Message = "Friend request declined" });
+        }
+
+        [HttpPost("remove/{friendId}")]
+        public async Task<ActionResult<ApiResponse<object>>> RemoveFriend(Guid friendId)
+        {
+            await _friendService.RemoveFriendAsync(_currentUser.UserId, friendId);
+            return Ok(new ApiResponse<object> { Message = "Friend removed" });
+        }
+
+        [HttpPost("block/{blockedId}")]
+        public async Task<ActionResult<ApiResponse<object>>> BlockUser(Guid blockedId)
+        {
+            await _friendService.BlockUserAsync(_currentUser.UserId, blockedId);
+            return Ok(new ApiResponse<object> { Message = "User blocked" });
+        }
+
+        [HttpPost("unblock/{blockedId}")]
+        public async Task<ActionResult<ApiResponse<object>>> UnblockUser(Guid blockedId)
+        {
+            await _friendService.UnblockUserAsync(_currentUser.UserId, blockedId);
+            return Ok(new ApiResponse<object> { Message = "User unblocked" });
+        }
+
+        [HttpPost("friends")]
+        public async Task<ActionResult<ApiResponse<List<UserResponse>>>> GetFriends([FromBody] UserFilterRequest filter)
+        {
+            var friends = await _friendService.GetFriendsAsync(_currentUser.UserId, filter);
+            return Ok(new ApiResponse<List<UserResponse>> { Data = friends });
+        }
+
+        [HttpGet("requests")]
+        public async Task<ActionResult<ApiResponse<List<FriendRequestReceivedResponse>>>> GetReceivedRequests()
+        {
+            var requests = await _friendService.GetReceivedRequestsAsync(_currentUser.UserId);
             return Ok(new ApiResponse<List<FriendRequestReceivedResponse>> { Data = requests });
         }
 
         [HttpGet("sent")]
         public async Task<ActionResult<ApiResponse<List<FriendRequestSentResponse>>>> GetSentRequests()
         {
-            var senderId = _currentUser.UserId;
-            var requests = await _friendService.GetSentRequestsAsync(senderId);
+            var requests = await _friendService.GetSentRequestsAsync(_currentUser.UserId);
             return Ok(new ApiResponse<List<FriendRequestSentResponse>> { Data = requests });
-        }
-
-        [HttpPost("friends")]
-        public async Task<ActionResult<ApiResponse<List<UserResponse>>>> GetFriends([FromBody] UserFilterRequest filter)
-        {
-            var senderId = _currentUser.UserId;
-            var friends = await _friendService.GetFriendsAsync(senderId, filter);
-            return Ok(new ApiResponse<List<UserResponse>> { Data = friends });
-        }
-
-        [HttpPost("accept/{senderId}")]
-        public async Task<ActionResult<ApiResponse<object>>> AcceptRequest(Guid senderId)
-        {
-            var userId = _currentUser.UserId;
-            await _friendService.AcceptFriendRequestAsync(userId, senderId);
-            return Ok(new ApiResponse<object> { Message = "Accept" });
-        }
-
-        [HttpPost("decline/{senderId}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeclineRequest(Guid senderId)
-        {
-            var userId = _currentUser.UserId;
-            await _friendService.DeclineFriendRequestAsync(userId, senderId);
-            return Ok(new ApiResponse<object> { Message = "Declined Friend" });
         }
     }
 }

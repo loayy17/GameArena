@@ -6,6 +6,6 @@
         public User User { get; set; } = null!;
         public Guid FriendId { get; set; }
         public User Friend { get; set; } = null!;
-
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

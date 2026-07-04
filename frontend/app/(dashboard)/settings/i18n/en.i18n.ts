@@ -3,7 +3,6 @@ const en = {
   settings: {
     profile: {
       title: "Profile",
-      description: "Update your personal information and account settings.",
       firstName: "First Name",
       lastName: "Last Name",
       username: "Username",
@@ -15,7 +14,6 @@ const en = {
     },
     notifications: {
       title: "Notifications",
-      description: "Manage your notification preferences and alerts.",
       save: "Save Preferences",
       push: "Push Notifications",
       email: "Email Notifications",
@@ -24,7 +22,6 @@ const en = {
     },
     privacy: {
       title: "Privacy",
-      description: "Control your privacy settings and data sharing options.",
       save: "Update Privacy",
       showOnline: "Show online status",
       allowFriendRequests: "Allow friend requests from everyone",
