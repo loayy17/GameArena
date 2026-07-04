@@ -4,9 +4,14 @@ WORKDIR /src
 COPY backend.csproj .
 RUN dotnet restore
 
-COPY . .
-RUN dotnet publish -c Release -o /app
 
+COPY . .
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+RUN dotnet ef migrations add AutoMigration_$(date +%s) --output-dir Migrations --context AppDbContext || true
+
+RUN dotnet publish -c Release -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
