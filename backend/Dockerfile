@@ -8,7 +8,7 @@ RUN dotnet restore
 COPY . .
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"
-// use this when new migrations are added to the project, it will automatically apply them during the docker build process
+# use this when new migrations are added to the project, it will automatically apply them during the docker build process
 ENV JWT_TOKEN="DockerBuildTemporaryTokenValue123456!"
 RUN dotnet ef migrations add AutoMigration_$(date +%s) --output-dir Migrations --context AppDbContext || true
 
