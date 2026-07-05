@@ -4,12 +4,9 @@ WORKDIR /src
 COPY backend.csproj .
 RUN dotnet restore
 
-
 COPY . .
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/root/.dotnet/tools"
-
 RUN dotnet publish -c Release -o /app
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .

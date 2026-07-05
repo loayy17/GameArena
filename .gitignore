@@ -52,6 +52,7 @@ backend/obj/
 *.db
 *.sqlite
 *.sqlite3
+Migrations/
 
 #####################################
 # Build outputs
