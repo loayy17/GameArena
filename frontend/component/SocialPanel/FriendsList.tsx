@@ -5,37 +5,51 @@ import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import type { IFriend } from "@/domain/meta/ICommon";
 import { GTile } from "../common/GTile";
 import { GStatusDot } from "../common/GStatusDot";
+import { GNav, GNavItem } from "../common/GNav";
+import { GIcon } from "../common/GIcon";
 
 interface IFriendsListProps {
   friends: IFriend[];
   onSelectFriend: (id: string) => void;
+  activeId?: string | null;
+  indicator?: "start" | "end" | "top" | "bottom" | "none";
 }
 
-export function FriendsList({ friends, onSelectFriend }: IFriendsListProps) {
+export function FriendsList({
+  friends,
+  onSelectFriend,
+  activeId,
+  indicator = "start",
+}: IFriendsListProps) {
   return (
-    <div className="space-y-1">
+    <GNav orientation="vertical">
       {friends.map((friend) => (
-        <button
+        <GNavItem
           key={friend.id}
+          active={friend.id === activeId}
+          indicator={indicator}
           onClick={() => onSelectFriend(friend.id)}
-          className="nav-link w-full"
-        >
-          <div className="relative shrink-0">
-            <GTile user={friend} size="sm" />
-            <GStatusDot status={friend.status} />
-          </div>
-
-          <span className="flex-1 min-w-0 flex items-center gap-1.5 text-left">
-            <span className="truncate">
-              {friend.firstName} {friend.lastName}
+          icon={
+            <span className="relative shrink-0">
+              <GTile user={friend} size="sm" />
+              <GStatusDot status={friend.status} />
             </span>
-
-            {friend.status === UserStatusEnum.InGame && (
-              <Gamepad2 className="w-3.5 h-3.5 text-primary" />
-            )}
-          </span>
-        </button>
+          }
+          label={
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-inherit">
+                {friend.firstName} {friend.lastName}
+              </span>
+              <span className="flex items-center gap-1 truncate text-xs text-text-muted">
+                {friend.status === UserStatusEnum.InGame && (
+                  <GIcon icon={Gamepad2} size="xs" color="primary" />
+                )}
+                @{friend.userName}
+              </span>
+            </span>
+          }
+        />
       ))}
-    </div>
+    </GNav>
   );
 }

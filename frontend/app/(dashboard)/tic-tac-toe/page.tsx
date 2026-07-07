@@ -30,6 +30,7 @@ import type { IFriend } from "@/domain/meta/ICommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
 import type { IUser } from "@/domain/meta/IUser";
 import { FriendsList } from "@/component/SocialPanel/FriendsList";
+import { ttt } from "@/component/games/tic-tac-toe/ttt.styles";
 
 type LobbyTab = "quick" | "invite";
 
@@ -142,7 +143,7 @@ function TicTacToePage() {
       return {
         title: t.game.opponentForfeited,
         description: t.game.opponentForfeitedDesc,
-        icon: <Trophy className="w-16 h-16 text-neon-green animate-bounce" />,
+        icon: <Trophy className="w-16 h-16 text-success" />,
         color: "text-neon-green",
       };
     }
@@ -150,8 +151,8 @@ function TicTacToePage() {
       return {
         title: t.game.victory,
         description: t.game.victoryDesc,
-        icon: <Trophy className="w-16 h-16 text-yellow-400 animate-bounce" />,
-        color: "text-yellow-400",
+        icon: <Trophy className="w-16 h-16 text-warning" />,
+        color: "text-warning",
       };
     }
     if (gameState?.isFinished && !gameState.winnerPlayerId) {
@@ -165,23 +166,23 @@ function TicTacToePage() {
     return {
       title: t.game.defeat,
       description: t.game.defeatDesc,
-      icon: <Frown className="w-16 h-16 text-red-400" />,
-      color: "text-red-400",
+      icon: <Frown className="w-16 h-16 text-error" />,
+      color: "text-error",
     };
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] w-full py-8 px-4 md:px-8 relative z-10">
+    <div className={ttt.page}>
       {/* LOBBY / MATCHMAKING CARD */}
       {!roomId && (
-        <div className="w-full max-w-md bg-bg-card/70 border border-border/80 rounded-3xl p-8 shadow-2xl text-center animate-fade-in relative overflow-hidden transition-all duration-300">
+        <div className={ttt.panel}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-neon-cyan/5 rounded-full blur-2xl" />
 
           {!isSearching ? (
-            <div className="animate-fade-in">
+            <div>
               <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary to-neon-purple flex items-center justify-center shadow-[0_0_25px_-5px_#7c5cfc]">
+                <div className={ttt.iconTile}>
                   <Swords className="w-8 h-8 text-text" />
                 </div>
               </div>
@@ -218,7 +219,7 @@ function TicTacToePage() {
                   )}
                 </div>
               ) : (
-                <div className="animate-fade-in flex flex-col text-left">
+                <div className="flex flex-col text-start">
                   <div className="mb-4">
                     <GInputSearch
                       value={searchQuery}
@@ -227,7 +228,7 @@ function TicTacToePage() {
                     />
                   </div>
 
-                  <div className="flex-1 overflow-y-auto max-h-62.5 pr-2 custom-scrollbar bg-surface/30 rounded-xl border border-border/50 p-2">
+                  <div className={ttt.friendsList}>
                     {loadingFriends ? (
                       <div className="flex justify-center items-center h-32">
                         <GSpinner />
@@ -248,12 +249,12 @@ function TicTacToePage() {
               )}
             </div>
           ) : (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="flex justify-center">
                 <GSpinner size="lg" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-text animate-pulse">
+                <p className="text-sm font-semibold text-text">
                   {t.lobby.searchingTitle}
                 </p>
                 <p className="text-xs text-text-muted mt-1">
@@ -270,11 +271,11 @@ function TicTacToePage() {
 
       {/* WAITING FOR OPPONENT */}
       {roomId && !gameState?.player2Id && (
-        <div className="w-full max-w-lg space-y-6 animate-fade-in">
-          <div className="grid grid-cols-7 items-center bg-bg-card/50 border border-border/60 rounded-2xl p-4 shadow-lg">
+        <div className="w-full max-w-lg space-y-6">
+          <div className={ttt.scoreBar}>
             {/* Player 1 */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
-              <div className="relative w-16 h-16 rounded-xl flex items-center justify-center border-2 border-border-light bg-surface shadow-[0_0_15px_rgba(124,252,0.15)]">
+              <div className={ttt.playerAvatar}>
                 <User className="w-8 h-8 text-primary" />
               </div>
               <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
@@ -298,7 +299,7 @@ function TicTacToePage() {
               </span>
             </div>
           </div>
-          <p className="text-center text-text-secondary text-sm animate-pulse">
+          <p className="text-center text-text-secondary text-sm">
             {t.lobby.waitingForOpponent}
           </p>
           <div className="flex flex-col gap-3">
@@ -328,7 +329,7 @@ function TicTacToePage() {
 
           {/* INVITE FRIEND PICKER */}
           {showInvitePicker && (
-            <div className="bg-surface/50 border border-border/60 rounded-xl p-4 animate-fade-in">
+            <div className="bg-surface/50 border border-border/60 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-text">
                   Invite a Friend
@@ -370,18 +371,18 @@ function TicTacToePage() {
 
       {/* GAME FOUND - PRE-START SCREEN */}
       {roomId && gameState?.player2Id && !gameState.hasStarted && (
-        <div className="w-full max-w-lg bg-bg-card/70 border border-border/80 rounded-3xl p-8 shadow-2xl text-center animate-fade-in relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-neon-blue via-primary to-neon-magenta animate-pulse" />
+        <div className={ttt.panelLg}>
+          <div className={ttt.accentBar} />
           <h2 className="text-2xl font-black text-text mb-6">
             {t.lobby.opponentFound}
           </h2>
 
           <div className="flex items-center justify-center gap-6 mb-10">
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-2xl border-2 border-neon-blue bg-neon-blue/10 flex items-center justify-center shadow-[0_0_20px_rgba(0,210,255,0.2)]">
-                <span className="text-3xl font-black text-neon-blue">X</span>
+              <div className={ttt.xSymbolBox}>
+                <span className={ttt.symbol}>X</span>
               </div>
-              <span className="text-sm font-bold mt-3 text-text truncate max-w-25">
+              <span className={`text-sm font-bold mt-3 text-text truncate ${ttt.maxPlayerName}`}>
                 {gameState.player1Id === user?.id
                   ? t.game.you
                   : gameState.player1Username}
@@ -391,10 +392,10 @@ function TicTacToePage() {
             <div className="text-text-muted font-black italic text-xl">VS</div>
 
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-2xl border-2 border-neon-magenta bg-neon-magenta/10 flex items-center justify-center shadow-[0_0_20px_rgba(224,64,251,0.2)]">
-                <span className="text-3xl font-black text-neon-magenta">O</span>
+              <div className={ttt.oSymbolBox}>
+                <span className={ttt.symbol}>O</span>
               </div>
-              <span className="text-sm font-bold mt-3 text-text truncate max-w-25">
+              <span className={`text-sm font-bold mt-3 text-text truncate ${ttt.maxPlayerName}`}>
                 {gameState.player2Id === user?.id
                   ? t.game.you
                   : gameState.player2Username}
@@ -418,16 +419,16 @@ function TicTacToePage() {
 
       {/* GAME IN PROGRESS (BOARD) */}
       {roomId && gameState?.player2Id && gameState.hasStarted && (
-        <div className="w-full max-w-lg space-y-6 animate-fade-in">
+        <div className="w-full max-w-lg space-y-6">
           {/* PLAYERS PANEL */}
-          <div className="grid grid-cols-7 items-center bg-bg-card/50 border border-border/60 rounded-2xl p-4 shadow-lg">
+          <div className={ttt.scoreBar}>
             {/* Player 1 (X) */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
               <div
-                className={`relative w-16 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+                className={`relative w-16 h-16 rounded-xl flex items-center justify-center border-2 ${
                   gameState?.currentTurnPlayerId === gameState?.player1Id &&
                   !gameState?.isFinished
-                    ? "border-neon-blue bg-neon-blue/10 shadow-[0_0_15px_rgba(0,210,255,0.3)] animate-glow"
+                    ? `${ttt.playerXActive}`
                     : "border-border-light bg-surface"
                 }`}
               >
@@ -436,9 +437,7 @@ function TicTacToePage() {
                 ) : (
                   <User className="w-8 h-8 text-text-secondary" />
                 )}
-                <span className="absolute -bottom-2 -right-2 w-6 h-6 rounded-md bg-neon-blue text-black font-black text-xs flex items-center justify-center shadow-md">
-                  X
-                </span>
+                <span className={ttt.badgeX}>X</span>
               </div>
               <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player1Id === user?.id
@@ -449,7 +448,7 @@ function TicTacToePage() {
               </span>
               {gameState?.currentTurnPlayerId === gameState?.player1Id &&
                 !gameState?.isFinished && (
-                  <span className="text-[10px] text-neon-blue font-bold tracking-widest mt-1 uppercase">
+                  <span className={`${ttt.turnX} mt-1`}>
                     Turn
                   </span>
                 )}
@@ -464,10 +463,10 @@ function TicTacToePage() {
             {/* Player 2 (O) */}
             <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
               <div
-                className={`relative w-16 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+                className={`relative w-16 h-16 rounded-xl flex items-center justify-center border-2 ${
                   gameState?.currentTurnPlayerId === gameState?.player2Id &&
                   !gameState?.isFinished
-                    ? "border-neon-magenta bg-neon-magenta/10 shadow-[0_0_15px_rgba(224,64,251,0.3)] animate-glow"
+                    ? `${ttt.playerOActive}`
                     : "border-border-light bg-surface"
                 }`}
               >
@@ -476,9 +475,7 @@ function TicTacToePage() {
                 ) : (
                   <User className="w-8 h-8 text-text-secondary" />
                 )}
-                <span className="absolute -bottom-2 -left-2 w-6 h-6 rounded-md bg-neon-magenta text-text font-black text-xs flex items-center justify-center shadow-md">
-                  O
-                </span>
+                 <span className={ttt.badgeO}>O</span>
               </div>
               <span className="text-sm font-semibold text-text mt-3 truncate max-w-full">
                 {gameState?.player2Id === user?.id ? (
@@ -494,7 +491,7 @@ function TicTacToePage() {
               </span>
               {gameState?.currentTurnPlayerId === gameState?.player2Id &&
                 !gameState?.isFinished && (
-                  <span className="text-[10px] text-neon-magenta font-bold tracking-widest mt-1 uppercase">
+                  <span className={`${ttt.turnO} mt-1`}>
                     Turn
                   </span>
                 )}
@@ -504,9 +501,9 @@ function TicTacToePage() {
           {/* TURN STATUS BANNER */}
           {!gameState?.isFinished && (
             <div
-              className={`w-full py-3 px-4 rounded-xl border text-center font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3 px-4 rounded-xl border text-center font-bold text-sm flex items-center justify-center gap-2 ${
                 isMyTurn
-                  ? "bg-primary-muted border-primary/30 text-text animate-pulse"
+                  ? "bg-primary-muted border-primary/30 text-text"
                   : "bg-surface border-border text-text-secondary"
               }`}
             >
@@ -521,7 +518,7 @@ function TicTacToePage() {
 
           {/* BOARD */}
           <div className="relative">
-            <div className="grid grid-cols-3 gap-3 bg-bg-card/75 border border-border/80 rounded-3xl p-5 shadow-2xl relative">
+            <div className="grid grid-cols-3 gap-3 bg-bg-card border border-border rounded-3xl p-5 relative">
               {board.map((cell, i) => {
                 const isCellActive =
                   cell !== "X" &&
@@ -533,26 +530,26 @@ function TicTacToePage() {
                     key={i}
                     onClick={() => handleClick(i)}
                     disabled={!isCellActive}
-                    className={`aspect-square rounded-2xl flex items-center justify-center text-4xl font-black transition-all duration-300 border relative group ${
+                    className={`${ttt.cellBase} ${
                       cell === "X"
-                        ? "bg-neon-blue/5 border-neon-blue/20 text-neon-blue shadow-[inset_0_0_15px_rgba(0,210,255,0.05)]"
+                        ? ttt.cellX
                         : cell === "O"
-                          ? "bg-neon-magenta/5 border-neon-magenta/20 text-neon-magenta shadow-[inset_0_0_15px_rgba(224,64,251,0.05)]"
+                          ? ttt.cellO
                           : "bg-surface border-border-light hover:border-primary/40 hover:bg-surface-alt cursor-pointer"
                     }`}
                   >
                     {cell === "X" && (
-                      <span className="drop-shadow-[0_0_8px_rgba(0,210,255,0.5)] animate-fade-in">
+                      <span className="text-accent">
                         X
                       </span>
                     )}
                     {cell === "O" && (
-                      <span className="drop-shadow-[0_0_8px_rgba(224,64,251,0.5)] animate-fade-in">
+                      <span className="text-warning">
                         O
                       </span>
                     )}
                     {isCellActive && (
-                      <span className="opacity-0 group-hover:opacity-25 transition-opacity duration-200 text-text-secondary text-3xl">
+                      <span className="opacity-0 group-hover:opacity-25 text-text-secondary text-3xl">
                         {mySymbol}
                       </span>
                     )}
@@ -563,7 +560,7 @@ function TicTacToePage() {
 
             {/* END GAME OVERLAY */}
             {gameState?.isFinished && (
-              <div className="absolute inset-0 bg-bg/95 rounded-3xl border border-border flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+              <div className="absolute inset-0 bg-bg/95 rounded-3xl border border-border flex flex-col items-center justify-center p-6 text-center">
                 {getWinnerMessage().icon}
                 <h2
                   className={`text-2xl font-black mt-4 ${getWinnerMessage().color}`}
@@ -595,9 +592,8 @@ function TicTacToePage() {
             <div className="flex justify-center">
               <GButton
                 onClick={leaveGame}
-                variant="secondary"
+                variant="dangerOutline"
                 size="sm"
-                className="text-red-400 border-red-400/30 hover:bg-red-400/10"
               >
                 Leave Game
               </GButton>

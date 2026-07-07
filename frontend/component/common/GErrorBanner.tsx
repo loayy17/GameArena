@@ -1,9 +1,10 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
 import clsx from "clsx";
-import type { GErrorBannerProps } from "./def/GErrorBanner";
+import { RefreshCw } from "lucide-react";
 import { GButton } from "./GButton";
+import { GCard } from "./GCard";
+import type { GErrorBannerProps } from "./def/GErrorBanner";
 
 function GErrorBanner({
   message,
@@ -12,15 +13,13 @@ function GErrorBanner({
   className,
 }: GErrorBannerProps) {
   return (
-    <div
-      className={clsx(
-        "rounded-2xl border border-error/30 bg-error-bg px-4 text-error",
-        onRetry ? "py-4" : "py-5",
-        className,
-      )}
+    <GCard
+      variant="outlined"
+      padding="sm"
+      className={clsx("border-danger/30 bg-danger-bg text-danger", className)}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm">{message}</p>
+        <div className="text-sm">{message}</div>
         {onRetry && (
           <GButton
             variant="secondary"
@@ -32,7 +31,7 @@ function GErrorBanner({
           </GButton>
         )}
       </div>
-    </div>
+    </GCard>
   );
 }
 

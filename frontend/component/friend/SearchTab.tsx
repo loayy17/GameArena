@@ -12,6 +12,9 @@ import { GInputSearch } from "../common/GInputSearch";
 import { GSelect } from "../common/GSelect";
 import { GSpinner } from "../common/GSpinner";
 import { GErrorBanner } from "../common/GErrorBanner";
+import { GCard } from "../common/GCard";
+import { GBadge } from "../common/GBadge";
+import { GIcon } from "../common/GIcon";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
@@ -89,7 +92,7 @@ function SearchTab() {
       window.clearTimeout(timer);
       ignore = true;
     };
-  }, [query, userFilter]);
+  }, [query, userFilter, t.searchTab.searchError]);
 
   const handleSendRequest = async (receiverId: string) => {
     try {
@@ -123,7 +126,7 @@ function SearchTab() {
         />
 
         <GSelect
-          startIcon={<Filter className="h-4 w-4" />}
+          startIcon={<GIcon icon={Filter} size="sm" color="muted" />}
           value={userFilter.userStatus}
           onChange={(e) =>
             setUserFilter((prev) => ({
@@ -131,7 +134,6 @@ function SearchTab() {
               userStatus: Number(e.target.value) as UserStatusEnum,
             }))
           }
-          className="min-w-40"
           options={[
             { value: UserStatusEnum.All, label: t.searchTab.allStatuses },
             { value: UserStatusEnum.Online, label: t.searchTab.online },
@@ -152,14 +154,15 @@ function SearchTab() {
       ) : query ? (
         <div className="space-y-3">
           {searchResults.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-bg-card/70 px-4 py-8 text-center text-sm text-text-muted">
+            <GCard padding="lg" className="text-center text-sm text-text-muted">
               {t.searchTab.noResults}
-            </div>
+            </GCard>
           ) : (
             searchResults.map((user) => (
-              <div
+              <GCard
                 key={user.id}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-card/70 px-4 py-4"
+                padding="sm"
+                className="flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-text">
@@ -173,26 +176,28 @@ function SearchTab() {
                 </div>
 
                 {user.isSendRequest ? (
-                  <span className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-muted">
-                    {t.searchTab.requestSent}
-                  </span>
+                  <GBadge variant="muted">{t.searchTab.requestSent}</GBadge>
                 ) : (
                   <GButton
                     onClick={() => void handleSendRequest(user.id)}
                     size="sm"
-                    leftIcon={<UserPlus className="h-4 w-4" />}
+                    leftIcon={<GIcon icon={UserPlus} size="sm" color="inherit" className="text-on-primary" />}
                   >
                     {t.searchTab.add}
                   </GButton>
                 )}
-              </div>
+              </GCard>
             ))
           )}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border bg-bg-card/40 px-4 py-10 text-center text-sm text-text-muted">
+        <GCard
+          variant="outlined"
+          padding="lg"
+          className="text-center text-sm text-text-muted border-dashed"
+        >
           {t.searchTab.emptyHint}
-        </div>
+        </GCard>
       )}
     </div>
   );

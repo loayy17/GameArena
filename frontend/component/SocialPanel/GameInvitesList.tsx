@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
 import { GButton } from "@/component/common/GButton";
+import { GCard } from "@/component/common/GCard";
 import { useTranslation } from "@/hooks/useSetting";
 import {
   en,
@@ -22,10 +23,7 @@ export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
   return (
     <div className="space-y-2">
       {gameInvites.map((invite) => (
-        <div
-          key={invite.roomId}
-          className="p-3 bg-primary-muted rounded-lg border border-primary/20"
-        >
+        <GCard key={invite.roomId} padding="sm" className="bg-primary-muted border-primary/20">
           <p className="text-sm font-medium text-text">
             {t.invites.wantsToPlay.replace(
               "{{name}}",
@@ -53,7 +51,7 @@ export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
               {t.invites.decline}
             </GButton>
           </div>
-        </div>
+        </GCard>
       ))}
     </div>
   );

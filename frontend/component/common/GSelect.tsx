@@ -3,26 +3,31 @@
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
 import { forwardRef } from "react";
+import { GLabel } from "./GLabel";
 import type { GSelectProps } from "./def/GSelect";
+import { focusRing, inputSize, rounded, transition } from "./tokens";
 
 const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
-  ({ label, error, className, startIcon, options, placeholder, ...props }, ref) => {
+  (
+    {
+      label,
+      error,
+      className,
+      startIcon,
+      options,
+      placeholder,
+      size = "md",
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <div className="space-y-2">
-        {label && (
-          <label className="text-sm font-medium">
-            {label}
-            {props.required && (
-              <span className="text-red-500" aria-label="required">
-                *
-              </span>
-            )}
-          </label>
-        )}
+        {label && <GLabel required={props.required}>{label}</GLabel>}
 
         <div className="relative">
           {startIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
               {startIcon}
             </div>
           )}
@@ -30,11 +35,14 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
           <select
             ref={ref}
             className={clsx(
-              "w-full appearance-none rounded-2xl border border-border bg-bg-card py-3 text-sm text-text outline-none transition focus:border-primary",
-              startIcon && "pl-9",
-              "pr-9",
-              error &&
-                "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+              "w-full appearance-none border border-border bg-bg-card text-text outline-none",
+              rounded.md,
+              transition,
+              focusRing,
+              inputSize[size],
+              startIcon && "ps-9",
+              "pe-9",
+              error && "border-danger",
               className,
             )}
             {...props}
@@ -54,7 +62,7 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
 
-        {error && <p className="text-sm text-error">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
       </div>
     );
   },

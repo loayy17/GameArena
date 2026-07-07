@@ -5,6 +5,9 @@ import { Check, UserCheck, X } from "lucide-react";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GButton } from "../common/GButton";
 import { GSkeleton } from "../common/GSkeleton";
+import { GCard } from "../common/GCard";
+import { GAvatar } from "../common/GAvatar";
+import { GIcon } from "../common/GIcon";
 import { useTranslation } from "@/hooks/useSetting";
 import { useFriendRequests } from "@/hooks/useFriends";
 import {
@@ -22,10 +25,7 @@ function RequestsTab() {
     return (
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="bg-bg-card border border-border rounded-xl p-4 animate-pulse flex items-center justify-between"
-          >
+          <GCard key={i} padding="sm" className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <GSkeleton variant="rect" className="w-10 h-10" />
               <div>
@@ -37,7 +37,7 @@ function RequestsTab() {
               <GSkeleton variant="circle" className="w-8 h-8" />
               <GSkeleton variant="circle" className="w-8 h-8" />
             </div>
-          </div>
+          </GCard>
         ))}
       </div>
     );
@@ -46,7 +46,7 @@ function RequestsTab() {
   if (requests.length === 0) {
     return (
       <GEmpty
-        icon={<UserCheck className="h-12 w-12 text-text-muted" />}
+        icon={<GIcon icon={UserCheck} size="xl" color="muted" />}
         title={t.requestsTab.emptyTitle}
         description={t.requestsTab.emptyDescription}
       />
@@ -59,16 +59,19 @@ function RequestsTab() {
         const isBusy = actionId === req.senderId;
 
         return (
-          <div
+          <GCard
             key={req.senderId}
-            className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-card/70 px-4 py-4 transition hover:border-primary/50"
+            variant="interactive"
+            padding="sm"
+            className="flex items-center justify-between gap-4"
           >
             <div className="min-w-0 flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-neon-cyan/20 text-sm font-bold text-text">
-                {req.senderFirstName?.charAt(0).toUpperCase() ??
-                  req.senderUserName?.charAt(0).toUpperCase() ??
-                  "?"}
-              </div>
+              <GAvatar
+                firstName={req.senderFirstName}
+                lastName={req.senderLastName}
+                userName={req.senderUserName}
+                size="sm"
+              />
               <div className="min-w-0">
                 <p className="truncate font-medium text-text">
                   {req.senderFirstName && req.senderLastName
@@ -83,33 +86,37 @@ function RequestsTab() {
 
             <div className="flex shrink-0 gap-2">
               <GButton
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setActionId(req.senderId);
-                  accept(req.senderId).finally(() => setActionId(null));
-                }}
+                size="sm"
+                variant="success"
                 disabled={isBusy}
-                className="bg-neon-green/15 text-neon-green hover:bg-neon-green/25"
                 aria-label={t.requestsTab.accept}
-              >
-                <Check className="h-4 w-4" />
-              </GButton>
-              <GButton
-                variant="ghost"
-                size="icon"
-                onClick={() => {
+                onClick={async () => {
                   setActionId(req.senderId);
-                  decline(req.senderId).finally(() => setActionId(null));
+                  try {
+                    await accept(req.senderId);
+                  } finally {
+                    setActionId(null);
+                  }
                 }}
+                leftIcon={<GIcon icon={Check} size="sm" color="inherit" className="text-bg" />}
+              />
+              <GButton
+                size="sm"
+                variant="danger"
                 disabled={isBusy}
-                className="bg-error/15 text-error hover:bg-error/25"
                 aria-label={t.requestsTab.decline}
-              >
-                <X className="h-4 w-4" />
-              </GButton>
+                onClick={async () => {
+                  setActionId(req.senderId);
+                  try {
+                    await decline(req.senderId);
+                  } finally {
+                    setActionId(null);
+                  }
+                }}
+                leftIcon={<GIcon icon={X} size="sm" color="inherit" className="text-on-primary" />}
+              />
             </div>
-          </div>
+          </GCard>
         );
       })}
     </div>

@@ -1,6 +1,10 @@
-export interface GTextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+import type { InputHTMLAttributes, ReactNode } from "react";
+import type { GSize } from "../tokens";
+
+export interface GTextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
+  startIcon?: ReactNode;
+  endIcon?: ReactNode;
+  size?: GSize;
 }

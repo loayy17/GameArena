@@ -101,7 +101,7 @@ function EmailVerifyPage() {
         {error && (
           <p className="text-error text-xs">{error}</p>
         )}
-        <GButton loading={loading} onClick={sendCode} className="w-full shadow-md">
+        <GButton loading={loading} onClick={sendCode} fullWidth>
           {loading ? t.sending : t.sendCode}
         </GButton>
       </div>

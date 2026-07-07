@@ -115,7 +115,7 @@ function OtpForm({ email, onSuccess }: OtpFormProps) {
 
       {/* Semantic Error Output Box */}
       {error && (
-        <p className="text-error text-xs font-medium text-center animate-fade-in">
+        <p className="text-error text-xs font-medium text-center">
           {error}
         </p>
       )}
@@ -124,7 +124,7 @@ function OtpForm({ email, onSuccess }: OtpFormProps) {
         <GButton
           loading={loading.verify}
           onClick={verify}
-          className="w-full shadow-md"
+          className="w-full"
         >
           {t.verify}
         </GButton>
@@ -133,7 +133,7 @@ function OtpForm({ email, onSuccess }: OtpFormProps) {
           type="button"
           disabled={loading.verify || loading.resend}
           onClick={resend}
-          className="w-full shadow-md"
+          className="w-full"
         >
           {t.resendCode}
         </GButton>

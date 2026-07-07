@@ -1,8 +1,9 @@
-import type { IFriend } from "@/domain/meta/ICommon";
 import type { IUser } from "@/domain/meta/IUser";
+import type { GSize } from "./tokens";
 
 interface GTileProps {
-  user: IUser | IFriend;
-  size?: "sm" | "md" | "lg";
+  user: IUser;
+  size?: GSize;
 }
+
 export type { GTileProps };

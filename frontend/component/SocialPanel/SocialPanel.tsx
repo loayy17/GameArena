@@ -3,6 +3,7 @@
 import { Users, X, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import clsx from "clsx";
 
 import { GameInvitesList } from "./GameInvitesList";
 import { GInputSearch } from "@/component/common/GInputSearch";
@@ -12,12 +13,15 @@ import { GTabItem } from "@/component/common/def/GTabs";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
 import { useFriendList } from "@/hooks/useFriends";
-import { GSpinner } from "@/component/common/GSpinner";
 import {
   en,
   type TSocialPanelTranslation,
 } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
+import { GButton } from "../common/GButton";
+import { GBackdrop } from "../common/GBackdrop";
+import { GIcon } from "../common/GIcon";
+import { GSpinner } from "../common/GSpinner";
 
 type SocialPanelTab = "friends" | "invites";
 
@@ -65,23 +69,27 @@ export function SocialPanel() {
   };
 
   const panel = (
-    <aside className="w-full sm:w-80 lg:w-72 h-dvh-safe bg-bg-sidebar flex flex-col">
+    <aside className="w-full sm:w-80 h-dvh-safe bg-bg-sidebar flex flex-col">
       <div className="h-20 flex items-center justify-between px-5 border-b border-border/50">
         <div>
           <p className="font-bold text-text flex items-center gap-2">
-            <Users size={18} /> {t.title}
+            <GIcon icon={Users} size="sm" color="inherit" className="text-text" />
+            {t.title}
           </p>
           <p className="text-xs text-text-muted">
             {onlineCount} {t.online}
           </p>
         </div>
 
-        <button
+        <GButton
+          variant="ghost"
+          size="icon"
+          rounded="full"
           onClick={() => setOpen(false)}
-          className="lg:hidden p-2 rounded-lg hover:bg-surface-alt text-text-secondary hover:text-text transition-colors"
+          aria-label="Close panel"
         >
           <X size={20} />
-        </button>
+        </GButton>
       </div>
 
       <div className="px-4 pt-4">
@@ -116,27 +124,31 @@ export function SocialPanel() {
 
   return (
     <>
-      <div className="hidden lg:flex border-l border-border">{panel}</div>
-
       {open && (
         <>
+          <GBackdrop onClick={() => setOpen(false)} />
           <div
-            className="drawer-backdrop lg:hidden"
-            onClick={() => setOpen(false)}
-          />
-          <div className="fixed right-0 top-0 z-50 w-full sm:w-80 lg:hidden h-dvh-safe shadow-2xl animate-fade-in">
+            className={clsx(
+              "fixed z-50 inset-y-0 end-0 w-full sm:w-80 h-dvh-safe",
+            )}
+          >
             {panel}
           </div>
         </>
       )}
 
       {!open && (
-        <button
+        <GButton
+          variant="secondary"
+          size="icon"
+          rounded="full"
+          fab
+          className="bottom-4 end-4"
           onClick={() => setOpen(true)}
-          className="fab bottom-6 right-4 lg:hidden"
+          aria-label="Open social panel"
         >
           <Users size={20} />
-        </button>
+        </GButton>
       )}
     </>
   );

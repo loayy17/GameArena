@@ -1,11 +1,13 @@
 "use client";
 
 import { Globe, Sun, Moon } from "lucide-react";
-import { GButton } from "./GButton";
 import clsx from "clsx";
+import { GButton } from "./GButton";
+import { GIcon } from "./GIcon";
 import { useLocale, useTheme, useTranslation } from "@/hooks/useSetting";
 import { en, type TLangThemeTranslation } from "@/component/i18n/LangTheme/en.i18n";
 import { ar } from "@/component/i18n/LangTheme/ar.i18n";
+import { rounded, transition } from "./tokens";
 
 function LangTheme({
   collapsed,
@@ -19,7 +21,15 @@ function LangTheme({
   const t = useTranslation({ en, ar }) as TLangThemeTranslation;
 
   const isDark = theme === "dark";
-  const sizeClass = collapsed ? "w-10 h-10 min-w-10" : "flex-1 w-full";
+  const sizeClass = collapsed ? "h-10 w-10 min-w-10" : "flex-1 w-full";
+
+  const toggleBtn = clsx(
+    "flex items-center justify-center gap-2 text-xs font-semibold border border-border text-text-secondary bg-surface",
+    rounded.sm,
+    transition,
+    "hover:text-primary hover:border-primary/40",
+    sizeClass,
+  );
 
   return (
     <div
@@ -30,36 +40,23 @@ function LangTheme({
       )}
     >
       <GButton
-        variant="secondary"
+        variant="ghost"
         onClick={() => setLocale(locale === "en" ? "ar" : "en")}
         title={locale === "en" ? t.switchToArabic : t.switchToEnglish}
-        className={clsx("btn-lang-theme", sizeClass)}
+        className={toggleBtn}
       >
-        <Globe className="w-4 h-4 transition-transform duration-300 hover:rotate-12" />
-        {!collapsed && (
-          <span className="animate-fade-in">
-            {locale === "en" ? t.english : t.arabic}
-          </span>
-        )}
+        <GIcon icon={Globe} size="sm" color="inherit" />
+        {!collapsed && <span>{locale === "en" ? t.english : t.arabic}</span>}
       </GButton>
 
       <GButton
-        variant="secondary"
+        variant="ghost"
         onClick={() => setTheme(isDark ? "light" : "dark")}
         title={isDark ? t.switchToLight : t.switchToDark}
-        className={clsx("btn-lang-theme", sizeClass)}
+        className={toggleBtn}
       >
-        {isDark ? (
-          <Moon className="w-4 h-4 text-neon-cyan animate-fade-in" />
-        ) : (
-          <Sun className="w-4 h-4 text-primary animate-fade-in" />
-        )}
-
-        {!collapsed && (
-          <span className="animate-fade-in">
-            {isDark ? t.light : t.dark}
-          </span>
-        )}
+        <GIcon icon={isDark ? Moon : Sun} size="sm" color="primary" />
+        {!collapsed && <span>{isDark ? t.light : t.dark}</span>}
       </GButton>
     </div>
   );

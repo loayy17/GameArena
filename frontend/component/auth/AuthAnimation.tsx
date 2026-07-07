@@ -17,7 +17,7 @@ function AuthAnimation({ page, className, pathAnimation }: TAnimationProps) {
       className={`w-full lg:w-1/2 relative overflow-hidden flex flex-col items-center justify-start lg:justify-center rounded-b-2xl m-0 p-12 ${className || ""}`}
     >
       <div className="relative z-10 flex flex-col items-center w-full max-w-md">
-        <div className="w-48 h-48 lg:w-64 lg:h-64 drop-shadow-xl">
+        <div className="w-48 h-48 lg:w-64 lg:h-64">
           <LottiePlayer
             autoplay
             loop

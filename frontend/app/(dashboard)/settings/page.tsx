@@ -8,6 +8,12 @@ import { GTabs } from "@/component/common/GTabs";
 import { User, Bell, Shield, Save } from "lucide-react";
 import { GButton } from "@/component/common/GButton";
 import { GTabItem } from "@/component/common/def/GTabs";
+import { GCard } from "@/component/common/GCard";
+import { GTextField } from "@/component/common/GTextField";
+import { GTextarea } from "@/component/common/GTextarea";
+import { GCheckbox } from "@/component/common/GCheckbox";
+import { GBadge } from "@/component/common/GBadge";
+import { GIcon } from "@/component/common/GIcon";
 
 type SettingsTab = "profile" | "notifications" | "privacy";
 
@@ -43,9 +49,11 @@ function SettingsPage() {
     { key: "gameInvites", label: t.settings.notifications.gameInvites },
   ] as const;
 
+  const settingRow = "flex items-center justify-between py-2 border-b border-border/50 last:border-0";
+
   return (
     <div className="h-full flex flex-col lg:flex-row overflow-hidden">
-      <aside className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-border/50 bg-bg-sidebar">
+      <aside className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-e border-border bg-bg-sidebar">
         <div className="p-4 lg:p-6">
           <h1 className="text-2xl font-bold text-text mb-4 lg:mb-8">
             {t.title}
@@ -56,159 +64,120 @@ function SettingsPage() {
             onChange={setActiveTab}
             direction="V"
             variant="sidebar"
+            indicator="start"
             fullWidth
           />
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 bg-bg-card/30">
-        <div className="max-w-2xl mx-auto animate-fade-in">
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 bg-bg">
+        <div className="max-w-2xl mx-auto">
           {activeTab === "profile" && (
             <div className="space-y-6">
-              <div className="surface-card p-6">
+              <GCard padding="lg">
                 <h2 className="text-xl font-bold text-text mb-4">
                   {t.settings.profile.title}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      {t.settings.profile.firstName}
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue="John"
-                      className="field-input pl-3"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      {t.settings.profile.lastName}
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue="Doe"
-                      className="field-input pl-3"
-                    />
-                  </div>
+                  <GTextField
+                    label={t.settings.profile.firstName}
+                    defaultValue="John"
+                  />
+                  <GTextField
+                    label={t.settings.profile.lastName}
+                    defaultValue="Doe"
+                  />
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      {t.settings.profile.username}
-                    </label>
-                    <input
-                      type="text"
+                    <GTextField
+                      label={t.settings.profile.username}
                       defaultValue="johndoe"
-                      className="field-input pl-3"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      {t.settings.profile.bio}
-                    </label>
-                    <textarea
+                    <GTextarea
+                      label={t.settings.profile.bio}
                       rows={3}
-                      className="field-input pl-3 resize-none"
                       defaultValue="A passionate gamer who loves strategy games."
                     />
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">
-                  <GButton leftIcon={<Save size={16} />}>
+                  <GButton leftIcon={<GIcon icon={Save} size="sm" color="inherit" className="text-on-primary" />}>
                     {t.settings.profile.save}
                   </GButton>
                 </div>
-              </div>
+              </GCard>
 
-              <div className="surface-card p-6">
+              <GCard padding="lg">
                 <h3 className="text-lg font-semibold text-text mb-3">
                   {t.settings.profile.linkedAccounts}
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                  <div className={settingRow}>
                     <span className="text-sm text-text">Discord</span>
-                    <span className="text-xs font-medium text-neon-green bg-neon-green/10 px-2 py-0.5 rounded-full">
-                      {t.settings.profile.connected}
-                    </span>
+                    <GBadge variant="success">{t.settings.profile.connected}</GBadge>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                  <div className={settingRow}>
                     <span className="text-sm text-text">Google</span>
-                    <span className="text-xs font-medium text-text-muted bg-text-muted/10 px-2 py-0.5 rounded-full">
-                      {t.settings.profile.notConnected}
-                    </span>
+                    <GBadge variant="muted">{t.settings.profile.notConnected}</GBadge>
                   </div>
-                  <div className="flex items-center justify-between py-2">
+                  <div className={settingRow}>
                     <span className="text-sm text-text">Twitch</span>
-                    <span className="text-xs font-medium text-neon-green bg-neon-green/10 px-2 py-0.5 rounded-full">
-                      {t.settings.profile.connected}
-                    </span>
+                    <GBadge variant="success">{t.settings.profile.connected}</GBadge>
                   </div>
                 </div>
-              </div>
+              </GCard>
             </div>
           )}
 
           {activeTab === "notifications" && (
-            <div className="surface-card p-6 space-y-5">
+            <GCard padding="lg" className="space-y-5">
               <h2 className="text-xl font-bold text-text">
                 {t.settings.notifications.title}
               </h2>
               <div className="space-y-4">
                 {notificationItems.map((item) => (
-                  <label
-                    key={item.key}
-                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-                  >
+                  <label key={item.key} className={settingRow}>
                     <span className="text-sm text-text">{item.label}</span>
-                    <input
-                      type="checkbox"
-                      defaultChecked={item.key !== "email"}
-                      className="w-5 h-5 accent-primary rounded"
-                    />
+                    <GCheckbox defaultChecked={item.key !== "email"} />
                   </label>
                 ))}
               </div>
               <div className="flex justify-end">
                 <GButton>{t.settings.notifications.save}</GButton>
               </div>
-            </div>
+            </GCard>
           )}
 
           {activeTab === "privacy" && (
-            <div className="surface-card p-6 space-y-5">
+            <GCard padding="lg" className="space-y-5">
               <h2 className="text-xl font-bold text-text">
                 {t.settings.privacy.title}
               </h2>
               <div className="space-y-4">
-                <label className="flex items-center justify-between py-2 border-b border-border/50">
+                <label className={settingRow}>
                   <span className="text-sm text-text">
                     {t.settings.privacy.showOnline}
                   </span>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="accent-primary"
-                  />
+                  <GCheckbox defaultChecked />
                 </label>
-                <label className="flex items-center justify-between py-2 border-b border-border/50">
+                <label className={settingRow}>
                   <span className="text-sm text-text">
                     {t.settings.privacy.allowFriendRequests}
                   </span>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="accent-primary"
-                  />
+                  <GCheckbox defaultChecked />
                 </label>
-                <label className="flex items-center justify-between py-2">
+                <label className={settingRow}>
                   <span className="text-sm text-text">
                     {t.settings.privacy.showGameActivity}
                   </span>
-                  <input type="checkbox" className="accent-primary" />
+                  <GCheckbox />
                 </label>
               </div>
               <div className="flex justify-end">
                 <GButton>{t.settings.privacy.save}</GButton>
               </div>
-            </div>
+            </GCard>
           )}
         </div>
       </main>

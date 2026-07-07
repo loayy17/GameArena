@@ -19,12 +19,16 @@ import { authService } from "@/services/def/AuthService";
 import { GTile } from "./common/GTile";
 import { LangTheme } from "./common/LangTheme";
 import { GBackdrop } from "./common/GBackdrop";
-import { GTabs } from "./common/GTabs";
+import { GNav, GNavItem } from "./common/GNav";
 import { GButton } from "./common/GButton";
-import { GTabItem } from "./common/def/GTabs";
+import { GBadge } from "./common/GBadge";
 import { GStatusDot } from "./common/GStatusDot";
+import { GIconTile } from "./common/GIconTile";
+import { GIcon } from "./common/GIcon";
+import { GCard } from "./common/GCard";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { sidebarNav } from "@/domain/constant/sidebarNav";
+import clsx from "clsx";
 
 function Sidebar() {
   const { user, setUser } = useAuth();
@@ -59,30 +63,30 @@ function Sidebar() {
     }
   };
 
-  const activeTab = sidebarNav.find((n) => pathname.startsWith(`/${n.id}`))?.id;
+  const activeId = sidebarNav.find((n) => pathname.startsWith(`/${n.id}`))?.id ?? "home";
 
-  const handleTabChange = useCallback(
-    (tabId: string) => {
-      router.push(`/${tabId}`);
-      if (isMobile) setCollapsed(true);
-    },
-    [router, isMobile],
-  );
-
-  const tabs = useMemo<GTabItem[]>(
+  const navItems = useMemo(
     () =>
       sidebarNav.map(({ id, labelKey, icon: Icon, badge }) => ({
         id,
         icon: <Icon size={20} />,
         label: t[labelKey as keyof TSidebarTranslation],
-        badge:
+        badgeCount:
           badge === "friends"
             ? friendRequestCount
             : badge === "messages"
               ? unreadMessageCount
-              : undefined,
+              : 0,
       })),
     [t, friendRequestCount, unreadMessageCount],
+  );
+
+  const goTo = useCallback(
+    (tabId: string) => {
+      router.push(`/${tabId}`);
+      if (isMobile) setCollapsed(true);
+    },
+    [router, isMobile],
   );
 
   const open = !collapsed;
@@ -92,32 +96,54 @@ function Sidebar() {
       {isMobile && open && <GBackdrop onClick={() => setCollapsed(true)} />}
 
       <aside
-        className={`relative flex shrink-0 bg-bg-sidebar border-r border-border flex-col h-dvh-safe lg:h-full transition-[width,transform] duration-300 ease-in-out shadow-2xl lg:shadow-none ${
-          collapsed ? "w-20" : "w-full sm:w-72"
-        } ${isMobile ? (collapsed ? "-translate-x-full fixed z-50" : "translate-x-0 fixed z-50") : "translate-x-0"}`}
+        className={clsx(
+          "relative flex shrink-0 bg-bg-sidebar border-e border-border flex-col h-dvh-safe lg:h-full",
+          collapsed ? (isMobile ? "w-72" : "w-20") : "w-full sm:w-72",
+          isMobile && [
+            "fixed z-50 inset-y-0 start-0 lg:relative lg:z-auto lg:translate-x-0",
+            collapsed
+              ? "ltr:-translate-x-full rtl:translate-x-full lg:translate-x-0"
+              : "translate-x-0",
+          ],
+        )}
       >
         {!isMobile && (
           <GButton
             onClick={() => setCollapsed(!collapsed)}
-            variant="ghost"
+            variant="secondary"
             size="icon"
-            className="absolute -right-3 bottom-24 w-6 h-6 flex items-center justify-center bg-surface-alt border border-border rounded-full text-text-secondary hover:text-text hover:border-primary transition-all shadow-md z-10"
+            rounded="full"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="absolute -end-3 top-7"
           >
-            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            {collapsed ? (
+              locale === "ar" ? (
+                <ChevronLeft size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )
+            ) : locale === "ar" ? (
+              <ChevronRight size={14} />
+            ) : (
+              <ChevronLeft size={14} />
+            )}
           </GButton>
         )}
 
-        <div className="flex items-center h-20 px-4 border-b border-border/50 shrink-0">
+        <div className="flex items-center h-20 px-4 border-b border-border shrink-0">
           <div
-            className={`flex items-center w-full ${collapsed ? "justify-center" : "justify-between"}`}
+            className={clsx(
+              "flex items-center w-full",
+              collapsed ? "justify-center" : "justify-between",
+            )}
           >
             <div className="flex items-center gap-3">
-              <div className="icon-tile w-10 h-10 bg-linear-to-br from-primary to-neon-magenta shadow-lg shadow-primary/20">
-                <Hexagon className="w-5 h-5 text-text" />
-              </div>
+              <GIconTile gradient="brand" size="sm">
+                <GIcon icon={Hexagon} size="md" color="inherit" className="text-text" />
+              </GIconTile>
               {!collapsed && (
-                <span className="font-bold text-text text-lg tracking-wide whitespace-nowrap">
-                  Game<span className="text-neon-cyan">Arena</span>
+                <span className="font-bold text-text text-lg whitespace-nowrap">
+                  Game<span className="text-primary">Arena</span>
                 </span>
               )}
             </div>
@@ -126,7 +152,7 @@ function Sidebar() {
                 onClick={() => setCollapsed(true)}
                 variant="ghost"
                 size="icon"
-                className="p-2 text-text-secondary hover:text-text rounded-lg hover:bg-surface-alt"
+                aria-label="Close sidebar"
               >
                 <X size={20} />
               </GButton>
@@ -134,29 +160,49 @@ function Sidebar() {
           </div>
         </div>
 
-        <div className="flex-1 py-6 px-3 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar">
-          <GTabs
-            tabs={tabs}
-            value={activeTab ?? "home"}
-            onChange={handleTabChange}
-            direction="V"
-            variant="sidebar"
-            fullWidth
-            renderLabel={(tab) =>
-              collapsed ? null : <span className="truncate">{tab.label}</span>
-            }
-          />
+        <div className="flex-1 px-3 py-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <GNav orientation="vertical">
+            {navItems.map((item) => {
+              const active = activeId === item.id;
+              return (
+                <GNavItem
+                  key={item.id}
+                  active={active}
+                  indicator="start"
+                  collapsed={collapsed}
+                  onClick={() => goTo(item.id)}
+                  icon={item.icon}
+                  label={item.label}
+                  badge={
+                    collapsed
+                      ? item.badgeCount > 0
+                        ? (
+                          <span className="absolute top-1 end-1 w-2 h-2 rounded-full bg-primary ring-2 ring-bg-sidebar" />
+                        )
+                        : undefined
+                      : item.badgeCount > 0
+                        ? (
+                          <GBadge size="sm" className="ms-auto min-w-5 justify-center">
+                            {item.badgeCount}
+                          </GBadge>
+                        )
+                        : undefined
+                  }
+                />
+              );
+            })}
+          </GNav>
         </div>
 
-        <div className="mt-auto flex flex-col gap-2 p-3 border-t border-border/50 pb-safe">
-          <div className="px-1">
-            <LangTheme collapsed={collapsed} />
-          </div>
+        <div className="mt-auto flex flex-col gap-2 p-3 border-t border-border pb-safe">
+          <LangTheme collapsed={collapsed} />
 
-          <div
-            className={`flex p-2 rounded-xl bg-surface/30 border border-border/50 ${
-              collapsed ? "flex-col items-center gap-2" : "items-center gap-3"
-            }`}
+          <GCard
+            padding="sm"
+            variant="outlined"
+            className={clsx(
+              collapsed ? "flex flex-col items-center gap-2" : "flex items-center gap-3",
+            )}
           >
             <div className="relative shrink-0">
               {user && <GTile user={user} size="sm" />}
@@ -168,7 +214,7 @@ function Sidebar() {
                 <p className="text-sm font-bold text-text truncate">
                   {user?.firstName} {user?.lastName}
                 </p>
-                <p className="text-xs text-neon-cyan font-medium truncate">
+                <p className="text-xs text-text-secondary truncate">
                   @{user?.userName}
                 </p>
               </div>
@@ -179,21 +225,22 @@ function Sidebar() {
               variant="ghost"
               size="icon"
               title={t.logout}
-              className="shrink-0 p-1.5 rounded-lg text-text-secondary hover:text-error hover:bg-error-bg transition-colors"
+              aria-label={t.logout}
             >
               <LogOut size={18} />
             </GButton>
-          </div>
+          </GCard>
         </div>
       </aside>
 
-      {/* Mobile open button */}
       {isMobile && collapsed && (
         <GButton
           onClick={() => setCollapsed(false)}
           variant="secondary"
           size="icon"
-          className={`fab top-4 ${locale === "en" ? "left-4" : "right-4"}`}
+          fab
+          className="bottom-4 start-4"
+          aria-label="Open sidebar"
         >
           <Menu size={20} />
         </GButton>

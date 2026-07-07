@@ -4,38 +4,51 @@ import Link from "next/link";
 import { useTranslation } from "@/hooks/useSetting";
 import { ar } from "./i18n/ar.i18n";
 import { en, type TGamesTranslation } from "./i18n/en.i18n";
+import { GCard } from "@/component/common/GCard";
+import { GIconTile } from "@/component/common/GIconTile";
+import { GIcon } from "@/component/common/GIcon";
+import type { GGradient } from "@/component/common/tokens";
 
 function GamesPage() {
   const t = useTranslation({ en, ar }) as TGamesTranslation;
 
-  const gameList = [
+  const gameList: {
+    name: string;
+    path: string;
+    desc: string;
+    gradient: GGradient;
+    playGradient: GGradient;
+  }[] = [
     {
       name: t.ticTacToe,
       path: "/tic-tac-toe",
       desc: t.ticTacToeDesc,
-      color: "from-cyan-400 via-neon-blue to-cyan-300",
+      gradient: "game-cyan",
+      playGradient: "play-cyan",
     },
     {
       name: t.snake,
       path: "/snake",
       desc: t.snakeDesc,
-      color: "from-emerald-400 via-neon-green to-emerald-300",
+      gradient: "game-green",
+      playGradient: "play-green",
     },
     {
       name: t.pong,
       path: "/pong",
       desc: t.pongDesc,
-      color: "from-violet-400 via-neon-purple to-violet-300",
+      gradient: "game-magenta",
+      playGradient: "play-magenta",
     },
   ];
 
   return (
     <div className="flex items-center justify-center h-full relative z-10 px-8">
-      <div className="text-center animate-fade-in">
+      <div className="text-center">
         <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-primary via-neon-cyan to-neon-cyan flex items-center justify-center">
-            <Gamepad2 className="w-7 h-7 text-text" />
-          </div>
+          <GIconTile gradient="game-cyan" size="lg">
+            <GIcon icon={Gamepad2} size="lg" color="inherit" className="text-text" />
+          </GIconTile>
         </div>
         <h1 className="text-4xl font-black tracking-tight mb-2 text-text">
           {t.title}
@@ -43,18 +56,14 @@ function GamesPage() {
         <p className="text-text-secondary text-sm mb-8">{t.subtitle}</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {gameList.map((g) => (
-            <Link
-              key={g.name}
-              href={g.path}
-              className="group block bg-bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors"
-            >
-              <h3 className="text-lg font-bold text-text mb-1">{g.name}</h3>
-              <p className="text-xs text-text-secondary mb-4">{g.desc}</p>
-              <div
-                className={`inline-flex items-center gap-1.5 text-xs font-bold bg-linear-to-r ${g.color} bg-clip-text text-transparent`}
-              >
-                {t.play} <ArrowRight className="w-3 h-3" />
-              </div>
+            <Link key={g.name} href={g.path}>
+              <GCard variant="interactive" padding="lg" className="text-start h-full">
+                <h3 className="text-lg font-bold text-text mb-1">{g.name}</h3>
+                <p className="text-xs text-text-secondary mb-4">{g.desc}</p>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${g.playGradient}`}>
+                  {t.play} <GIcon icon={ArrowRight} size="xs" color="inherit" />
+                </span>
+              </GCard>
             </Link>
           ))}
         </div>

@@ -64,7 +64,7 @@ function ForgotPasswordPage() {
           onChange={(e) => handleChange(e.target.value)}
           className="w-full"
         />
-        <GButton loading={loading} onClick={send} className="w-full shadow-md">
+        <GButton loading={loading} onClick={send} fullWidth>
           {t.sendCode}
         </GButton>
       </div>

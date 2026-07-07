@@ -6,6 +6,7 @@ import { AuthAnimation } from "@/component/auth/AuthAnimation";
 import { AuthFlowAnimationEnum } from "@/domain/enum/AuthFlowAnimationEnum";
 import { LangTheme } from "@/component/common/LangTheme";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { GSpinner } from "@/component/common/GSpinner";
 
 function AuthLayout({
   page,
@@ -26,7 +27,7 @@ function AuthLayout({
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+        <GSpinner size="lg" />
       </div>
     );
   }
@@ -34,22 +35,19 @@ function AuthLayout({
   if (user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row login-panel-bg lg:bg-none relative transition-colors duration-200">
-      {/* Lang / Theme toggle — always visible in auth flow */}
+    <div className="min-h-screen flex flex-col lg:flex-row login-panel-bg lg:bg-none relative">
       <div className="absolute top-4 right-4 z-50">
         <LangTheme collapsed={false} className="flex gap-2" />
       </div>
 
-      {/* Left panel — animated illustration that changes per step */}
       <AuthAnimation
         page={page}
         pathAnimation="/game.json"
-        className="bg-transparent lg:login-panel-bg lg:shadow-none"
+        className="bg-transparent lg:login-panel-bg"
       />
 
-      {/* Right panel — page-specific form content */}
       <div className="flex-1 flex items-center justify-center lg:bg-bg">
-        <div className="w-full max-w-md animate-fade-in">{children}</div>
+        <div className="w-full max-w-md">{children}</div>
       </div>
     </div>
   );

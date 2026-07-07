@@ -7,6 +7,7 @@ import { Sidebar } from "@/component/SideBar";
 import { SocialPanel } from "@/component/SocialPanel/SocialPanel";
 import { ConnectionProvider } from "@/app/providers/ConnectionProvider";
 import { DashboardNotificationsProvider } from "@/app/providers/DashboardNotificationsProvider";
+import { GSpinner } from "@/component/common/GSpinner";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,7 +22,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   if (loading || !user) {
     return (
       <div className="flex h-screen w-screen bg-bg items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+        <GSpinner size="lg" />
       </div>
     );
   }

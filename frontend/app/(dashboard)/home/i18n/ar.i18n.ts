@@ -12,6 +12,20 @@ const ar = {
     unreadMessages: "الرسائل غير المقروءة",
     friendRequests: "طلبات الصداقة",
   },
+  games: {
+    snake: "السمكة",
+    snakeDescription: "كلاسيكية الأركادية - تأكل وتنتفس",
+    ticTacToe: "لعبة المربعات والأشرطة",
+    ticTacToeDescription: "دورية 3×3",
+    pong: "بونغ",
+    pongDescription: "تنس قديم",
+  },
+  recentHistory: {
+    title: "آخر المعارك",
+    viewAll: "عرض الكل",
+    emptyTitle: "لا توجد معارك بعد",
+    emptyDescription: "العب مباراتك الأولى وسيظهر سجلك هنا.",
+  },
 };
 
 export { ar };

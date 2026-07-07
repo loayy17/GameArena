@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
+import { GCard } from "@/component/common/GCard";
+import { GErrorBanner } from "@/component/common/GErrorBanner";
 import { emailValidator, passwordValidator } from "@/utils";
 import {
   en,
@@ -121,106 +123,111 @@ function RegisterForm() {
   };
 
   return (
-    <form
-      className="w-full max-w-xl p-6 sm:p-8 bg-surface-alt/40 border border-border/60 rounded-lg shadow-md"
-      onSubmit={(e) => {
-        e.preventDefault();
-        register();
-      }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <GTextField
-          label={t.firstName}
-          placeholder={t.placeholder.firstName}
-          value={firstName}
-          error={errors.firstName}
-          className="transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.firstName, e.target.value)
-          }
-        />
-        <GTextField
-          label={t.lastName}
-          placeholder={t.placeholder.lastName}
-          value={lastName}
-          error={errors.lastName}
-          className="transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.lastName, e.target.value)
-          }
-        />
-        <GTextField
-          label={t.email}
-          placeholder={t.placeholder.email}
-          value={email}
-          error={errors.email}
-          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          type="email"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.email, e.target.value)
-          }
-        />
-        <GTextField
-          label={t.userName}
-          placeholder={t.placeholder.userName}
-          value={userName}
-          error={errors.userName}
-          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          autoComplete="username"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.userName, e.target.value)
-          }
-        />
-        <GTextField
-          label={t.password}
-          placeholder={t.placeholder.password}
-          value={password}
-          error={errors.password}
-          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          type="password"
-          autoComplete="new-password"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.password, e.target.value)
-          }
-        />
-        <GTextField
-          label={t.confirmPassword}
-          placeholder={t.placeholder.confirmPassword}
-          value={confirmPassword}
-          error={errors.confirmPassword}
-          className="md:col-span-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
-          type="password"
-          autoComplete="new-password"
-          required
-          onChange={(e) =>
-            handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
-          }
-        />
-      </div>
-      {apiError.message && (
-        <div className="text-sm mt-4 p-3 rounded-md bg-error-bg border border-error/20 text-error flex flex-col gap-1">
-          <span>{apiError.message}</span>
-          {apiError.link && (
-            <Link
-              href={apiError.link}
-              className="text-primary hover:text-primary-hover font-medium underline transition-colors self-start"
-            >
-              {t.goToLogin}
-            </Link>
-          )}
+    <GCard variant="elevated" padding="lg" className="w-full max-w-xl">
+      <form
+        className="space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          register();
+        }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <GTextField
+            label={t.firstName}
+            placeholder={t.placeholder.firstName}
+            value={firstName}
+            error={errors.firstName}
+            required
+            onChange={(e) =>
+              handleChange(FieldRegisterEnum.firstName, e.target.value)
+            }
+          />
+          <GTextField
+            label={t.lastName}
+            placeholder={t.placeholder.lastName}
+            value={lastName}
+            error={errors.lastName}
+            required
+            onChange={(e) =>
+              handleChange(FieldRegisterEnum.lastName, e.target.value)
+            }
+          />
+          <div className="md:col-span-2">
+            <GTextField
+              label={t.email}
+              placeholder={t.placeholder.email}
+              value={email}
+              error={errors.email}
+              type="email"
+              required
+              onChange={(e) =>
+                handleChange(FieldRegisterEnum.email, e.target.value)
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <GTextField
+              label={t.userName}
+              placeholder={t.placeholder.userName}
+              value={userName}
+              error={errors.userName}
+              autoComplete="username"
+              required
+              onChange={(e) =>
+                handleChange(FieldRegisterEnum.userName, e.target.value)
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <GTextField
+              label={t.password}
+              placeholder={t.placeholder.password}
+              value={password}
+              error={errors.password}
+              type="password"
+              autoComplete="new-password"
+              required
+              onChange={(e) =>
+                handleChange(FieldRegisterEnum.password, e.target.value)
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <GTextField
+              label={t.confirmPassword}
+              placeholder={t.placeholder.confirmPassword}
+              value={confirmPassword}
+              error={errors.confirmPassword}
+              type="password"
+              autoComplete="new-password"
+              required
+              onChange={(e) =>
+                handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
+              }
+            />
+          </div>
         </div>
-      )}
-      <div className="mt-6 space-y-4">
-        <GButton
-          loading={loading}
-          className="w-full shadow-sm hover:shadow-glow"
-          type="submit"
-        >
+        {apiError.message && (
+          <GErrorBanner
+            message={
+              <>
+                {apiError.message}
+                {apiError.link && (
+                  <>
+                    {" "}
+                    <Link
+                      href={apiError.link}
+                      className="font-medium underline text-primary hover:text-primary-hover"
+                    >
+                      {t.goToLogin}
+                    </Link>
+                  </>
+                )}
+              </>
+            }
+          />
+        )}
+        <GButton loading={loading} fullWidth type="submit">
           {loading ? t.createElipses : t.create}
         </GButton>
 
@@ -228,13 +235,13 @@ function RegisterForm() {
           {t.haveAccount}{" "}
           <Link
             href="/login"
-            className="text-primary hover:text-primary-hover font-semibold transition-colors px-1"
+            className="text-primary hover:text-primary-hover font-semibold px-1"
           >
             {t.signIn}
           </Link>
         </div>
-      </div>
-    </form>
+      </form>
+    </GCard>
   );
 }
 

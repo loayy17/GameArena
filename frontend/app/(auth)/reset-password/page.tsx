@@ -100,11 +100,7 @@ function ResetPasswordPage() {
             onChange={(e) => handlePasswordChange(e.target.value)}
             className="w-full"
           />
-          <GButton
-            loading={loading}
-            onClick={reset}
-            className="w-full shadow-md"
-          >
+          <GButton loading={loading} onClick={reset} fullWidth>
             {t.resetPassword}
           </GButton>
         </div>

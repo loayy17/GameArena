@@ -1,30 +1,36 @@
 import { Orbit, Puzzle, Swords } from "lucide-react";
+import type { GGradient } from "@/component/common/tokens";
 
-const games = [
+type GameId = "snake" | "ticTacToe" | "pong";
+
+const games: {
+  id: GameId;
+  path: string;
+  icon: typeof Orbit;
+  gradient: GGradient;
+  color: "success" | "primary" | "warning";
+}[] = [
   {
-    name: "Snake",
+    id: "snake",
     path: "/snake",
-    desc: "Classic arcade — eat & survive",
     icon: Orbit,
-    gradient: "from-emerald-400 via-neon-green to-emerald-300",
-    color: "text-neon-green",
+    gradient: "game-green",
+    color: "success",
   },
   {
-    name: "Tic Tac Toe",
+    id: "ticTacToe",
     path: "/tic-tac-toe",
-    desc: "3×3 tactical duel",
     icon: Puzzle,
-    gradient: "from-cyan-400 via-neon-cyan to-cyan-300",
-    color: "text-neon-cyan",
+    gradient: "game-cyan",
+    color: "primary",
   },
   {
-    name: "Pong",
+    id: "pong",
     path: "/pong",
-    desc: "Retro table tennis",
     icon: Swords,
-    gradient: "from-violet-400 via-neon-magenta to-violet-300",
-    color: "text-neon-magenta",
+    gradient: "game-magenta",
+    color: "warning",
   },
 ];
 
-export { games };
+export { games, type GameId };

@@ -1,9 +1,10 @@
 "use client";
 import { Gamepad2, MessageSquare } from "lucide-react";
 import type { IFriendCardProps } from "./def/IFriendCard";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { GButton } from "../common/GButton";
 import { GAvatar } from "../common/GAvatar";
+import { GStatusDot } from "../common/GStatusDot";
+import { GCard } from "../common/GCard";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
@@ -12,7 +13,7 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-5 flex flex-col items-center hover:border-primary/50 transition-shadow hover:shadow-lg">
+    <GCard variant="interactive" padding="md" className="flex flex-col items-center">
       <div className="relative">
         <GAvatar
           firstName={user.firstName}
@@ -21,16 +22,7 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => {
           src={`https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=7c5cfc&color=fff`}
           size="md"
         />
-        <span
-          className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-bg-card ${(() => {
-            switch (user.status) {
-              case UserStatusEnum.Online: return "bg-neon-green";
-              case UserStatusEnum.Offline: return "bg-text-muted";
-              case UserStatusEnum.InGame: return "bg-neon-cyan";
-              default: return "bg-text-muted";
-            }
-          })()}`}
-        />
+        <GStatusDot status={user.status} />
       </div>
       <h3 className="text-text font-semibold mt-2">
         {user.fullName ??
@@ -56,7 +48,7 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => {
           {t.invite}
         </GButton>
       </div>
-    </div>
+    </GCard>
   );
 };
 

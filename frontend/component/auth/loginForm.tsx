@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
+import { GCard } from "@/component/common/GCard";
+import { GErrorBanner } from "@/component/common/GErrorBanner";
 import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -97,7 +99,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md p-6 sm:p-8 bg-surface-alt/40 border border-border/60 rounded-lg shadow-md ">
+    <GCard variant="elevated" padding="lg" className="w-full max-w-md">
       <form onSubmit={submit} className="space-y-5">
         <div className="space-y-4">
           <GTextField
@@ -105,7 +107,6 @@ function LoginForm() {
             placeholder={t.placeholder.email}
             value={email}
             error={errors.email}
-            className="w-full transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
             type="email"
             autoComplete="email"
             required
@@ -117,7 +118,6 @@ function LoginForm() {
             placeholder={t.placeholder.password}
             value={password}
             error={errors.password}
-            className="w-full transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/40"
             type="password"
             autoComplete="current-password"
             required
@@ -125,33 +125,35 @@ function LoginForm() {
           />
 
           {apiError.message && (
-            <div className="text-sm p-3 rounded-md bg-error-bg border border-error/20 text-error animate-fade-in flex flex-col gap-1">
-              <span>{apiError.message}</span>
-              {apiError.link && (
-                <Link
-                  href={apiError.link}
-                  className="text-primary hover:text-primary-hover font-medium underline transition-colors self-start"
-                >
-                  {t.verifyEmail}
-                </Link>
-              )}
-            </div>
+            <GErrorBanner
+              message={
+                <>
+                  {apiError.message}
+                  {apiError.link && (
+                    <>
+                      {" "}
+                      <Link
+                        href={apiError.link}
+                        className="font-medium underline text-primary hover:text-primary-hover"
+                      >
+                        {t.verifyEmail}
+                      </Link>
+                    </>
+                  )}
+                </>
+              }
+            />
           )}
 
-          <GButton
-            type="submit"
-            loading={loading}
-            className="w-full mt-2 shadow-sm hover:shadow-glow"
-          >
+          <GButton type="submit" loading={loading} fullWidth>
             {loading ? t.loggingIn : t.login}
           </GButton>
         </div>
 
-        {/* Footer actions with logical multi-directional padding support */}
         <div className="flex flex-wrap justify-between items-center gap-2 text-xs sm:text-sm pt-4 border-t border-border/40">
           <Link
             href="/forgot-password"
-            className="text-primary hover:text-primary-hover font-medium transition-colors"
+            className="text-primary hover:text-primary-hover font-medium"
           >
             {t.forgotPassword}
           </Link>
@@ -160,14 +162,14 @@ function LoginForm() {
             {t.dontHaveAccount}{" "}
             <Link
               href="/register"
-              className="text-primary hover:text-primary-hover font-semibold transition-colors inline-block px-1"
+              className="text-primary hover:text-primary-hover font-semibold px-1"
             >
               {t.register}
             </Link>
           </div>
         </div>
       </form>
-    </div>
+    </GCard>
   );
 }
 

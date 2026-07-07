@@ -3,6 +3,8 @@
 import { Users } from "lucide-react";
 import { FriendCard } from "@/component/friend/FriendCard";
 import { GEmpty } from "@/component/common/GEmpty";
+import { GCard } from "../common/GCard";
+import { GIcon } from "../common/GIcon";
 import { GButton } from "../common/GButton";
 import { GSkeleton } from "../common/GSkeleton";
 import { useTranslation } from "@/hooks/useSetting";
@@ -28,7 +30,7 @@ function FriendsTab({
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-bg-card border border-border rounded-xl p-5 flex flex-col items-center animate-pulse">
+          <GCard key={i} padding="md" className="flex flex-col items-center">
             <GSkeleton variant="rect" className="w-16 h-16 mb-2" />
             <GSkeleton variant="text" className="w-24 mb-1" />
             <GSkeleton variant="text" className="w-16 mb-4" />
@@ -36,7 +38,7 @@ function FriendsTab({
               <GSkeleton variant="rect" className="flex-1 h-9" />
               <GSkeleton variant="rect" className="flex-1 h-9" />
             </div>
-          </div>
+          </GCard>
         ))}
       </div>
     );
@@ -45,7 +47,7 @@ function FriendsTab({
   if (friends.length === 0) {
     return (
       <GEmpty
-        icon={<Users className="h-12 w-12 text-text-muted" />}
+        icon={<GIcon icon={Users} size="xl" color="muted" />}
         title={t.noFriendsTitle}
         description={t.noFriendsDescription}
       >
