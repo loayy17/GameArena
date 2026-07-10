@@ -73,25 +73,32 @@ namespace backend.Hubs
 
         public async Task FindMatch(GamesKind gameType)
         {
-            string playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
-
-            if (_roomService.TryGetPlayerRoom(playerId, out var existingRoomId)
-                && _roomService.TryGetRoom(existingRoomId!, out var existingRoom)
-                && !existingRoom!.IsFinished
-            )
+            try
             {
-                existingRoom.DisconnectedPlayerId = null;
-                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
-                await Clients.Caller.SendAsync("gameState", existingRoom.GetStatePayload());
-                return;
+                string playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
+
+                if (_roomService.TryGetPlayerRoom(playerId, out var existingRoomId)
+                    && _roomService.TryGetRoom(existingRoomId!, out var existingRoom)
+                    && !existingRoom!.IsFinished
+                )
+                {
+                    existingRoom.DisconnectedPlayerId = null;
+                    await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
+                    await Clients.Caller.SendAsync("gameState", existingRoom.GetStatePayload());
+                    return;
+                }
+
+                var username = Context.User?.Identity?.Name ?? "Player 1";
+                var (room, _) = _roomService.FindOrCreateRoom(gameType, playerId, username);
+
+                await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
+                await Clients.Group(room.RoomId)
+                    .SendAsync("gameState", room.GetStatePayload());
             }
-
-            var username = Context.User?.Identity?.Name ?? "Player 1";
-            var (room, _) = _roomService.FindOrCreateRoom(gameType, playerId, username);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
-            await Clients.Group(room.RoomId)
-                .SendAsync("gameState", room.GetStatePayload());
+            catch (AppException ex)
+            {
+                throw new HubException(ex.Message);
+            }
         }
 
         public async Task SendAction(JsonElement action)

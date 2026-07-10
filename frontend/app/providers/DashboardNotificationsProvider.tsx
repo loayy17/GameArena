@@ -87,6 +87,11 @@ export function DashboardNotificationsProvider({ children }: { children: React.R
     socialConnection.on("friend:declined", handleDeclined);
     socialConnection.on("chat:notification", handleChatNotification);
 
+    const noop = () => {};
+    socialConnection.on("friend:online", noop);
+    socialConnection.on("friend:offline", noop);
+    socialConnection.on("friend:ingame", noop);
+
     const unsub = onFriendRequestChange(() => {
       void refreshFriendRequests();
     });
@@ -96,6 +101,9 @@ export function DashboardNotificationsProvider({ children }: { children: React.R
       socialConnection.off("friend:accepted", handleAccepted);
       socialConnection.off("friend:declined", handleDeclined);
       socialConnection.off("chat:notification", handleChatNotification);
+      socialConnection.off("friend:online", noop);
+      socialConnection.off("friend:offline", noop);
+      socialConnection.off("friend:ingame", noop);
       unsub();
     };
   }, [socialConnection, pathname, searchParams, user, refreshFriendRequests]);
