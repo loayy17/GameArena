@@ -16,7 +16,19 @@ namespace backend.Hubs
                 _presence.SetOnline(userId);
                 await Clients.Others.SendAsync("friend:online", new { userId });
                 if (Guid.TryParse(userId, out var guid))
-                    await _notificationService.SendSocialDataAsync(guid);
+                {
+                    try
+                    {
+                        await _notificationService.SendSocialDataAsync(guid);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to send social data to user {userId} on connect.");
+                        Console.WriteLine(ex);
+                        // Connection stays alive even if initial push fails.
+                        // Client will invoke RequestSocialData after reconnect.
+                    }
+                }
             }
 
             await base.OnConnectedAsync();
