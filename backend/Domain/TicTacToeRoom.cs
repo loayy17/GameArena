@@ -1,3 +1,4 @@
+using System.Text.Json;
 using backend.Enums;
 using backend.Utils;
 
@@ -8,7 +9,6 @@ public class TicTacToeRoom : BaseGameRoom
     public TicTacToeRoom() : base(GamesKind.TicTacToe) { }
     public string[] Board { get; set; } = [.. Enumerable.Repeat(".", 9)];
     public string CurrentTurnPlayerId { get; set; } = "";
-    public override void UpdatePhysics(float deltaTime) { }
     public override object GetStatePayload() => new
     {
         roomId = RoomId,
@@ -27,15 +27,22 @@ public class TicTacToeRoom : BaseGameRoom
         player2Username = Player2Username
     };
 
-    public override void ProcessInput(string playerId, string inputType, object payload)
+    public override void ProcessInput(string playerId, object action)
     {
+        if (action is not JsonElement json
+            || json.ValueKind != JsonValueKind.Object
+            || !json.TryGetProperty("type", out var typeProp)
+            || typeProp.GetString() != "MAKE_MOVE"
+            || !json.TryGetProperty("cell", out var cellProp))
+            return;
+
+        var cell = cellProp.GetInt32();
+
         if (
             IsFinished
             || !IsFull
-            || inputType != "MAKE_MOVE"
             || playerId != CurrentTurnPlayerId
             || (playerId != Player1Id && playerId != Player2Id)
-            || !int.TryParse(payload.ToString(), out int cell)
             || cell < 0
             || cell > 8
             || Board[cell] != "."

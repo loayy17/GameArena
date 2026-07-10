@@ -1,3 +1,4 @@
+using System.Text.Json;
 using backend.Domain;
 using backend.Enums;
 using backend.Events;
@@ -61,7 +62,7 @@ namespace backend.Hubs
                     var botSymbol = xo.Player1Id == playerId ? "X" : "O";
                     var botMove = _botService.GetBotMove(xo.Board, botSymbol);
                     if (botMove >= 0)
-                        room.ProcessInput(playerId, "MAKE_MOVE", botMove.ToString());
+                        room.ProcessInput(playerId, new { type = "MAKE_MOVE", cell = botMove });
                 }
 
                 await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
@@ -93,7 +94,7 @@ namespace backend.Hubs
                 .SendAsync("gameState", room.GetStatePayload());
         }
 
-        public async Task SendAction(string inputType, string payload)
+        public async Task SendAction(JsonElement action)
         {
             var playerId = Context.UserIdentifier ?? throw new AppException(ErrorCode.Unauthorized);
 
@@ -104,7 +105,7 @@ namespace backend.Hubs
             )
                 return;
 
-            room.ProcessInput(playerId, inputType, payload);
+            room.ProcessInput(playerId, action);
 
             if (!room.IsFinished && room.IsBotGame && room is TicTacToeRoom xoRoom)
             {
@@ -113,7 +114,7 @@ namespace backend.Hubs
                 var botMove = _botService.GetBotMove(xoRoom.Board, botSymbol);
                 if (botMove >= 0)
                 {
-                    room.ProcessInput(botId, "MAKE_MOVE", botMove.ToString());
+                    room.ProcessInput(botId, new { type = "MAKE_MOVE", cell = botMove });
                 }
             }
 
@@ -200,7 +201,7 @@ namespace backend.Hubs
                     var botSymbol = xo.Player1Id == playerId ? "X" : "O";
                     var botMove = _botService.GetBotMove(xo.Board, botSymbol);
                     if (botMove >= 0)
-                        room.ProcessInput(playerId, "MAKE_MOVE", botMove.ToString());
+                        room.ProcessInput(playerId, new { type = "MAKE_MOVE", cell = botMove });
                 }
 
                 await _eventBus.PublishAsync(new GameLeftEvent(playerId));

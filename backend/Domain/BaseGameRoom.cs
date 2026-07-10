@@ -19,9 +19,8 @@ namespace backend.Domain
         public string? WinnerSymbol { get; set; }
         public string? DisconnectedPlayerId { get; set; }
         public bool IsBotGame { get; set; } = false;
-        public abstract void UpdatePhysics(float deltaTime); 
         public abstract object GetStatePayload();
-        public abstract void ProcessInput(string playerId, string inputType, object payload);
+        public abstract void ProcessInput(string playerId, object action);
     }
 
 }
