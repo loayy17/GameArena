@@ -10,5 +10,7 @@ namespace backend.Services.Interface
         Task<UserResponse> UpdateUserAsync(UserResponse request);
         Task<UserResponse> UpdateProfileAsync(Guid userId, RegisterRequest request);
         Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
+        Task<string?> GetPreferencesAsync(Guid userId);
+        Task UpdatePreferencesAsync(Guid userId, string preferencesJson);
     }
 }

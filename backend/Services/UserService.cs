@@ -67,5 +67,18 @@ namespace backend.Services
             user.PasswordHash = AuthHelper.HashPassword(user, newPassword);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<string?> GetPreferencesAsync(Guid userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId) ?? throw new AppException(ErrorCode.UserNotFound);
+            return user.Preferences;
+        }
+
+        public async Task UpdatePreferencesAsync(Guid userId, string preferencesJson)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId) ?? throw new AppException(ErrorCode.UserNotFound);
+            user.Preferences = preferencesJson;
+            await _context.SaveChangesAsync();
+        }
     }
 }

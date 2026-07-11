@@ -57,12 +57,21 @@ namespace backend.Services
                 .SendAsync("social:requests", new { received, sent });
         }
 
+        public async Task SendBlockedAsync(Guid userId)
+        {
+            var blocked = await _friendService.GetBlockedUsersAsync(userId);
+            await _hub.Clients
+                .Group($"user:{userId}")
+                .SendAsync("social:blocked", blocked);
+        }
+
         public async Task SendSocialDataAsync(Guid userId)
         {
             await Task.WhenAll(
                 SendCountersAsync(userId),
                 SendFriendsAsync(userId),
-                SendFriendRequestsAsync(userId)
+                SendFriendRequestsAsync(userId),
+                SendBlockedAsync(userId)
             );
         }
     }

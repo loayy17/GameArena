@@ -20,5 +20,7 @@ namespace backend.DTOs.Responses
         public DateTime CreatedAt { get; set; }
 
         public bool IsVerified { get; set; }
+
+        public string? Preferences { get; set; }
     }
 }

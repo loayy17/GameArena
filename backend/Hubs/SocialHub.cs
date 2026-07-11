@@ -67,6 +67,13 @@ namespace backend.Hubs
                 await _notificationService.SendFriendRequestsAsync(guid);
         }
 
+        public async Task RequestBlocked()
+        {
+            var userId = Context.UserIdentifier;
+            if (userId != null && Guid.TryParse(userId, out var guid))
+                await _notificationService.SendBlockedAsync(guid);
+        }
+
         public async Task RequestSocialData()
         {
             var userId = Context.UserIdentifier;

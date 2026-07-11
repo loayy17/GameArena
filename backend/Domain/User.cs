@@ -49,5 +49,6 @@ namespace backend.Domain
         // match history
         public ICollection<MatchHistory> MatchesAsPlayer1 { get; set; } = new List<MatchHistory>();
         public ICollection<MatchHistory> MatchesAsPlayer2 { get; set; } = new List<MatchHistory>();
+        public string? Preferences { get; set; }
     }
 }

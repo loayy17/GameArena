@@ -60,5 +60,19 @@ namespace backend.Controllers
             await _userService.ChangePasswordAsync(_currentUser.UserId, request.OldPassword, request.NewPassword);
             return Ok(new ApiResponse<object>());
         }
+
+        [HttpGet("preferences")]
+        public async Task<ActionResult<ApiResponse<string?>>> GetPreferences()
+        {
+            var preferences = await _userService.GetPreferencesAsync(_currentUser.UserId);
+            return Ok(new ApiResponse<string?> { Data = preferences });
+        }
+
+        [HttpPut("preferences")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdatePreferences([FromBody] UserPreferencesRequest request)
+        {
+            await _userService.UpdatePreferencesAsync(_currentUser.UserId, request.Preferences);
+            return Ok(new ApiResponse<object>());
+        }
     }
 }

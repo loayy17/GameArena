@@ -18,7 +18,8 @@ namespace backend.Utils
                 Role = user.Role,
                 Status = user.Status,
                 CreatedAt = user.CreatedAt,
-                IsVerified = user.IsVerified
+                IsVerified = user.IsVerified,
+                Preferences = user.Preferences
             };
         }
         public static UserSummaryResponse ToDtoSummary(UserResponse user)

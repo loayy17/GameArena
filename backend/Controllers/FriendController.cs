@@ -75,5 +75,12 @@ namespace backend.Controllers
             var requests = await _friendService.GetSentRequestsAsync(_currentUser.UserId);
             return Ok(new ApiResponse<List<FriendRequestSentResponse>> { Data = requests });
         }
+
+        [HttpGet("blocked")]
+        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetBlockedUsers()
+        {
+            var blocked = await _friendService.GetBlockedUsersAsync(_currentUser.UserId);
+            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = blocked });
+        }
     }
 }

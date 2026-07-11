@@ -179,6 +179,17 @@ namespace backend.Services
             return requests.Select(MapperHelper.ToSentRequestDto).ToList();
         }
 
+        public async Task<List<UserSummaryResponse>> GetBlockedUsersAsync(Guid userId)
+        {
+            var blocked = await _context.Blocks
+                .Where(b => b.BlockerId == userId)
+                .Include(b => b.Blocked)
+                .Select(b => b.Blocked)
+                .ToListAsync();
+
+            return blocked.Select(MapperHelper.ToDtoSummary).ToList();
+        }
+
         public async Task<int> GetFriendRequestCountAsync(Guid userId)
         {
             return await _context.FriendRequests

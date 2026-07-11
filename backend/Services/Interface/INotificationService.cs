@@ -8,6 +8,7 @@ namespace backend.Services.Interface
         Task SendCountersAsync(Guid userId);
         Task SendFriendsAsync(Guid userId);
         Task SendFriendRequestsAsync(Guid userId);
+        Task SendBlockedAsync(Guid userId);
         Task SendSocialDataAsync(Guid userId);
     }
 }
