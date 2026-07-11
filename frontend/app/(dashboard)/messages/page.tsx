@@ -64,10 +64,6 @@ function MessagesPage() {
     });
   }, [friends, query]);
 
-  const handleSelectFriend = (friendId: string) => {
-    selectFriend(friendId);
-    router.replace(`/messages?friend=${friendId}`);
-  };
 
   const handleBack = () => {
     selectFriend(null);
@@ -101,7 +97,7 @@ function MessagesPage() {
           ) : filteredFriends.length === 0 ? (
             <GEmpty icon={<GIcon icon={MessagesSquare} size="xl" color="muted" />} title={t.noFriendsTitle} description={t.noFriendsDescription} />
           ) : (
-            <FriendsList friends={filteredFriends} onSelectFriend={handleSelectFriend} activeId={selectedFriendId} indicator="start" />
+            <FriendsList friends={filteredFriends} messageLabel={t.message} activeLabel={t.active} query={query} />
           )}
         </div>
       </aside>
@@ -158,7 +154,9 @@ function MessagesPage() {
                                 outgoing ? "justify-end text-on-primary/80" : "text-text-muted",
                               )}>
                               <span>{time}</span>
-                              {outgoing && <CheckCheck className={clsx("h-3.5 w-3.5", message.isRead ? "opacity-100" : "opacity-50")} />}
+                              {outgoing && (
+                                <GIcon icon={CheckCheck} size="sm" color="inherit" className={message.isRead ? "opacity-100" : "opacity-50"} />
+                              )}
                             </div>
                           }>
                           <p className="whitespace-pre-wrap">{message.content}</p>

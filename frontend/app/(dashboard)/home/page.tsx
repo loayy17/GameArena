@@ -4,6 +4,7 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
 import { ArrowLeft, Gamepad2, MessagesSquare, UserPlus } from "lucide-react";
+import { GIcon } from "@/component/common/GIcon";
 import { ar } from "./i18n/ar.i18n";
 import { en, type THomeTranslation } from "./i18n/en.i18n";
 import { GamesList } from "@/domain/constant/games";
@@ -68,7 +69,7 @@ function Home() {
                 <p className="text-xl font-black">{value}</p>
                 <p className="mt-1 truncate text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
               </div>
-              <ArrowLeft size={16} />
+              <GIcon icon={ArrowLeft} size="sm" color="inherit" />
             </GCard>
           </Link>
         ))}

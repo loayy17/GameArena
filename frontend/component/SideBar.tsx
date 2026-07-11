@@ -18,6 +18,7 @@ import { GBadge } from "./common/GBadge";
 import { GStatusDot } from "./common/GStatusDot";
 import { GIconTile } from "./common/GIconTile";
 import { GCard } from "./common/GCard";
+import { GIcon } from "./common/GIcon";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { sidebarNav } from "@/domain/constant/sidebarNav";
 
@@ -47,7 +48,7 @@ function SidebarNav() {
     () =>
       sidebarNav.map(({ id, labelKey, icon: Icon, badge }) => ({
         id,
-        icon: <Icon size={20} />,
+        icon: <GIcon icon={Icon} size="md" color="inherit" />,
         label: t[labelKey as keyof TSidebarTranslation],
         badgeCount: badge === "friends" ? friendRequestCount : badge === "messages" ? unreadMessageCount : 0,
       })),
@@ -132,7 +133,7 @@ function SidebarFooter() {
         )}
 
         <GButton onClick={handleLogout} variant="ghost" size="icon" title={t.logout} aria-label={t.logout}>
-          <LogOut size={18} />
+          <GIcon icon={LogOut} size="md" color="inherit" />
         </GButton>
       </GCard>
     </div>
@@ -147,7 +148,7 @@ function Sidebar() {
       widthExpanded="w-60"
       mode="inline"
       ariaLabel={t.mainNavigation}
-      collapsedIcon={<Menu size={20} />}
+      collapsedIcon={<GIcon icon={Menu} size="md" color="inherit" />}
       expandedBrand={<SidebarBrand />}
       footer={<SidebarFooter />}>
       <SidebarNav />

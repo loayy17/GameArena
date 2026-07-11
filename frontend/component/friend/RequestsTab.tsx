@@ -1,48 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Check, UserCheck, X } from "lucide-react";
-import { GEmpty } from "@/component/common/GEmpty";
-import { GButton } from "../common/GButton";
-import { GSkeleton } from "../common/GSkeleton";
-import { GCard } from "../common/GCard";
-import { GAvatar } from "../common/GAvatar";
+import { Check, Loader2, UserCheck, X } from "lucide-react";
+import { FriendsList } from "../SocialPanel/FriendsList";
+import { GEmpty } from "../common/GEmpty";
 import { GIcon } from "../common/GIcon";
-import { useTranslation } from "@/hooks/useSetting";
-import { useFriendRequests } from "@/hooks/useFriends";
-import {
-  en,
-  type TFriendsTranslation,
-} from "@/app/(dashboard)/friends/i18n/en.i18n";
-import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
+import { GIconTile } from "../common/GIconTile";
+import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import type { RequestsTabProps } from "./def/FriendsTab";
+import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { TNullable } from "@/domain/type/TCommon";
 
-function RequestsTab() {
-  const t = useTranslation({ en, ar }) as TFriendsTranslation;
-  const { requests, loading, accept, decline } = useFriendRequests();
+function RequestsTab({ requests, onAccept, onDecline, t }: RequestsTabProps) {
   const [actionId, setActionId] = useState<TNullable<string>>(null);
-
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <GCard key={i} padding="sm" className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <GSkeleton variant="rect" className="w-10 h-10" />
-              <div>
-                <GSkeleton variant="text" className="w-32" />
-                <GSkeleton variant="text" className="w-20 mt-1" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <GSkeleton variant="circle" className="w-8 h-8" />
-              <GSkeleton variant="circle" className="w-8 h-8" />
-            </div>
-          </GCard>
-        ))}
-      </div>
-    );
-  }
 
   if (requests.length === 0) {
     return (
@@ -54,73 +24,38 @@ function RequestsTab() {
     );
   }
 
+  const friends: IUserSummary[] = requests.map((r) => ({
+    id: r.senderId,
+    firstName: r.senderFirstName,
+    lastName: r.senderLastName,
+    userName: r.senderUserName,
+    fullName: [r.senderFirstName, r.senderLastName].filter(Boolean).join(" ") || r.senderUserName || r.senderId,
+    status: UserStatusEnum.Offline,
+  }));
+
   return (
-    <div className="space-y-3">
-      {requests.map((req) => {
-        const isBusy = actionId === req.senderId;
-
+    <FriendsList
+      friends={friends}
+      messageLabel={t.message}
+      activeLabel={t.message}
+      actions={(friend) => {
+        const isBusy = actionId === friend.id;
         return (
-          <GCard
-            key={req.senderId}
-            variant="interactive"
-            padding="sm"
-            className="flex items-center justify-between gap-4"
-          >
-            <div className="min-w-0 flex items-center gap-3">
-              <GAvatar
-                firstName={req.senderFirstName}
-                lastName={req.senderLastName}
-                userName={req.senderUserName}
-                size="sm"
-              />
-              <div className="min-w-0">
-                <p className="truncate font-medium text-text">
-                  {req.senderFirstName && req.senderLastName
-                    ? `${req.senderFirstName} ${req.senderLastName}`
-                    : req.senderUserName}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {t.requestsTab.wantsToBeFriends}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 gap-2">
-              <GButton
-                size="sm"
-                variant="success"
-                disabled={isBusy}
-                aria-label={t.requestsTab.accept}
-                onClick={async () => {
-                  setActionId(req.senderId);
-                  try {
-                    await accept(req.senderId);
-                  } finally {
-                    setActionId(null);
-                  }
-                }}
-                leftIcon={<GIcon icon={Check} size="sm" color="inherit" className="text-bg" />}
-              />
-              <GButton
-                size="sm"
-                variant="danger"
-                disabled={isBusy}
-                aria-label={t.requestsTab.decline}
-                onClick={async () => {
-                  setActionId(req.senderId);
-                  try {
-                    await decline(req.senderId);
-                  } finally {
-                    setActionId(null);
-                  }
-                }}
-                leftIcon={<GIcon icon={X} size="sm" color="inherit" className="text-on-primary" />}
-              />
-            </div>
-          </GCard>
+          <div className="flex gap-1">
+            <GIconTile icon={isBusy ? Loader2 : Check} size="sm" gradient="text-success" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
+              onClick={async () => {
+                setActionId(friend.id);
+                try { await onAccept(friend.id); } finally { setActionId(null); }
+              }} />
+            <GIconTile icon={isBusy ? Loader2 : X} size="sm" gradient="text-danger" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
+              onClick={async () => {
+                setActionId(friend.id);
+                try { await onDecline(friend.id); } finally { setActionId(null); }
+              }} />
+          </div>
         );
-      })}
-    </div>
+      }}
+    />
   );
 }
 

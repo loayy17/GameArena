@@ -1,12 +1,13 @@
 const en = {
   requests: "Requests",
   friends: "Friends",
+  sentRequests: "Sent Requests",
+  blockedUsers: "Blocked Users",
   search: "Search",
   message: "Message",
   invite: "Invite",
   addFriend: "Add Friend",
-  subtitle:
-    "Find friends, review incoming requests, and search for new players without leaving the page.",
+  subtitle: "Find friends, review incoming requests, and search for new players without leaving the page.",
   community: "Community",
   noFriendsTitle: "No friends yet",
   noFriendsDescription: "Search for users and add them as friends.",
@@ -38,6 +39,18 @@ const en = {
     wantsToBeFriends: "Wants to be friends",
     accept: "Accept request",
     decline: "Decline request",
+  },
+  sentTab: {
+    emptyTitle: "No sent requests",
+    emptyDescription: "You haven't sent any friend requests yet.",
+    cancel: "Cancel request",
+    cancelError: "Failed to cancel request. Please try again.",
+  },
+  blockedTab: {
+    emptyTitle: "No blocked users",
+    emptyDescription: "You haven't blocked anyone.",
+    unblock: "Unblock",
+    unblockError: "Failed to unblock user. Please try again.",
   },
 };
 

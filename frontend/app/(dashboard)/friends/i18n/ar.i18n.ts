@@ -1,12 +1,15 @@
-const ar = {
+import type { TFriendsTranslation } from "./en.i18n";
+
+const ar: TFriendsTranslation = {
   requests: "طلبات الصداقة",
   friends: "الأصدقاء",
+  sentRequests: "الطلبات المرسلة",
+  blockedUsers: "المستخدمون المحظورون",
   search: "بحث",
   message: "رسالة",
   invite: "دعوة",
   addFriend: "إضافة صديق",
-  subtitle:
-    "اعثر على أصدقاء، راجع الطلبات الواردة، وابحث عن لاعبين جدد دون مغادرة الصفحة.",
+  subtitle: "اعثر على أصدقاء، راجع الطلبات الواردة، وابحث عن لاعبين جدد دون مغادرة الصفحة.",
   community: "المجتمع",
   noFriendsTitle: "لا يوجد أصدقاء بعد",
   noFriendsDescription: "ابحث عن مستخدمين وأضفهم كأصدقاء.",
@@ -38,6 +41,18 @@ const ar = {
     wantsToBeFriends: "يريد أن يكون صديقًا",
     accept: "قبول الطلب",
     decline: "رفض الطلب",
+  },
+  sentTab: {
+    emptyTitle: "لا توجد طلبات مرسلة",
+    emptyDescription: "لم ترسل أي طلبات صداقة بعد.",
+    cancel: "إلغاء الطلب",
+    cancelError: "فشل إلغاء الطلب. يرجى المحاولة مرة أخرى.",
+  },
+  blockedTab: {
+    emptyTitle: "لا يوجد مستخدمون محظورون",
+    emptyDescription: "لم تقم بحظر أي شخص.",
+    unblock: "إلغاء الحظر",
+    unblockError: "فشل إلغاء الحظر. يرجى المحاولة مرة أخرى.",
   },
 };
 

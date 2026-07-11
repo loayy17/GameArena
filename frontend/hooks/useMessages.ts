@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatService } from "@/services/def/ChatService";
 import { useFriends } from "./useFriends";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -38,6 +38,14 @@ export function useMessages(initialFriendId?: TNullable<string>) {
   const [selectedFriendId, setSelectedFriendId] = useState<TNullable<string>>(
     initialFriendId ?? null,
   );
+  const prevInitialRef = useRef(initialFriendId);
+
+  useEffect(() => {
+    if (initialFriendId && initialFriendId !== prevInitialRef.current) {
+      prevInitialRef.current = initialFriendId;
+      setSelectedFriendId(initialFriendId);
+    }
+  }, [initialFriendId]);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [draft, setDraft] = useState("");
 

@@ -7,6 +7,6 @@ export interface GAvatarProps {
   src?: TNullable<string>;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   shape?: "rounded" | "circle";
-  gradient?: "brand" | "subtle-brand" | "game-green" | "game-cyan" | "game-magenta" | "play-cyan" | "play-green" | "play-magenta";
+  gradient?: string;
   className?: string;
 }

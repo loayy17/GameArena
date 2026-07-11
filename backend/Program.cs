@@ -86,14 +86,16 @@ builder.Services.AddScoped<IMatchHistoryService, MatchHistoryService>();
 // Event bus this for notification system like friend request, game invitation, message notification, user online/offline status.
 builder.Services.AddSingleton<IEventBus, EventBus>();
 builder.Services.AddScoped<SocialNotificationHandler>();
-builder.Services.AddScoped<IEventHandler<FriendRequestSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
-builder.Services.AddScoped<IEventHandler<FriendRequestAcceptedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
-builder.Services.AddScoped<IEventHandler<FriendRequestDeclinedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<FriendRequestSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>()); // requst sent
+builder.Services.AddScoped<IEventHandler<FriendRequestAcceptedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>()); // request accepted
+builder.Services.AddScoped<IEventHandler<FriendRequestDeclinedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>()); // request declined
+builder.Services.AddScoped<IEventHandler<FriendRequestCancelledEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>()); // request cancelled
 builder.Services.AddScoped<IEventHandler<FriendRemovedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
 builder.Services.AddScoped<IEventHandler<ChatMessageSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
 builder.Services.AddScoped<IEventHandler<GameStartedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
 builder.Services.AddScoped<IEventHandler<GameFinishedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
 builder.Services.AddScoped<IEventHandler<GameLeftEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+builder.Services.AddScoped<IEventHandler<UserBlockedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IUserPresenceService, UserPresenceService>();
 builder.Services.AddSingleton<IGameRoomService, GameRoomService>();

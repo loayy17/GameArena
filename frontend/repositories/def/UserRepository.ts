@@ -22,6 +22,18 @@ class UserRepository implements IUserRepository {
     return this.api.updateProfile(data);
   }
 
+  changePassword(data: { oldPassword: string; newPassword: string }): TPromise<unknown> {
+    return this.api.changePassword(data);
+  }
+
+  getPreferences(): TPromise<string | null> {
+    return this.api.getPreferences();
+  }
+
+  updatePreferences(data: { preferences: string }): TPromise<unknown> {
+    return this.api.updatePreferences(data);
+  }
+
   static getInstance() {
     if (!UserRepository.instance) {
       UserRepository.instance = new UserRepository();

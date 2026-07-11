@@ -19,6 +19,9 @@ const rounded: Record<string, string> = {
   sm: "rounded-[var(--radius-sm)]",
   md: "rounded-[var(--radius-md)]",
   lg: "rounded-[var(--radius-lg)]",
+  xl: "rounded-xl",
+  "2xl": "rounded-2xl",
+  "3xl": "rounded-3xl",
   full: "rounded-full",
 };
 

@@ -35,6 +35,7 @@
         NotBlocked = 4007,
         CannotSelfBlock = 4008,
         UserBlockedYou = 4009,
+        YouBlockedUser = 4010,
 
         // Game
         RoomNotFound = 5001,

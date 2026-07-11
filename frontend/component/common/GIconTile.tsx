@@ -17,9 +17,9 @@ const rounded: Record<string, string> = {
   full: "rounded-full",
 };
 
-function GIconTile({ children, gradient, size = "md", rounded: roundedProp = "md", icon, className, iconColor }: GIconTileProps) {
+function GIconTile({ children, gradient, size = "md", rounded: roundedProp = "md", icon, className, iconColor, ...rest }: GIconTileProps) {
   return (
-    <div className={clsx("flex shrink-0 items-center justify-center", iconTileSize[size], rounded[roundedProp], gradient, className)}>
+    <div className={clsx("flex shrink-0 items-center justify-center", iconTileSize[size], rounded[roundedProp], gradient, className)} {...rest}>
       {children ?? (icon && <GIcon icon={icon} color={iconColor} />)}
     </div>
   );

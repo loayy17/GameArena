@@ -22,8 +22,12 @@ class FriendService implements IFriendService {
     return this.repo.getSentFriendRequests();
   }
 
-  getFriends(data: IUserFilterRequest): TPromise<IUserSummary[]> {
-    return this.repo.getFriends(data);
+  async getFriends(data: IUserFilterRequest): TPromise<IUserSummary[]> {
+    const result = await this.repo.getFriends(data);
+    result.data?.forEach((friend) => {
+      friend.fullName = `${friend.firstName ?? ""} ${friend.lastName ?? ""}`.trim();
+    });
+    return result;
   }
 
   acceptFriendRequest(senderId: string): TPromise<void> {
@@ -38,12 +42,20 @@ class FriendService implements IFriendService {
     return this.repo.removeFriend(friendId);
   }
 
+  cancelFriendRequest(receiverId: string): TPromise<void> {
+    return this.repo.cancelFriendRequest(receiverId);
+  }
+
   blockUser(blockedId: string): TPromise<void> {
     return this.repo.blockUser(blockedId);
   }
 
   unblockUser(blockedId: string): TPromise<void> {
     return this.repo.unblockUser(blockedId);
+  }
+
+  getBlockedUsers(): TPromise<IUserSummary[]> {
+    return this.repo.getBlockedUsers();
   }
 }
 

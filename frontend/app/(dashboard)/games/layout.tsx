@@ -1,9 +1,7 @@
 "use client";
 
-import { GameProvider } from "@/app/providers/GameProvider";
-
 function GameLayout({ children }: { children: React.ReactNode }) {
-  return <GameProvider>{children}</GameProvider>;
+  return <>{children}</>;
 }
 
 export default GameLayout;

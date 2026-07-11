@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useSetting";
 import { en as gameEn, type GameTranslations } from "@/component/i18n/Game/en.i18n";
 import { ar as gameAr } from "@/component/i18n/Game/ar.i18n";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
+import { GCard } from "@/component/common/GCard";
 import type { ISnakeGameState } from "@/app/providers/def/IGameState";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
 
@@ -30,7 +31,7 @@ function SnakePage() {
 
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.Snake}>
-      <div className="bg-bg-card border border-border rounded-3xl p-5">
+      <GCard padding="md" rounded="3xl">
         <div className="grid gap-1">
           {grid.map((row, rowIndex) => (
             <div key={rowIndex} className="flex gap-1">
@@ -57,7 +58,7 @@ function SnakePage() {
         </div>
 
         {!isFinished && <div className="mt-4 text-center text-xs text-text-muted">{t.snake.arrowKeysHint}</div>}
-      </div>
+      </GCard>
     </GameLayoutWrapper>
   );
 }

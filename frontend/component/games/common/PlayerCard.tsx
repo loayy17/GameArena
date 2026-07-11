@@ -2,41 +2,11 @@
 
 import { Bot, User } from "lucide-react";
 import clsx from "clsx";
-
-interface PlayerCardProps {
-  playerId?: string;
-  playerUsername?: string;
-  symbol?: string;
-  isBot?: boolean;
-  isYou?: boolean;
-  myName: string;
-  fallbackName: string;
-  isTurn: boolean;
-  youSuffix?: string;
-  aiBotLabel?: string;
-  turnLabel?: string;
-  symbolColors?: {
-    box: string;
-    badge: string;
-    turn: string;
-  };
-}
-
-const defaultSymbolColors: Record<string, { box: string; badge: string; turn: string }> = {
-  X: {
-    box: "border-accent bg-accent-muted",
-    badge: "bg-accent",
-    turn: "text-accent",
-  },
-  O: {
-    box: "border-warning bg-warning-bg",
-    badge: "bg-warning",
-    turn: "text-warning",
-  },
-};
+import { GIcon } from "@/component/common/GIcon";
+import type { PlayerCardProps } from "./def/PlayerCard";
 
 function PlayerCard({
-  playerId,
+  playerId: _playerId,
   playerUsername,
   symbol,
   isBot,
@@ -49,12 +19,13 @@ function PlayerCard({
   turnLabel = "Turn",
   symbolColors,
 }: PlayerCardProps) {
-  const colors = symbolColors ?? (symbol ? defaultSymbolColors[symbol] : undefined);
   const name = isYou
     ? `${myName} ${youSuffix}`
     : isBot
       ? aiBotLabel
       : playerUsername || fallbackName;
+
+  const colors = symbolColors;
 
   return (
     <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
@@ -65,9 +36,9 @@ function PlayerCard({
         )}
       >
         {isBot ? (
-          <Bot className={clsx("w-8 h-8", symbol === "X" ? "text-neon-blue" : "text-neon-magenta")} />
+          <GIcon icon={Bot} size="xl" color="inherit" className={symbol === "X" ? "text-neon-blue" : "text-neon-magenta"} />
         ) : (
-          <User className="w-8 h-8 text-text-secondary" />
+          <GIcon icon={User} size="xl" color="secondary" />
         )}
         {symbol && colors && (
           <span
@@ -80,7 +51,7 @@ function PlayerCard({
           </span>
         )}
       </div>
-      <span className="text-sm font-semibold text-text mt-3 truncate max-w-[7rem]">
+      <span className="text-sm font-semibold text-text mt-3 truncate max-w-28">
         {name}
       </span>
       {isTurn && colors && (
@@ -93,4 +64,3 @@ function PlayerCard({
 }
 
 export { PlayerCard };
-export type { PlayerCardProps };

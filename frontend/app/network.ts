@@ -5,7 +5,7 @@ import type { IApiResponse } from "@/domain/meta/IApiResponse";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
 export const baseURL = `${API_BASE}/api/`;
 
-export const api = axios.create({
+const api = axios.create({
   baseURL,
   withCredentials: true,
 });
@@ -79,7 +79,7 @@ api.interceptors.response.use(
 
 /* ---------------- URL ---------------- */
 
-export function buildUrl(template: string, payload?: THashMap): { url: string; leftover: THashMap } {
+function buildUrl(template: string, payload?: THashMap): { url: string; leftover: THashMap } {
   if (payload == null) return { url: template, leftover: {} };
 
   if (typeof payload !== "object") {

@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 
 interface GIconProps {
   icon: LucideIcon;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
   color?: "primary" | "secondary" | "muted" | "success" | "warning" | "danger" | "inherit";
   flip?: boolean;
   className?: string;

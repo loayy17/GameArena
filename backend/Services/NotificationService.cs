@@ -23,11 +23,17 @@ namespace backend.Services
 
         public async Task<NotificationCountersResponse> GetCountersAsync(Guid userId)
         {
+            var friendRequestsTask = _friendService.GetFriendRequestCountAsync(userId);
+            var friendsTask = _friendService.GetFriendCountAsync(userId);
+            var unreadTask = _chatService.GetUnreadMessagesCountAsync(userId);
+
+            await Task.WhenAll(friendRequestsTask, friendsTask, unreadTask);
+
             return new NotificationCountersResponse
             {
-                FriendRequests = await _friendService.GetFriendRequestCountAsync(userId),
-                Friends = await _friendService.GetFriendCountAsync(userId),
-                UnreadMessages = await _chatService.GetUnreadMessagesCountAsync(userId)
+                FriendRequests = friendRequestsTask.Result,
+                Friends = friendsTask.Result,
+                UnreadMessages = unreadTask.Result
             };
         }
 

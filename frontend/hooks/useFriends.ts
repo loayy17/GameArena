@@ -17,30 +17,25 @@ function useFriendList() {
     if (!socialConnection) return;
 
     const handleFriends = (data: IUserSummary[]) => {
-      setFriends(data);
+      const sortedFriends = data
+        .map((friend) => ({
+          ...friend,
+          fullName: `${friend.firstName ?? ""} ${friend.lastName ?? ""}`.trim(),
+        }))
+        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+      setFriends(sortedFriends);
       setLoading(false);
     };
 
     socialConnection.on("social:friends", handleFriends);
 
+    // Request initial data only on first connect or reconnect
+    if (isSocialConnected) {
+      socialConnection.invoke("RequestSocialData").catch(() => {});
+    }
+
     return () => {
       socialConnection.off("social:friends", handleFriends);
-    };
-  }, [socialConnection]);
-
-  useEffect(() => {
-    if (!socialConnection || !isSocialConnected) return;
-
-    const invokeRequest = () => {
-      socialConnection.invoke("RequestFriends").catch(() => {});
-    };
-
-    invokeRequest();
-
-    const retryTimer = setTimeout(invokeRequest, 500);
-
-    return () => {
-      clearTimeout(retryTimer);
     };
   }, [socialConnection, isSocialConnected, socialReconnectKey]);
 
@@ -48,17 +43,12 @@ function useFriendList() {
     if (!socialConnection) return;
 
     const setStatus = (userId: string, status: UserStatusEnum) => {
-      setFriends((prev) =>
-        prev.map((f) => (f.id === userId ? { ...f, status } : f)),
-      );
+      setFriends((prev) => prev.map((f) => (f.id === userId ? { ...f, status } : f)));
     };
 
-    const handleOnline = ({ userId }: { userId: string }) =>
-      setStatus(userId, UserStatusEnum.Online);
-    const handleOffline = ({ userId }: { userId: string }) =>
-      setStatus(userId, UserStatusEnum.Offline);
-    const handleInGame = ({ userId }: { userId: string }) =>
-      setStatus(userId, UserStatusEnum.InGame);
+    const handleOnline = ({ userId }: { userId: string }) => setStatus(userId, UserStatusEnum.Online);
+    const handleOffline = ({ userId }: { userId: string }) => setStatus(userId, UserStatusEnum.Offline);
+    const handleInGame = ({ userId }: { userId: string }) => setStatus(userId, UserStatusEnum.InGame);
 
     socialConnection.on("friend:online", handleOnline);
     socialConnection.on("friend:offline", handleOffline);
@@ -78,10 +68,7 @@ function useFriendList() {
     }
   }, [socialConnection]);
 
-  const onlineCount = useMemo(
-    () => friends.filter((f) => f.status !== UserStatusEnum.Offline).length,
-    [friends],
-  );
+  const onlineCount = useMemo(() => friends.filter((f) => f.status !== UserStatusEnum.Offline).length, [friends]);
 
   return { friends, loading, onlineCount, reload };
 }
@@ -111,18 +98,18 @@ function useFriendRequests() {
   useEffect(() => {
     if (!socialConnection || !isSocialConnected) return;
 
-    const invokeRequest = () => {
-      socialConnection.invoke("RequestFriendRequests").catch(() => {});
-    };
-
-    invokeRequest();
-
-    const retryTimer = setTimeout(invokeRequest, 500);
+    // Data is already pushed via SendSocialDataAsync on connect,
+    // but we need to ensure we get the data if the event was missed
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        socialConnection.invoke("RequestFriendRequests").catch(() => {});
+      }
+    }, 2000);
 
     return () => {
-      clearTimeout(retryTimer);
+      clearTimeout(timeoutId);
     };
-  }, [socialConnection, isSocialConnected, socialReconnectKey]);
+  }, [socialConnection, isSocialConnected, socialReconnectKey, loading]);
 
   const reload = useCallback(() => {
     if (socialConnection) {
@@ -131,38 +118,29 @@ function useFriendRequests() {
     }
   }, [socialConnection]);
 
-  const accept = useCallback(
-    async (senderId: string) => {
-      try {
-        await friendService.acceptFriendRequest(senderId);
-      } catch {
-        // accept failed — backend will push updated data via SignalR
-      }
-    },
-    [],
-  );
+  const accept = useCallback(async (senderId: string) => {
+    try {
+      await friendService.acceptFriendRequest(senderId);
+    } catch {
+      // accept failed — backend will push updated data via SignalR
+    }
+  }, []);
 
-  const decline = useCallback(
-    async (senderId: string) => {
-      try {
-        await friendService.rejectFriendRequest(senderId);
-      } catch {
-        // decline failed — backend will push updated data via SignalR
-      }
-    },
-    [],
-  );
+  const decline = useCallback(async (senderId: string) => {
+    try {
+      await friendService.rejectFriendRequest(senderId);
+    } catch {
+      // decline failed — backend will push updated data via SignalR
+    }
+  }, []);
 
-  const send = useCallback(
-    async (friendId: string) => {
-      try {
-        await friendService.sendFriendRequest(friendId);
-      } catch {
-        // send request failed — backend will push updated data via SignalR
-      }
-    },
-    [],
-  );
+  const send = useCallback(async (friendId: string) => {
+    try {
+      await friendService.sendFriendRequest(friendId);
+    } catch {
+      // send request failed — backend will push updated data via SignalR
+    }
+  }, []);
 
   return {
     requests,
@@ -176,13 +154,69 @@ function useFriendRequests() {
   };
 }
 
+function useBlockedUsers() {
+  const { socialConnection, isSocialConnected, socialReconnectKey } = useConnections();
+  const [blockedUsers, setBlockedUsers] = useState<IUserSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchViaRest = useCallback(async () => {
+    try {
+      const response = await friendService.getBlockedUsers();
+      setBlockedUsers(response.data ?? []);
+    } catch {
+      // REST fallback failed — keep whatever we have
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleBlockedSignal = useCallback((data: IUserSummary[]) => {
+    setBlockedUsers(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!socialConnection) return;
+
+    socialConnection.on("social:blocked", handleBlockedSignal);
+
+    return () => {
+      socialConnection.off("social:blocked", handleBlockedSignal);
+    };
+  }, [socialConnection, handleBlockedSignal]);
+
+  useEffect(() => {
+    if (!socialConnection || !isSocialConnected) return;
+
+    // Data is already pushed via SendSocialDataAsync on connect.
+    // Only fall back to REST if SignalR push doesn't arrive within 3s.
+    let cancelled = false;
+
+    const restFallbackTimer = setTimeout(() => {
+      if (!cancelled && loading) fetchViaRest();
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(restFallbackTimer);
+    };
+  }, [socialConnection, isSocialConnected, socialReconnectKey, fetchViaRest, loading]);
+
+  const reload = useCallback(() => {
+    setLoading(true);
+    if (socialConnection) {
+      socialConnection.invoke("RequestBlocked")
+        .catch(() => fetchViaRest());
+    } else {
+      fetchViaRest();
+    }
+  }, [socialConnection, fetchViaRest]);
+
+  return { blockedUsers, loading, reload };
+}
+
 function useFriends() {
-  const {
-    friends,
-    loading: friendsLoading,
-    onlineCount,
-    reload: reloadFriends,
-  } = useFriendList();
+  const { friends, loading: friendsLoading, onlineCount, reload: reloadFriends } = useFriendList();
   const {
     requests,
     sentRequests,
@@ -190,46 +224,68 @@ function useFriends() {
     requestCount,
     accept: acceptRequest,
     decline: declineRequest,
+
     send: sendRequest,
     reload: reloadRequests,
   } = useFriendRequests();
+  const { blockedUsers, loading: blockedLoading, reload: reloadBlocked } = useBlockedUsers();
 
-  const removeFriend = useCallback(
-    async (friendId: string) => {
-      await friendService.removeFriend(friendId);
-    },
-    [],
-  );
+  const removeFriend = useCallback(async (friendId: string) => {
+    await friendService.removeFriend(friendId);
+    reloadFriends();
+  }, [reloadFriends]);
 
-  const blockUser = useCallback(
-    async (blockedId: string) => {
-      await friendService.blockUser(blockedId);
-    },
-    [],
-  );
+  const blockUser = useCallback(async (blockedId: string) => {
+    await friendService.blockUser(blockedId);
+    reloadFriends();
+    reloadBlocked();
+  }, [reloadFriends, reloadBlocked]);
 
   const unblockUser = useCallback(async (blockedId: string) => {
     await friendService.unblockUser(blockedId);
-  }, []);
+    reloadBlocked();
+  }, [reloadBlocked]);
+
+  const cancelFriendRequest = useCallback(async (receiverId: string) => {
+    await friendService.cancelFriendRequest(receiverId);
+    reloadRequests();
+  }, [reloadRequests]);
+
+  const handleAccept = useCallback(async (senderId: string) => {
+    await acceptRequest(senderId);
+    reloadFriends();
+    reloadRequests();
+  }, [acceptRequest, reloadFriends, reloadRequests]);
+
+  const handleDecline = useCallback(async (senderId: string) => {
+    await declineRequest(senderId);
+    reloadRequests();
+  }, [declineRequest, reloadRequests]);
 
   return {
     friends,
     requests,
     sentRequests,
-    loading: friendsLoading || requestsLoading,
+    blockedUsers,
+    friendsLoading,
+    requestsLoading,
+    blockedLoading,
+    loading: friendsLoading || requestsLoading || blockedLoading,
     requestCount,
     onlineCount,
     sendRequest,
-    acceptRequest,
-    declineRequest,
+    acceptRequest: handleAccept,
+    declineRequest: handleDecline,
     removeFriend,
     blockUser,
     unblockUser,
+    cancelFriendRequest,
     reload: async () => {
       reloadFriends();
       reloadRequests();
+      reloadBlocked();
     },
   };
 }
 
-export { useFriendList, useFriendRequests, useFriends };
+export { useFriendList, useFriendRequests, useBlockedUsers, useFriends };

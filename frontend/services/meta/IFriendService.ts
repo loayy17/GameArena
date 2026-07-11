@@ -11,8 +11,10 @@ interface IFriendService {
   getFriends(data: IUserFilterRequest): TPromise<IUserSummary[]>;
   acceptFriendRequest(senderId: string): TPromise<void>;
   rejectFriendRequest(senderId: string): TPromise<void>;
+  cancelFriendRequest(receiverId: string): TPromise<void>;
   removeFriend(friendId: string): TPromise<void>;
   blockUser(blockedId: string): TPromise<void>;
   unblockUser(blockedId: string): TPromise<void>;
+  getBlockedUsers(): TPromise<IUserSummary[]>;
 }
 export type { IFriendService };

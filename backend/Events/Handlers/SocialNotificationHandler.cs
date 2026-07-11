@@ -16,7 +16,9 @@ public class SocialNotificationHandler(
     IEventHandler<ChatMessageSentEvent>,
     IEventHandler<GameStartedEvent>,
     IEventHandler<GameFinishedEvent>,
-    IEventHandler<GameLeftEvent>
+    IEventHandler<GameLeftEvent>,
+    IEventHandler<UserBlockedEvent>,
+    IEventHandler<FriendRequestCancelledEvent>
 {
     public async Task HandleAsync(FriendRequestSentEvent eventHappen)
     {
@@ -93,6 +95,31 @@ public class SocialNotificationHandler(
     public async Task HandleAsync(GameLeftEvent eventHappen)
     {
         await SetPresenceAndBroadcastAsync(eventHappen.PlayerId, UserStatus.Online, "friend:online");
+    }
+    public async Task HandleAsync(UserBlockedEvent eventHappen)
+    {
+        await _hub.Clients.User(eventHappen.BlockedUserId.ToString())
+            .SendAsync("friend:blocked", new
+            {
+                userId = eventHappen.BlockerId
+            });
+        await _notificationService.SendFriendsAsync(eventHappen.BlockedUserId);
+        await _notificationService.SendCountersAsync(eventHappen.BlockedUserId);
+        await _notificationService.SendBlockedAsync(eventHappen.BlockerId);
+        await _notificationService.SendCountersAsync(eventHappen.BlockerId);
+    }
+    public async Task HandleAsync(FriendRequestCancelledEvent eventHappen)
+    {
+        await _hub.Clients.User(eventHappen.ReceiverId.ToString())
+            .SendAsync("friend:requestCancelled", new
+            {
+                senderId = eventHappen.SenderId
+            });
+
+        await _notificationService.SendFriendRequestsAsync(eventHappen.SenderId);
+        await _notificationService.SendFriendRequestsAsync(eventHappen.ReceiverId);
+        await _notificationService.SendCountersAsync(eventHappen.SenderId);
+        await _notificationService.SendCountersAsync(eventHappen.ReceiverId);
     }
 
     private async Task SetPresenceAndBroadcastAsync(string userId, UserStatus status, string eventName)

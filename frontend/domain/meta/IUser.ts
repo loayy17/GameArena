@@ -7,5 +7,6 @@ interface IUser extends IUserSummary {
   role: UserRoleEnum;
   createdAt: Date;
   isVerified: boolean;
+  preferences?: string;
 }
 export type { IUser };

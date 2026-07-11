@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useConnections } from "@/app/providers/ConnectionProvider";
 import { GameService } from "@/services/gameService";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
@@ -17,52 +17,67 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<TNullable<IGameState>>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
-  const searchingRef = useRef(false);
+  const [isInitialSyncDone, setIsInitialSyncDone] = useState(false);
+  const [lastGameType, setLastGameType] = useState<GamesKindEnum | null>(null);
   const router = useRouter();
-  const reset = useCallback(() => {
+
+  const goToLobby = useCallback(() => {
     setState(null);
     setIsSearching(false);
     setOpponentDisconnected(false);
     router.push("/games");
   }, [router]);
 
-  useEffect(() => {
-    searchingRef.current = isSearching;
-  }, [isSearching]);
+  const clearGameState = useCallback(() => {
+    setState(null);
+    setIsSearching(false);
+    setOpponentDisconnected(false);
+  }, []);
 
   useEffect(() => {
     if (!gameConnection) return;
-    const updateState = (value: IGameState) => {
+    const handleGameState = (value: IGameState) => {
       setState(value);
       setIsSearching(false);
       setOpponentDisconnected(false);
     };
-    const syncState = () => gameConnection.invoke<TNullable<IGameState>>("GetCurrentState").then((value) => value && updateState(value));
-    const opponentDisconnect = () => setOpponentDisconnected(true);
-    gameConnection.on("gameState", updateState);
-    gameConnection.on("OpponentDisconnected", opponentDisconnect);
+    const handleOpponentDisconnect = () => setOpponentDisconnected(true);
+    const syncState = () =>
+      gameConnection
+        .invoke<TNullable<IGameState>>("GetCurrentState")
+        .then((value) => {
+          if (value) handleGameState(value);
+        })
+        .finally(() => setIsInitialSyncDone(true));
+
+    gameConnection.on("gameState", handleGameState);
+    gameConnection.on("OpponentDisconnected", handleOpponentDisconnect);
     gameConnection.onreconnected(syncState);
     syncState();
+
     return () => {
-      gameConnection.off("gameState", updateState);
-      gameConnection.off("OpponentDisconnected", opponentDisconnect);
+      gameConnection.off("gameState", handleGameState);
+      gameConnection.off("OpponentDisconnected", handleOpponentDisconnect);
       gameConnection.onreconnected(() => {});
+      setIsInitialSyncDone(false);
     };
   }, [gameConnection]);
 
   const findMatch = useCallback(
     async (game: GamesKindEnum) => {
-      if (!service) return;
-      reset();
+      if (!service || isSearching) return;
+      clearGameState();
+      setLastGameType(game);
       setIsSearching(true);
       await service.findMatch(game);
     },
-    [service, reset],
+    [service, clearGameState, isSearching],
   );
 
   const startGame = useCallback(
     async (friendId: TNullable<string>, gameKind: GamesKindEnum) => {
       if (!service) return;
+      setLastGameType(gameKind);
       await service.startGame(friendId, gameKind);
     },
     [service],
@@ -79,26 +94,25 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const inviteToRoom = useCallback(
     async (friendId: string) => {
       if (!service) return;
-
       await service.inviteToRoom(friendId);
     },
     [service],
   );
 
   const leaveGame = useCallback(async () => {
-    await service?.leaveGame();
-    reset();
-  }, [service, reset]);
+    if (!service) return;
+    await service.leaveGame();
+    goToLobby();
+  }, [service, goToLobby]);
 
   const resetGame = useCallback(async () => {
-    if (searchingRef.current) await service?.cancelSearch();
-
-    reset();
-  }, [service, reset]);
+    if (isSearching) await service?.cancelSearch();
+    goToLobby();
+  }, [service, goToLobby, isSearching]);
 
   const sendAction = useCallback(
-    (action: object) => {
-      service?.sendAction(action);
+    async (action: object) => {
+      await service?.sendAction(action);
     },
     [service],
   );
@@ -110,6 +124,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       isSearching,
       isConnected: isGameConnected,
       opponentDisconnected,
+      isInitialSyncDone,
+      lastGameType,
       findMatch,
       startGame,
       inviteFriend,
@@ -118,7 +134,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
       resetGame,
       sendAction,
     }),
-    [state, isSearching, isGameConnected, opponentDisconnected, findMatch, startGame, inviteFriend, inviteToRoom, leaveGame, resetGame, sendAction],
+    [
+      state,
+      isSearching,
+      isGameConnected,
+      opponentDisconnected,
+      isInitialSyncDone,
+      lastGameType,
+      findMatch,
+      startGame,
+      inviteFriend,
+      inviteToRoom,
+      leaveGame,
+      resetGame,
+      sendAction,
+    ],
   );
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

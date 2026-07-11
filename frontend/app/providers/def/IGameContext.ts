@@ -8,13 +8,15 @@ interface IGameContext {
   isSearching: boolean;
   isConnected: boolean;
   opponentDisconnected: boolean;
+  isInitialSyncDone: boolean;
+  lastGameType: GamesKindEnum | null;
   findMatch(gameKind: GamesKindEnum): Promise<void>;
   startGame(friendId: TNullable<string>, gameKind: GamesKindEnum): Promise<void>;
   inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void>;
   inviteToRoom(friendId: string): Promise<void>;
   leaveGame(): Promise<void>;
   resetGame(): Promise<void>;
-  sendAction(action: object): void;
+  sendAction(action: object): Promise<void>;
 }
 
 export type { IGameContext };

@@ -7,16 +7,7 @@ import { GCard } from "@/component/common/GCard";
 import { GIconTile } from "@/component/common/GIconTile";
 import type { IMatchHistory } from "@/domain/meta/IMatchHistory";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
-
-interface MatchHistoryItemProps {
-  match: IMatchHistory;
-  locale: string;
-  winLabel: string;
-  lossLabel: string;
-  drawLabel: string;
-  versusLabel: string;
-  gameLabel: string;
-}
+import type { MatchHistoryItemProps } from "./def/MatchHistoryItem";
 
 export function MatchHistoryItem({ match, locale, winLabel, lossLabel, drawLabel, versusLabel, gameLabel }: MatchHistoryItemProps) {
   const game = match.kind != GamesKindEnum.None ? GamesList[match.kind] : undefined;

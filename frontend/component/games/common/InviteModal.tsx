@@ -1,25 +1,12 @@
 "use client";
 
-import { Frown } from "lucide-react";
+import { Frown, UserPlus } from "lucide-react";
 import { GButton } from "@/component/common/GButton";
 import { GSpinner } from "@/component/common/GSpinner";
 import { GInputSearch } from "@/component/common/GInputSearch";
-import { FriendsList } from "@/component/SocialPanel/FriendsList";
-import type { IUserSummary } from "@/domain/meta/IUserSummary";
-
-interface InviteModalProps {
-  open: boolean;
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  loading: boolean;
-  friends: IUserSummary[];
-  onSelect: (friendId: string) => void;
-  onClose: () => void;
-  title?: string;
-  cancelLabel?: string;
-  searchPlaceholder?: string;
-  noFriendsText?: string;
-}
+import { GCard } from "@/component/common/GCard";
+import { GIcon } from "@/component/common/GIcon";
+import type { InviteModalProps } from "./def/InviteModal";
 
 function InviteModal({
   open,
@@ -37,7 +24,7 @@ function InviteModal({
   if (!open) return null;
 
   return (
-    <div className="bg-surface/50 border border-border/60 rounded-xl p-4">
+    <GCard variant="outlined" padding="sm" className="bg-surface/50 border-border/60">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-text">{title}</h3>
         <GButton onClick={onClose} variant="secondary" size="sm">
@@ -53,15 +40,28 @@ function InviteModal({
         {loading ? (
           <GSpinner size="sm" />
         ) : friends.length > 0 ? (
-          <FriendsList friends={friends} onSelectFriend={onSelect} />
+          <div className="space-y-1">
+            {friends.map((friend) => (
+              <GButton
+                key={friend.id}
+                variant="ghost"
+                fullWidth
+                className="justify-start text-sm"
+                leftIcon={<GIcon icon={UserPlus} size="sm" color="inherit" />}
+                onClick={() => onSelect(friend.id)}
+              >
+                {friend.fullName ?? friend.userName}
+              </GButton>
+            ))}
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-20 text-text-muted text-sm">
-            <Frown className="w-6 h-6 mb-1 opacity-50" />
+            <GIcon icon={Frown} size="lg" color="muted" className="mb-1" />
             {noFriendsText}
           </div>
         )}
       </div>
-    </div>
+    </GCard>
   );
 }
 

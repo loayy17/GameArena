@@ -2,12 +2,8 @@
 
 import { Zap } from "lucide-react";
 import clsx from "clsx";
-
-interface GameTurnIndicatorProps {
-  isMyTurn: boolean;
-  currentTurnText: string;
-  waitingText: string;
-}
+import { GIcon } from "@/component/common/GIcon";
+import type { GameTurnIndicatorProps } from "./def/GameTurnIndicator";
 
 function GameTurnIndicator({
   isMyTurn,
@@ -23,11 +19,11 @@ function GameTurnIndicator({
           : "bg-surface border-border text-text-secondary",
       )}
     >
-      <Zap
-        className={clsx(
-          "w-4 h-4",
-          isMyTurn ? "text-neon-cyan" : "text-text-muted",
-        )}
+      <GIcon
+        icon={Zap}
+        size="sm"
+        color="inherit"
+        className={isMyTurn ? "text-neon-cyan" : "text-text-muted"}
       />
       {isMyTurn ? currentTurnText : waitingText}
     </div>

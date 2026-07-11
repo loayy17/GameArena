@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Bell } from "lucide-react";
+import { Users, Bell, UsersRound, MailQuestion } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState } from "react";
 
@@ -9,6 +9,7 @@ import { GInputSearch } from "@/component/common/GInputSearch";
 import { FriendsList } from "./FriendsList";
 import { GTabs } from "@/component/common/GTabs";
 import type { GTabItem } from "@/component/common/def/GTabs";
+import { GEmpty } from "@/component/common/GEmpty";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
 import { useFriendList } from "@/hooks/useFriends";
@@ -18,6 +19,7 @@ import { GAside, useAsideCtx } from "../common/GAside";
 import { GTile } from "../common/GTile";
 import { GStatusDot } from "../common/GStatusDot";
 import { GSpinner } from "../common/GSpinner";
+import { GIcon } from "@/component/common/GIcon";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { GButton } from "../common/GButton";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
@@ -45,7 +47,7 @@ function SocialBrand() {
   return (
     <div className="min-w-0">
       <p className="font-bold text-text flex items-center gap-2">
-        <Users size={16} className="text-text shrink-0" />
+        <GIcon icon={Users} size="sm" color="inherit" className="shrink-0" />
         <span className="truncate">{t.title}</span>
       </p>
       <p className="text-xs text-text-muted">
@@ -70,7 +72,7 @@ function SocialRail() {
   if (online.length === 0) {
     return (
       <div className="flex justify-center pt-4">
-        <Users size={18} className="text-text-muted" />
+        <GIcon icon={Users} size="md" color="muted" />
       </div>
     );
   }
@@ -85,7 +87,7 @@ function SocialRail() {
           title={`${f.firstName ?? ""} ${f.lastName ?? ""}`.trim() || (f.userName ?? undefined)}
           className="relative shrink-0 rounded-full transition hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-primary outline-none">
           <GTile user={f} size="sm" />
-          <GStatusDot status={f.status} className="absolute -bottom-0.5 -end-0.5 ring-2 ring-bg-sidebar" />
+          <GStatusDot status={f.status} className="absolute -bottom-0.5 -inset-e-0.5 ring-2 ring-bg-sidebar" />
         </GButton>
       ))}
     </div>
@@ -96,7 +98,6 @@ function SocialExpanded() {
   const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
   const { gameInvites } = useDashboardNotifications();
   const { friends, loading } = useSharedFriends();
-  const router = useRouter();
   const { isCompact, closeMobile } = useAsideCtx();
 
   const [query, setQuery] = useState("");
@@ -110,21 +111,16 @@ function SocialExpanded() {
 
   const tabs = useMemo<GTabItem<SocialPanelTab>[]>(
     () => [
-      { id: "friends", label: t.tabs.friends, icon: <Users size={16} /> },
+      { id: "friends", label: t.tabs.friends, icon: <GIcon icon={Users} size="sm" color="inherit" /> },
       {
         id: "invites",
         label: t.tabs.invites,
-        icon: <Bell size={16} />,
+        icon: <GIcon icon={Bell} size="sm" color="inherit" />,
         badge: gameInvites.length || undefined,
       },
     ],
     [t, gameInvites.length],
   );
-
-  const goToChat = (id: string) => {
-    router.push(`/messages?friend=${id}`);
-    if (isCompact) closeMobile();
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -139,14 +135,17 @@ function SocialExpanded() {
       </div>
 
       <div className="flex-1 p-4 space-y-4">
-        {activeTab === "invites" ? (
+              {activeTab === "invites" ? (
+                  
           <GameInvitesList onAfterAccept={() => isCompact && closeMobile()} />
         ) : loading ? (
           <div className="flex justify-center py-10">
             <GSpinner />
           </div>
+        ) : filteredFriends.length === 0 ? (
+          <GEmpty icon={<GIcon icon={UsersRound} size="xl" color="muted" />} title={t.noFriendsTitle} description={t.noFriendsDescription} />
         ) : (
-          <FriendsList friends={filteredFriends} onSelectFriend={goToChat} />
+          <FriendsList friends={filteredFriends} query={query} messageLabel={t.message} activeLabel={t.active} />
         )}
       </div>
     </div>
@@ -164,8 +163,8 @@ function SocialPanelInner() {
 
   const collapsedIcon = (
     <span className="relative inline-flex">
-      <Users size={20} />
-      {gameInvites.length > 0 && <span className="absolute -top-1 -end-1 w-2 h-2 rounded-full bg-primary ring-2 ring-bg-sidebar" />}
+      <GIcon icon={Users} size="md" color="inherit" />
+      {gameInvites.length > 0 && <span className="absolute -top-1 -inset-e-1 w-2 h-2 rounded-full bg-primary ring-2 ring-bg-sidebar" />}
     </span>
   );
 
@@ -185,10 +184,7 @@ function SocialPanelInner() {
 function SocialPanel() {
   const { friends, loading, onlineCount, reload } = useFriendList();
 
-  const value = useMemo<FriendsContextValue>(
-    () => ({ friends, loading, onlineCount, reload }),
-    [friends, loading, onlineCount, reload],
-  );
+  const value = useMemo<FriendsContextValue>(() => ({ friends, loading, onlineCount, reload }), [friends, loading, onlineCount, reload]);
 
   return (
     <FriendsContext.Provider value={value}>

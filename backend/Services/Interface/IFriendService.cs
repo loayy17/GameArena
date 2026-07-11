@@ -9,6 +9,7 @@ namespace backend.Services.Interface
         Task AcceptRequestAsync(Guid userId, Guid senderId);
         Task DeclineRequestAsync(Guid userId, Guid senderId);
         Task RemoveFriendAsync(Guid userId, Guid friendId);
+        Task CancelRequestAsync(Guid senderId, Guid receiverId);
         Task BlockUserAsync(Guid blockerId, Guid blockedId);
         Task UnblockUserAsync(Guid blockerId, Guid blockedId);
         Task<List<UserSummaryResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter);

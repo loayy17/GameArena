@@ -22,6 +22,16 @@ public sealed record FriendRemovedEvent(
     Guid RemovedFriendId
 ) : DomainEvent;
 
+public sealed record UserBlockedEvent(
+    Guid BlockerId,
+    Guid BlockedUserId
+) : DomainEvent;
+
+public sealed record FriendRequestCancelledEvent(
+    Guid SenderId,
+    Guid ReceiverId
+) : DomainEvent;
+
 public sealed record ChatMessageSentEvent(
     Guid SenderId,
     Guid ReceiverId,

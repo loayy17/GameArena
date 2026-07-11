@@ -1,8 +1,12 @@
-const ar = {
+import type { TMessagesTranslation } from "./en.i18n";
+
+const ar: TMessagesTranslation = {
   title: "الرسائل",
   subtitle: "تواصل مع أصدقائك مباشرة",
   search: "ابحث عن صديق...",
   send: "إرسال",
+  message: "رسالة",
+  active: "نشط",
   placeholder: "اكتب رسالة...",
   back: "رجوع",
   online: "متصل",

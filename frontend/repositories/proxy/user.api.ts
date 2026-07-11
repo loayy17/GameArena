@@ -15,6 +15,18 @@ const userApi = clientFactory(
       verb: "put",
       template: "/update-profile",
     },
+    changePassword: {
+      verb: "put",
+      template: "/change-password",
+    },
+    getPreferences: {
+      verb: "get",
+      template: "/preferences",
+    },
+    updatePreferences: {
+      verb: "put",
+      template: "/preferences",
+    },
   },
   undefined,
   (json) => json,

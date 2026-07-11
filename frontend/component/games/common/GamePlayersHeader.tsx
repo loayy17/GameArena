@@ -1,39 +1,8 @@
 "use client";
 
 import { PlayerCard } from "./PlayerCard";
-
-interface Player {
-  id?: string;
-  username?: string;
-  isTurn: boolean;
-  isYou: boolean;
-}
-
-interface GamePlayersHeaderProps {
-  player1: Player;
-  player2: Player;
-  player1Symbol?: string;
-  player2Symbol?: string;
-  isBotGame: boolean;
-  currentUserId?: string;
-  myName: string;
-  player1Fallback: string;
-  player2Fallback: string;
-  vsLabel?: string;
-  youSuffix?: string;
-  aiBotLabel?: string;
-  turnLabel?: string;
-  player1Colors?: {
-    box: string;
-    badge: string;
-    turn: string;
-  };
-  player2Colors?: {
-    box: string;
-    badge: string;
-    turn: string;
-  };
-}
+import { GCard } from "@/component/common/GCard";
+import type { GamePlayersHeaderProps } from "./def/GamePlayersHeader";
 
 function GamePlayersHeader({
   player1,
@@ -53,7 +22,7 @@ function GamePlayersHeader({
   player2Colors,
 }: GamePlayersHeaderProps) {
   return (
-    <div className="grid grid-cols-7 items-center bg-bg-card border border-border rounded-lg p-4">
+    <GCard padding="sm" className="grid grid-cols-7 items-center">
       <PlayerCard
         playerId={player1.id ?? undefined}
         playerUsername={player1.username ?? undefined}
@@ -88,9 +57,8 @@ function GamePlayersHeader({
         turnLabel={turnLabel}
         symbolColors={player2Colors}
       />
-    </div>
+    </GCard>
   );
 }
 
 export { GamePlayersHeader };
-export type { GamePlayersHeaderProps, Player };

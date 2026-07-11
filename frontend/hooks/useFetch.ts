@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TNullable } from "@/domain/type/TCommon";
 
-export interface UseFetchResult<T> {
+interface UseFetchResult<T> {
   data: TNullable<T>;
   loading: boolean;
   error: TNullable<string>;

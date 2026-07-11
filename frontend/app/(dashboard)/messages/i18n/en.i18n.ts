@@ -3,6 +3,8 @@ const en = {
   subtitle: "Talk with your friends in real time",
   search: "Search friends...",
   send: "Send",
+  message: "Message",
+  active: "Active",
   placeholder: "Type a message...",
   back: "Back",
   online: "Online",
@@ -15,8 +17,7 @@ const en = {
   noMessagesTitle: "No messages yet",
   noMessagesDescription: "Say hello to start the conversation.",
   selectConversationTitle: "Pick a conversation",
-  selectConversationDescription:
-    "Choose a friend from the list on the left to open the chat.",
+  selectConversationDescription: "Choose a friend from the list on the left to open the chat.",
   noUsername: "No username",
   unknownUser: "Unknown user",
 };

@@ -41,11 +41,11 @@ function updateThemeDOM(theme: TTheme) {
   updateThemeDOM(currentTheme);
 })();
 
-export function getLocale(): TLocale {
+function getLocale(): TLocale {
   return currentLocale;
 }
 
-export function setLocale(locale: TLocale) {
+function setLocale(locale: TLocale) {
   if (locale === currentLocale) return;
   currentLocale = locale;
   localStorage.setItem("locale", locale);
@@ -54,11 +54,11 @@ export function setLocale(locale: TLocale) {
   emit();
 }
 
-export function getTheme(): TTheme {
+function getTheme(): TTheme {
   return currentTheme;
 }
 
-export function setTheme(theme: TTheme) {
+function setTheme(theme: TTheme) {
   if (theme === currentTheme) return;
   currentTheme = theme;
   localStorage.setItem("theme", theme);

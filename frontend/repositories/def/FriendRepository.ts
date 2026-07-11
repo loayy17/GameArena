@@ -38,12 +38,20 @@ class FriendRepository implements IFriendRepository {
     return this.api.removeFriend({ friendId });
   }
 
+  cancelFriendRequest(receiverId: string): TPromise<void> {
+    return this.api.cancelFriendRequest({ receiverId });
+  }
+
   blockUser(blockedId: string): TPromise<void> {
     return this.api.blockUser({ blockedId });
   }
 
   unblockUser(blockedId: string): TPromise<void> {
     return this.api.unblockUser({ blockedId });
+  }
+
+  getBlockedUsers(): TPromise<IUserSummary[]> {
+    return this.api.getBlockedUsers();
   }
 
   static getInstance() {

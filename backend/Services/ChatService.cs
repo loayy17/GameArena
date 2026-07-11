@@ -29,7 +29,9 @@ namespace backend.Services
 
         public async Task<MessageResponse> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message)
         {
-            var isFriend = await _context.UserFriends.AnyAsync(x => x.UserId == senderId && x.FriendId == receiverId);
+            var isFriend = await _context.UserFriends.AnyAsync(x =>
+                (x.UserId == senderId && x.FriendId == receiverId) ||
+                (x.UserId == receiverId && x.FriendId == senderId));
 
             if (!isFriend) throw new AppException(ErrorCode.IsNotFriend);
 

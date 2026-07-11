@@ -17,8 +17,10 @@ namespace backend.Services
             if (senderId == receiverId)
                 throw new AppException(ErrorCode.InvalidRequest);
 
-            if (await IsBlockedAsync(senderId, receiverId))
-                throw new AppException(ErrorCode.UserBlockedYou);
+            var (blocked, userBlockedBy) = await IsBlockedAsync(senderId, receiverId);
+            if (blocked)
+                throw new AppException(userBlockedBy == receiverId ? ErrorCode.UserBlockedYou : ErrorCode.YouBlockedUser);
+            
 
             if (await _context.UserFriends.AnyAsync(x =>
                 (x.UserId == senderId && x.FriendId == receiverId) ||
@@ -64,9 +66,15 @@ namespace backend.Services
 
             request.Status = FriendRequestStatus.Accepted;
 
-            if (!await _context.UserFriends.AnyAsync(x => x.UserId == userId && x.FriendId == senderId))
+            var existingFriendships = await _context.UserFriends
+                .Where(x => (x.UserId == userId && x.FriendId == senderId) ||
+                            (x.UserId == senderId && x.FriendId == userId))
+                .Select(x => x.UserId)
+                .ToListAsync();
+
+            if (!existingFriendships.Contains(userId))
                 _context.UserFriends.Add(new UserFriends { UserId = userId, FriendId = senderId });
-            if (!await _context.UserFriends.AnyAsync(x => x.UserId == senderId && x.FriendId == userId))
+            if (!existingFriendships.Contains(senderId))
                 _context.UserFriends.Add(new UserFriends { UserId = senderId, FriendId = userId });
 
             await _context.SaveChangesAsync();
@@ -93,7 +101,19 @@ namespace backend.Services
 
             await _eventBus.PublishAsync(new FriendRequestDeclinedEvent(senderId, userId));
         }
+        public async Task CancelRequestAsync(Guid userId, Guid receiverId)
+        {
+            var request = await _context.FriendRequests
+                .FirstOrDefaultAsync(fr =>
+                    fr.SenderId == userId &&
+                    fr.ReceiverId == receiverId &&
+                    fr.Status == FriendRequestStatus.Pending)
+                ?? throw new AppException(ErrorCode.FriendRequestNotFound);
 
+            _context.FriendRequests.Remove(request);
+            await _context.SaveChangesAsync();
+            await _eventBus.PublishAsync(new FriendRequestCancelledEvent(userId, receiverId));
+        }
         public async Task RemoveFriendAsync(Guid userId, Guid friendId)
         {
             var friendships = await _context.UserFriends
@@ -107,7 +127,6 @@ namespace backend.Services
 
             _context.UserFriends.RemoveRange(friendships);
             await _context.SaveChangesAsync();
-
             await _eventBus.PublishAsync(new FriendRemovedEvent(userId, friendId));
         }
 
@@ -128,7 +147,18 @@ namespace backend.Services
                 .ToListAsync();
 
             _context.UserFriends.RemoveRange(friendships);
+            var pendingRequests = await _context.FriendRequests
+                .Where(fr =>
+                    fr.Status == FriendRequestStatus.Pending &&
+                    ((fr.SenderId == blockerId && fr.ReceiverId == blockedId) ||
+                     (fr.SenderId == blockedId && fr.ReceiverId == blockerId)))
+                .ToListAsync();
+
+            _context.FriendRequests.RemoveRange(pendingRequests);
+
             await _context.SaveChangesAsync();
+
+            await _eventBus.PublishAsync(new UserBlockedEvent(blockerId, blockedId));
         }
 
         public async Task UnblockUserAsync(Guid blockerId, Guid blockedId)
@@ -202,11 +232,12 @@ namespace backend.Services
                 .CountAsync(uf => uf.UserId == userId);
         }
 
-        private async Task<bool> IsBlockedAsync(Guid userId, Guid blockedById)
+        private async Task<(bool Blocked, Guid WhoBlocked)> IsBlockedAsync(Guid userId, Guid blockedById)
         {
-            return await _context.Blocks.AnyAsync(b =>
+            var block = await _context.Blocks.FirstOrDefaultAsync(b =>
                 (b.BlockerId == blockedById && b.BlockedId == userId) ||
                 (b.BlockerId == userId && b.BlockedId == blockedById));
+            return (block != null, block?.BlockerId ?? Guid.Empty);
         }
 
     }

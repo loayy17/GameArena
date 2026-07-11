@@ -54,7 +54,12 @@ namespace backend.Controllers
             await _friendService.UnblockUserAsync(_currentUser.UserId, blockedId);
             return Ok(new ApiResponse<object> { Message = "User unblocked" });
         }
-
+        [HttpPost("CancelRequest/{receiverId}")]
+        public async Task<ActionResult<ApiResponse<object>>> CancelRequest(Guid receiverId)
+        {
+            await _friendService.CancelRequestAsync(_currentUser.UserId, receiverId);
+            return Ok(new ApiResponse<object> { Message = "Friend request cancelled" });
+        }
         [HttpPost("friends")]
         public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetFriends([FromBody] UserFilterRequest filter)
         {
