@@ -1,5 +1,4 @@
-﻿
-using backend.Domain;
+﻿using backend.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Data
@@ -28,7 +27,6 @@ namespace backend.Data
                 .IsUnique();
 
             // friends
-            // user-friend relationship user -> sent friendships and friend -> received friendships
             modelBuilder.Entity<UserFriends>()
                 .HasKey(uf => new { uf.UserId, uf.FriendId });
             modelBuilder.Entity<UserFriends>()
@@ -59,7 +57,9 @@ namespace backend.Data
                 .HasForeignKey(x => x.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // blocks same as friends but with different entity
+            modelBuilder.Entity<FriendRequest>()
+                .HasIndex(fr => new { fr.ReceiverId, fr.Status });
+
             modelBuilder.Entity<Block>()
                 .HasKey(b => new { b.BlockerId, b.BlockedId });
             modelBuilder.Entity<Block>()
@@ -73,6 +73,9 @@ namespace backend.Data
                 .HasForeignKey(b => b.BlockedId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Block>()
+                .HasIndex(b => b.BlockedId);
+
             // chat
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
@@ -85,6 +88,11 @@ namespace backend.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasIndex(m => new { m.SenderId, m.ReceiverId });
+            modelBuilder.Entity<Message>()
+                .HasIndex(m => new { m.ReceiverId, m.IsRead });
 
             // match history
             modelBuilder.Entity<MatchHistory>()

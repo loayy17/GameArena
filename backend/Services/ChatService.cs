@@ -18,6 +18,7 @@ namespace backend.Services
                 .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.IsRead, true));
 
             var messages = await _context.Messages
+                .AsNoTracking()
                 .Where(m =>
                     (m.SenderId == userId && m.ReceiverId == friendId) ||
                     (m.SenderId == friendId && m.ReceiverId == userId))

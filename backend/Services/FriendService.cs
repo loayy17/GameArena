@@ -176,6 +176,7 @@ namespace backend.Services
         public async Task<List<UserSummaryResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter)
         {
             var query = _context.UserFriends
+                .AsNoTracking()
                 .Where(x => x.UserId == userId)
                 .Select(x => x.Friend);
 
@@ -192,6 +193,7 @@ namespace backend.Services
         public async Task<List<FriendRequestReceivedResponse>> GetReceivedRequestsAsync(Guid userId)
         {
             var requests = await _context.FriendRequests
+                .AsNoTracking()
                 .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
                 .Include(u => u.Sender)
                 .ToListAsync();
@@ -202,6 +204,7 @@ namespace backend.Services
         public async Task<List<FriendRequestSentResponse>> GetSentRequestsAsync(Guid userId)
         {
             var requests = await _context.FriendRequests
+                .AsNoTracking()
                 .Where(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending)
                 .Include(fr => fr.Receiver)
                 .ToListAsync();
@@ -212,6 +215,7 @@ namespace backend.Services
         public async Task<List<UserSummaryResponse>> GetBlockedUsersAsync(Guid userId)
         {
             var blocked = await _context.Blocks
+                .AsNoTracking()
                 .Where(b => b.BlockerId == userId)
                 .Select(b => b.Blocked)
                 .ToListAsync();
