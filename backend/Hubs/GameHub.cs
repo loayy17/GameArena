@@ -49,7 +49,10 @@ namespace backend.Hubs
                 var botSymbol = room.Player1Id == playerId ? "X" : "O";
                 var botMove = TicTacToeMinimax.GetBestMove(xo.Board, botSymbol);
                 if (botMove >= 0)
-                    room.ProcessInput(playerId, new { type = "MAKE_MOVE", cell = botMove });
+                {
+                    var action = JsonSerializer.SerializeToElement(new { type = "MAKE_MOVE", cell = botMove });
+                    room.ProcessInput(playerId, action);
+                }
             }
         }
 
@@ -145,7 +148,10 @@ namespace backend.Hubs
                 var botSymbol = botId == xoRoom.Player1Id ? "X" : "O";
                 var botMove = TicTacToeMinimax.GetBestMove(xoRoom.Board, botSymbol);
                 if (botMove >= 0)
-                    room.ProcessInput(botId, new { type = "MAKE_MOVE", cell = botMove });
+                {
+                    var botAction = JsonSerializer.SerializeToElement(new { type = "MAKE_MOVE", cell = botMove });
+                    room.ProcessInput(botId, botAction);
+                }
             }
 
             await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
