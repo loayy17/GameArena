@@ -23,17 +23,15 @@ namespace backend.Services
 
         public async Task<NotificationCountersResponse> GetCountersAsync(Guid userId)
         {
-            var friendRequestsTask = _friendService.GetFriendRequestCountAsync(userId);
-            var friendsTask = _friendService.GetFriendCountAsync(userId);
-            var unreadTask = _chatService.GetUnreadMessagesCountAsync(userId);
-
-            await Task.WhenAll(friendRequestsTask, friendsTask, unreadTask);
+            var friendRequests = await _friendService.GetFriendRequestCountAsync(userId);
+            var friends = await _friendService.GetFriendCountAsync(userId);
+            var unread = await _chatService.GetUnreadMessagesCountAsync(userId);
 
             return new NotificationCountersResponse
             {
-                FriendRequests = friendRequestsTask.Result,
-                Friends = friendsTask.Result,
-                UnreadMessages = unreadTask.Result
+                FriendRequests = friendRequests,
+                Friends = friends,
+                UnreadMessages = unread
             };
         }
 
@@ -71,14 +69,13 @@ namespace backend.Services
                 .SendAsync("social:blocked", blocked);
         }
 
+
         public async Task SendSocialDataAsync(Guid userId)
         {
-            await Task.WhenAll(
-                SendCountersAsync(userId),
-                SendFriendsAsync(userId),
-                SendFriendRequestsAsync(userId),
-                SendBlockedAsync(userId)
-            );
+            await SendCountersAsync(userId);
+            await SendFriendsAsync(userId);
+            await SendFriendRequestsAsync(userId);
+            await SendBlockedAsync(userId);
         }
     }
 }

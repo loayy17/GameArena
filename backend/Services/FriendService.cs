@@ -20,7 +20,6 @@ namespace backend.Services
             var (blocked, userBlockedBy) = await IsBlockedAsync(senderId, receiverId);
             if (blocked)
                 throw new AppException(userBlockedBy == receiverId ? ErrorCode.UserBlockedYou : ErrorCode.YouBlockedUser);
-            
 
             if (await _context.UserFriends.AnyAsync(x =>
                 (x.UserId == senderId && x.FriendId == receiverId) ||
@@ -101,6 +100,7 @@ namespace backend.Services
 
             await _eventBus.PublishAsync(new FriendRequestDeclinedEvent(senderId, userId));
         }
+
         public async Task CancelRequestAsync(Guid userId, Guid receiverId)
         {
             var request = await _context.FriendRequests
@@ -114,6 +114,7 @@ namespace backend.Services
             await _context.SaveChangesAsync();
             await _eventBus.PublishAsync(new FriendRequestCancelledEvent(userId, receiverId));
         }
+
         public async Task RemoveFriendAsync(Guid userId, Guid friendId)
         {
             var friendships = await _context.UserFriends
@@ -147,6 +148,7 @@ namespace backend.Services
                 .ToListAsync();
 
             _context.UserFriends.RemoveRange(friendships);
+
             var pendingRequests = await _context.FriendRequests
                 .Where(fr =>
                     fr.Status == FriendRequestStatus.Pending &&
@@ -175,9 +177,7 @@ namespace backend.Services
         {
             var query = _context.UserFriends
                 .Where(x => x.UserId == userId)
-                .Include(x => x.Friend)
-                .Select(x => x.Friend)
-                .AsQueryable();
+                .Select(x => x.Friend);
 
             if (filter != null && !string.IsNullOrWhiteSpace(filter.Name))
             {
@@ -213,7 +213,6 @@ namespace backend.Services
         {
             var blocked = await _context.Blocks
                 .Where(b => b.BlockerId == userId)
-                .Include(b => b.Blocked)
                 .Select(b => b.Blocked)
                 .ToListAsync();
 
@@ -239,6 +238,5 @@ namespace backend.Services
                 (b.BlockerId == userId && b.BlockedId == blockedById));
             return (block != null, block?.BlockerId ?? Guid.Empty);
         }
-
     }
 }
