@@ -7,7 +7,6 @@ import { GIcon } from "./GIcon";
 import { useLocale, useTheme, useTranslation } from "@/hooks/useSetting";
 import { en, type TLangThemeTranslation } from "@/component/i18n/LangTheme/en.i18n";
 import { ar } from "@/component/i18n/LangTheme/ar.i18n";
-import { rounded, transition } from "./tokens";
 
 function LangTheme({ collapsed, className = "" }: { collapsed: boolean; className?: string }) {
   const [locale, setLocale] = useLocale();
@@ -19,8 +18,7 @@ function LangTheme({ collapsed, className = "" }: { collapsed: boolean; classNam
 
   const toggleBtn = clsx(
     "flex items-center justify-center gap-2 text-xs font-semibold border border-border text-text-secondary bg-surface",
-    rounded.sm,
-    transition,
+    "rounded-[var(--radius-sm)] transition-colors duration-150",
     "hover:text-primary hover:border-primary/40",
     sizeClass,
   );

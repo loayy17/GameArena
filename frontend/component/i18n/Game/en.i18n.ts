@@ -6,6 +6,7 @@ const en = {
   snake: {
     name: "Snake",
     description: "Grow your snake and dominate the arena",
+    arrowKeysHint: "Use arrow keys to control",
   },
   pingpong: {
     name: "Ping Pong",
@@ -18,6 +19,8 @@ const en = {
     searchingTitle: "Searching for opponent...",
     searchingSubtitle: "Checking GameArena servers",
     cancelSearch: "Cancel Search",
+    quick: "Quick",
+    invite: "Invite",
   },
 
   waiting: {
@@ -38,6 +41,10 @@ const en = {
 
   game: {
     you: "You",
+    youSuffix: "(You)",
+    aiBot: "AI Bot",
+    turn: "Turn",
+    vs: "VS",
     opponent: "Opponent",
     waiting: "Waiting...",
     player1: "Player 1",
@@ -45,6 +52,13 @@ const en = {
     yourTurn: "Your Turn - Make your move!",
     waitingFor: "Waiting for {name}...",
     leaveGame: "Leave Game",
+  },
+
+  invite: {
+    title: "Invite a Friend",
+    cancel: "Cancel",
+    searchFriends: "Search friends...",
+    noFriends: "No friends found",
   },
 
   result: {

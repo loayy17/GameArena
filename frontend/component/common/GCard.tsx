@@ -1,13 +1,11 @@
 import clsx from "clsx";
 import type { GCardProps } from "./def/GCard";
-import { rounded, transition } from "./tokens";
 
 const variants = {
   default: "bg-bg-card border border-border",
   outlined: "bg-surface border border-border",
   elevated: "bg-bg-card border-2 border-border",
-  interactive:
-    "bg-bg-card border border-border hover:border-primary hover:bg-surface cursor-pointer",
+  interactive: "bg-bg-card border border-border hover:border-primary hover:bg-surface cursor-pointer",
 };
 
 const paddings = {
@@ -17,25 +15,16 @@ const paddings = {
   lg: "p-6",
 };
 
-function GCard({
-  variant = "default",
-  padding = "md",
-  rounded: roundedProp = "lg",
-  className,
-  children,
-  ...props
-}: GCardProps) {
+const rounded: Record<string, string> = {
+  sm: "rounded-[var(--radius-sm)]",
+  md: "rounded-[var(--radius-md)]",
+  lg: "rounded-[var(--radius-lg)]",
+  full: "rounded-full",
+};
+
+function GCard({ variant = "default", padding = "md", rounded: roundedProp = "lg", className, children, ...props }: GCardProps) {
   return (
-    <div
-      className={clsx(
-        rounded[roundedProp],
-        transition,
-        variants[variant],
-        paddings[padding],
-        className,
-      )}
-      {...props}
-    >
+    <div className={clsx(rounded[roundedProp], "transition-colors duration-150", variants[variant], paddings[padding], className)} {...props}>
       {children}
     </div>
   );

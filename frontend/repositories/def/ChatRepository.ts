@@ -11,9 +11,6 @@ class ChatRepository implements IChatRepository {
     return this.api.getMessages({ friendId: id });
   }
 
-  getUnreadMessageCount(): TPromise<number> {
-    return this.api.getUnreadCount();
-  }
   static getInstance() {
     if (!ChatRepository.instance) {
       ChatRepository.instance = new ChatRepository();

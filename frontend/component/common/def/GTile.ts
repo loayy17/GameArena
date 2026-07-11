@@ -1,9 +1,8 @@
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
-import type { GSize } from "../tokens";
 
 interface GTileProps {
   user: IUserSummary;
-  size?: GSize;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
 export type { GTileProps };

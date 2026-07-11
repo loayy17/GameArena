@@ -12,6 +12,9 @@ interface PlayerCardProps {
   myName: string;
   fallbackName: string;
   isTurn: boolean;
+  youSuffix?: string;
+  aiBotLabel?: string;
+  turnLabel?: string;
   symbolColors?: {
     box: string;
     badge: string;
@@ -41,13 +44,16 @@ function PlayerCard({
   myName,
   fallbackName,
   isTurn,
+  youSuffix = "(You)",
+  aiBotLabel = "AI Bot",
+  turnLabel = "Turn",
   symbolColors,
 }: PlayerCardProps) {
   const colors = symbolColors ?? (symbol ? defaultSymbolColors[symbol] : undefined);
   const name = isYou
-    ? `${myName} (You)`
+    ? `${myName} ${youSuffix}`
     : isBot
-      ? "AI Bot"
+      ? aiBotLabel
       : playerUsername || fallbackName;
 
   return (
@@ -79,7 +85,7 @@ function PlayerCard({
       </span>
       {isTurn && colors && (
         <span className={clsx("text-xs font-medium mt-1", colors.turn)}>
-          Turn
+          {turnLabel}
         </span>
       )}
     </div>
@@ -87,3 +93,4 @@ function PlayerCard({
 }
 
 export { PlayerCard };
+export type { PlayerCardProps };

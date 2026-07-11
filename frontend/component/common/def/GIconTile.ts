@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
-import type { GGradient, GSize, GRounded } from "../tokens";
+import type { LucideIcon } from "lucide-react";
 
 interface GIconTileProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: ReactNode;
-  gradient?: GGradient;
-  size?: GSize;
-  rounded?: GRounded;
+  children?: ReactNode;
+  gradient?: string;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  rounded?: "sm" | "md" | "lg" | "full";
+  icon?: LucideIcon;
+  iconColor?: "primary" | "secondary" | "muted" | "success" | "warning" | "danger" | "inherit";
 }
 
 export type { GIconTileProps };

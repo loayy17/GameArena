@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useConnections } from "./ConnectionProvider";
@@ -18,10 +18,15 @@ export function DashboardNotificationsProvider({ children }: { children: React.R
   const { user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { socialConnection, isSocialConnected, gameConnection } = useConnections();
+  const { socialConnection, isSocialConnected, socialReconnectKey, gameConnection } = useConnections();
   const [friendRequestCount, setFriendRequestCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [gameInvites, setGameInvites] = useState<IGameInvite[]>([]);
+
+  const pathnameRef = useRef(pathname);
+  const searchParamsRef = useRef(searchParams);
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
+  useEffect(() => { searchParamsRef.current = searchParams; }, [searchParams]);
 
   useEffect(() => {
     if (!user) {
@@ -42,8 +47,8 @@ export function DashboardNotificationsProvider({ children }: { children: React.R
     const handleChatNotification = (payload: IChatNotificationPayload) => {
       if (!user) return;
 
-      const selectedFriendId = searchParams.get("friend");
-      const isOpenConversation = pathname === "/messages" && selectedFriendId === payload.senderId;
+      const selectedFriendId = searchParamsRef.current.get("friend");
+      const isOpenConversation = pathnameRef.current === "/messages" && selectedFriendId === payload.senderId;
 
       if (!isOpenConversation) {
         setUnreadMessageCount((prev) => prev + 1);
@@ -57,12 +62,23 @@ export function DashboardNotificationsProvider({ children }: { children: React.R
       socialConnection.off("notification:update", handleNotificationUpdate);
       socialConnection.off("chat:notification", handleChatNotification);
     };
-  }, [socialConnection, pathname, searchParams, user]);
+  }, [socialConnection, user]);
 
   useEffect(() => {
     if (!socialConnection || !isSocialConnected) return;
-    socialConnection.invoke("RequestCounters").catch(() => {});
-  }, [socialConnection, isSocialConnected]);
+
+    const invokeRequest = () => {
+      socialConnection.invoke("RequestCounters").catch(() => {});
+    };
+
+    invokeRequest();
+
+    const retryTimer = setTimeout(invokeRequest, 500);
+
+    return () => {
+      clearTimeout(retryTimer);
+    };
+  }, [socialConnection, isSocialConnected, socialReconnectKey]);
 
   useEffect(() => {
     if (!gameConnection) return;

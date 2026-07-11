@@ -12,19 +12,17 @@ import { GPageHeader } from "@/component/common/GPageHeader";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 import { GPage } from "@/component/common/GPage";
-import { MatchHistoryCard } from "@/component/history/MatchHistoryCard";
+import { MatchHistoryItem } from "@/component/history/MatchHistoryItem";
+import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import { ar } from "./i18n/ar.i18n";
 import { en, type THistoryTranslation } from "./i18n/en.i18n";
-import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import type { GTabItem } from "@/component/common/def/GTabs";
-import type { TLocale } from "@/domain/type/TCommon";
 
-function MatchHistoryPage() {
-  const [locale] = useLocale() as [TLocale, (l: TLocale) => void];
+export default function MatchHistoryPage() {
+  const [locale] = useLocale();
   const t = useTranslation({ en, ar }) as THistoryTranslation;
   const [filter, setFilter] = useState(MatchStatusEnum.All);
-  const { matches, summary, loading } = useMatchHistory(filter);
-
+  const { matches, loading } = useMatchHistory(filter);
   const tabs = useMemo<GTabItem<MatchStatusEnum>[]>(
     () => [
       { id: MatchStatusEnum.All, label: t.filters.all },
@@ -51,28 +49,32 @@ function MatchHistoryPage() {
       <GCard padding="sm">
         <GTabs tabs={tabs} value={filter} onChange={setFilter} variant="pills" fullWidth className="mb-4" />
 
-        {loading ? (
+        {loading && (
           <div className="flex justify-center py-16">
             <GSpinner size="lg" />
           </div>
-        ) : matches.length === 0 ? (
+        )}
+
+        {!loading && matches.length === 0 && (
           <GEmpty
             icon={<GIcon icon={History} size="xl" color="muted" />}
             title={t.empty.title}
             description={filter === MatchStatusEnum.All ? t.empty.description : t.empty.filtered}
           />
-        ) : (
+        )}
+
+        {!loading && matches.length > 0 && (
           <div className="flex flex-col gap-3">
             {matches.map((match) => (
-              <MatchHistoryCard
+              <MatchHistoryItem
                 key={match.id}
                 match={match}
-                gameName={t.games[match.kind as keyof typeof t.games]}
-                resultLabel={
-                  match.result === MatchStatusEnum.Win ? t.results.win : match.result === MatchStatusEnum.Lost ? t.results.loss : t.results.draw
-                }
-                playedAtLabel={new Date(match.completedAt).toLocaleString(locale)}
+                locale={locale}
+                winLabel={t.results.win}
+                lossLabel={t.results.loss}
+                drawLabel={t.results.draw}
                 versusLabel={t.versus}
+                gameLabel={t.games[match.kind]}
               />
             ))}
           </div>
@@ -81,5 +83,3 @@ function MatchHistoryPage() {
     </GPage>
   );
 }
-
-export default MatchHistoryPage;

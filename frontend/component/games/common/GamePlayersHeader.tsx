@@ -19,6 +19,10 @@ interface GamePlayersHeaderProps {
   myName: string;
   player1Fallback: string;
   player2Fallback: string;
+  vsLabel?: string;
+  youSuffix?: string;
+  aiBotLabel?: string;
+  turnLabel?: string;
   player1Colors?: {
     box: string;
     badge: string;
@@ -41,6 +45,10 @@ function GamePlayersHeader({
   myName,
   player1Fallback,
   player2Fallback,
+  vsLabel = "VS",
+  youSuffix,
+  aiBotLabel,
+  turnLabel,
   player1Colors,
   player2Colors,
 }: GamePlayersHeaderProps) {
@@ -55,11 +63,14 @@ function GamePlayersHeader({
         myName={myName}
         fallbackName={player1Fallback}
         isTurn={player1.isTurn}
+        youSuffix={youSuffix}
+        aiBotLabel={aiBotLabel}
+        turnLabel={turnLabel}
         symbolColors={player1Colors}
       />
 
       <div className="col-span-1 flex flex-col items-center justify-center">
-        <span className="text-xs font-bold text-text-muted">VS</span>
+        <span className="text-xs font-bold text-text-muted">{vsLabel}</span>
         <div className="w-px h-10 bg-border/40 mt-1" />
       </div>
 
@@ -72,6 +83,9 @@ function GamePlayersHeader({
         myName={myName}
         fallbackName={player2Fallback}
         isTurn={player2.isTurn}
+        youSuffix={youSuffix}
+        aiBotLabel={aiBotLabel}
+        turnLabel={turnLabel}
         symbolColors={player2Colors}
       />
     </div>

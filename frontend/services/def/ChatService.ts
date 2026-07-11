@@ -11,10 +11,6 @@ class ChatService implements IChatService {
   getMessagesByFriendId(friendId: string): TPromise<IMessage[]> {
     return this.repo.getMessagesByFriendId(friendId);
   }
-
-  getUnreadMessageCount(): TPromise<number> {
-    return this.repo.getUnreadMessageCount();
-  }
 }
 
 const chatService = new ChatService(chatRepository);

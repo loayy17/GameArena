@@ -8,7 +8,6 @@ interface IAuthRepository {
   login(data: ILoginRequest): TPromise<void>;
   register(data: IRegisterRequest): TPromise<void>;
   logout(): TPromise<void>;
-  refreshToken(): TPromise<void>;
   forgotPassword(data: IForgotPasswordRequest): TPromise<void>;
   resetPassword(data: IResetPasswordRequest): TPromise<void>;
 }

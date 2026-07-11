@@ -8,6 +8,7 @@ const ar = {
   settings: "الإعدادات",
   logout: "تسجيل الخروج",
   user: "مستخدم",
+  mainNavigation: "التنقل الرئيسي",
 };
 
 export { ar };

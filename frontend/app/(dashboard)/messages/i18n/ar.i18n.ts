@@ -4,6 +4,7 @@ const ar = {
   search: "ابحث عن صديق...",
   send: "إرسال",
   placeholder: "اكتب رسالة...",
+  back: "رجوع",
   online: "متصل",
   playing: "يلعب",
   offline: "غير متصل",

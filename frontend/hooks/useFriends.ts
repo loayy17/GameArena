@@ -2,7 +2,6 @@
 
 import { friendService } from "@/services/def/FriendService";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { useFetch } from "./useFetch";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useConnections } from "@/app/providers/ConnectionProvider";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
@@ -10,23 +9,40 @@ import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceive
 import type { IFriendRequestSent } from "@/domain/meta/IFriendRequestSent";
 
 function useFriendList() {
-  const { socialConnection } = useConnections();
+  const { socialConnection, isSocialConnected, socialReconnectKey } = useConnections();
   const [friends, setFriends] = useState<IUserSummary[]>([]);
-  const {
-    data: fetched,
-    loading,
-    reload,
-  } = useFetch(
-    (signal) =>
-      friendService
-        .getFriends({ name: null, userStatus: UserStatusEnum.All })
-        .then((res) => res.data ?? []),
-    [],
-  );
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (fetched) setFriends(fetched);
-  }, [fetched]);
+    if (!socialConnection) return;
+
+    const handleFriends = (data: IUserSummary[]) => {
+      setFriends(data);
+      setLoading(false);
+    };
+
+    socialConnection.on("social:friends", handleFriends);
+
+    return () => {
+      socialConnection.off("social:friends", handleFriends);
+    };
+  }, [socialConnection]);
+
+  useEffect(() => {
+    if (!socialConnection || !isSocialConnected) return;
+
+    const invokeRequest = () => {
+      socialConnection.invoke("RequestFriends").catch(() => {});
+    };
+
+    invokeRequest();
+
+    const retryTimer = setTimeout(invokeRequest, 500);
+
+    return () => {
+      clearTimeout(retryTimer);
+    };
+  }, [socialConnection, isSocialConnected, socialReconnectKey]);
 
   useEffect(() => {
     if (!socialConnection) return;
@@ -43,23 +59,24 @@ function useFriendList() {
       setStatus(userId, UserStatusEnum.Offline);
     const handleInGame = ({ userId }: { userId: string }) =>
       setStatus(userId, UserStatusEnum.InGame);
-    const handleAccepted = () => reload();
-    const handleRemoved = () => reload();
 
     socialConnection.on("friend:online", handleOnline);
     socialConnection.on("friend:offline", handleOffline);
     socialConnection.on("friend:ingame", handleInGame);
-    socialConnection.on("friend:accepted", handleAccepted);
-    socialConnection.on("friend:removed", handleRemoved);
 
     return () => {
       socialConnection.off("friend:online", handleOnline);
       socialConnection.off("friend:offline", handleOffline);
       socialConnection.off("friend:ingame", handleInGame);
-      socialConnection.off("friend:accepted", handleAccepted);
-      socialConnection.off("friend:removed", handleRemoved);
     };
-  }, [socialConnection, reload]);
+  }, [socialConnection]);
+
+  const reload = useCallback(() => {
+    if (socialConnection) {
+      setLoading(true);
+      socialConnection.invoke("RequestFriends").catch(() => {});
+    }
+  }, [socialConnection]);
 
   const onlineCount = useMemo(
     () => friends.filter((f) => f.status !== UserStatusEnum.Offline).length,
@@ -70,99 +87,92 @@ function useFriendList() {
 }
 
 function useFriendRequests() {
-  const { socialConnection } = useConnections();
+  const { socialConnection, isSocialConnected, socialReconnectKey } = useConnections();
   const [requests, setRequests] = useState<IFriendRequestReceived[]>([]);
   const [sentRequests, setSentRequests] = useState<IFriendRequestSent[]>([]);
-
-  const {
-    data: recv,
-    loading: recvLoading,
-    reload: reloadRecv,
-  } = useFetch(
-    () =>
-      friendService.getReceivedFriendRequests().then((res) => res.data ?? []),
-    [],
-  );
-  const {
-    data: sent,
-    loading: sentLoading,
-    reload: reloadSent,
-  } = useFetch(
-    () => friendService.getSentFriendRequests().then((res) => res.data ?? []),
-    [],
-  );
-
-  useEffect(() => {
-    if (recv) setRequests(recv);
-  }, [recv]);
-  useEffect(() => {
-    if (sent) setSentRequests(sent);
-  }, [sent]);
-
-  const reloadAll = useCallback(async () => {
-    await Promise.all([reloadRecv(), reloadSent()]);
-  }, [reloadRecv, reloadSent]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!socialConnection) return;
 
-    const handleDeclined = () => reloadAll();
-    const handleAccepted = () => reloadAll();
+    const handleRequests = (data: { received: IFriendRequestReceived[]; sent: IFriendRequestSent[] }) => {
+      setRequests(data.received);
+      setSentRequests(data.sent);
+      setLoading(false);
+    };
 
-    socialConnection.on("friend:declined", handleDeclined);
-    socialConnection.on("friend:accepted", handleAccepted);
+    socialConnection.on("social:requests", handleRequests);
 
     return () => {
-      socialConnection.off("friend:declined", handleDeclined);
-      socialConnection.off("friend:accepted", handleAccepted);
+      socialConnection.off("social:requests", handleRequests);
     };
-  }, [socialConnection, reloadAll]);
+  }, [socialConnection]);
+
+  useEffect(() => {
+    if (!socialConnection || !isSocialConnected) return;
+
+    const invokeRequest = () => {
+      socialConnection.invoke("RequestFriendRequests").catch(() => {});
+    };
+
+    invokeRequest();
+
+    const retryTimer = setTimeout(invokeRequest, 500);
+
+    return () => {
+      clearTimeout(retryTimer);
+    };
+  }, [socialConnection, isSocialConnected, socialReconnectKey]);
+
+  const reload = useCallback(() => {
+    if (socialConnection) {
+      setLoading(true);
+      socialConnection.invoke("RequestFriendRequests").catch(() => {});
+    }
+  }, [socialConnection]);
 
   const accept = useCallback(
     async (senderId: string) => {
       try {
         await friendService.acceptFriendRequest(senderId);
-        await reloadRecv();
       } catch {
-        // accept failed — UI stays unchanged
+        // accept failed — backend will push updated data via SignalR
       }
     },
-    [reloadRecv],
+    [],
   );
 
   const decline = useCallback(
     async (senderId: string) => {
       try {
         await friendService.rejectFriendRequest(senderId);
-        await reloadRecv();
       } catch {
-        // decline failed — UI stays unchanged
+        // decline failed — backend will push updated data via SignalR
       }
     },
-    [reloadRecv],
+    [],
   );
 
   const send = useCallback(
     async (friendId: string) => {
       try {
         await friendService.sendFriendRequest(friendId);
-        await reloadSent();
       } catch {
-        // send request failed — UI stays unchanged
+        // send request failed — backend will push updated data via SignalR
       }
     },
-    [reloadSent],
+    [],
   );
 
   return {
     requests,
     sentRequests,
-    loading: recvLoading || sentLoading,
+    loading,
     requestCount: requests.length,
     accept,
     decline,
     send,
-    reload: reloadAll,
+    reload,
   };
 }
 
@@ -187,17 +197,15 @@ function useFriends() {
   const removeFriend = useCallback(
     async (friendId: string) => {
       await friendService.removeFriend(friendId);
-      await reloadFriends();
     },
-    [reloadFriends],
+    [],
   );
 
   const blockUser = useCallback(
     async (blockedId: string) => {
       await friendService.blockUser(blockedId);
-      await reloadFriends();
     },
-    [reloadFriends],
+    [],
   );
 
   const unblockUser = useCallback(async (blockedId: string) => {
@@ -218,7 +226,8 @@ function useFriends() {
     blockUser,
     unblockUser,
     reload: async () => {
-      await Promise.all([reloadFriends(), reloadRequests()]);
+      reloadFriends();
+      reloadRequests();
     },
   };
 }

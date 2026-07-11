@@ -6,6 +6,7 @@ const ar = {
   snake: {
     name: "الأفعى",
     description: "اجعل ثعبانك ينمو وسيطر على الساحة",
+    arrowKeysHint: "استخدم مفاتيح الأسهم للتحكم",
   },
   pingpong: {
     name: "بينج بونج",
@@ -18,6 +19,8 @@ const ar = {
     searchingTitle: "البحث عن خصم...",
     searchingSubtitle: "التحقق من خوادم GameArena",
     cancelSearch: "إلغاء البحث",
+    quick: "سريع",
+    invite: "دعوة",
   },
 
   waiting: {
@@ -38,6 +41,10 @@ const ar = {
 
   game: {
     you: "أنت",
+    youSuffix: "(أنت)",
+    aiBot: "الذكاء الاصطناعي",
+    turn: "الدور",
+    vs: "ضد",
     opponent: "الخصم",
     waiting: "انتظار...",
     player1: "اللاعب 1",
@@ -45,6 +52,13 @@ const ar = {
     yourTurn: "دورك - قم بحركتك!",
     waitingFor: "في انتظار {name}...",
     leaveGame: "مغادرة اللعبة",
+  },
+
+  invite: {
+    title: "دعوة صديق",
+    cancel: "إلغاء",
+    searchFriends: "ابحث عن الأصدقاء...",
+    noFriends: "لم يتم العثور على أصدقاء",
   },
 
   result: {

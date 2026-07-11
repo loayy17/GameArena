@@ -15,6 +15,7 @@ import { GCheckbox } from "@/component/common/GCheckbox";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 import { GSpinner } from "@/component/common/GSpinner";
+import { userService } from "@/services/def/UserService";
 import { userRepository } from "@/repositories/def/UserRepository";
 import type { IUser } from "@/domain/meta/IUser";
 
@@ -36,7 +37,7 @@ function SettingsPage() {
     let alive = true;
     const load = async () => {
       setLoading(true);
-      const res = await userRepository.profile();
+      const res = await userService.profile();
       if (!alive) return;
       if (res.data) {
         setProfile(res.data);
@@ -149,7 +150,7 @@ function SettingsPage() {
                         <GTextarea
                           label={t.settings.profile.bio}
                           rows={3}
-                          defaultValue="A passionate gamer who loves strategy games."
+                          defaultValue={t.settings.profile.defaultBio}
                         />
                       </div>
                     </div>
@@ -172,15 +173,15 @@ function SettingsPage() {
                 </h3>
                 <div className="space-y-3">
                   <div className={settingRow}>
-                    <span className="text-sm text-text">Discord</span>
+                    <span className="text-sm text-text">{t.settings.profile.discord}</span>
                     <GBadge variant="success">{t.settings.profile.connected}</GBadge>
                   </div>
                   <div className={settingRow}>
-                    <span className="text-sm text-text">Google</span>
+                    <span className="text-sm text-text">{t.settings.profile.google}</span>
                     <GBadge variant="muted">{t.settings.profile.notConnected}</GBadge>
                   </div>
                   <div className={settingRow}>
-                    <span className="text-sm text-text">Twitch</span>
+                    <span className="text-sm text-text">{t.settings.profile.twitch}</span>
                     <GBadge variant="success">{t.settings.profile.connected}</GBadge>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ interface IConnectionContext {
   isChatConnected: boolean;
   isGameConnected: boolean;
   isSocialConnected: boolean;
+  socialReconnectKey: number;
 }
 
 export type { IConnectionContext };

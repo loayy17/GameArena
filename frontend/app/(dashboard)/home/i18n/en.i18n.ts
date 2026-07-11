@@ -1,12 +1,8 @@
 const en = {
-  welcome: "Welcome to GameArena",
+  welcome: (name: string) => "Welcome back" + (name ? `, ${name}` : ""),
+  brand: "Arena404",
   enterArena: "Enter the arena. Pick your battle.",
   playNow: "PLAY NOW",
-  greeting: {
-    morning: "Good morning",
-    afternoon: "Good afternoon",
-    evening: "Good evening",
-  },
   stats: {
     gamesAvailable: "Games available",
     unreadMessages: "Unread messages",

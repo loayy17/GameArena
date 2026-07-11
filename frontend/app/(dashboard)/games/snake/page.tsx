@@ -2,12 +2,16 @@
 
 import clsx from "clsx";
 import { useGame } from "@/app/providers/GameProvider";
+import { useTranslation } from "@/hooks/useSetting";
+import { en as gameEn, type GameTranslations } from "@/component/i18n/Game/en.i18n";
+import { ar as gameAr } from "@/component/i18n/Game/ar.i18n";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { ISnakeGameState } from "@/app/providers/def/IGameState";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
 
 function SnakePage() {
   const { state } = useGame();
+  const t = useTranslation({ en: gameEn, ar: gameAr }) as GameTranslations;
 
   // GameLayoutWrapper handles all stages - we only render board when state has game-specific fields
   if (!state || !("grid" in state)) {
@@ -52,7 +56,7 @@ function SnakePage() {
           ))}
         </div>
 
-        {!isFinished && <div className="mt-4 text-center text-xs text-text-muted">Use arrow keys to control</div>}
+        {!isFinished && <div className="mt-4 text-center text-xs text-text-muted">{t.snake.arrowKeysHint}</div>}
       </div>
     </GameLayoutWrapper>
   );

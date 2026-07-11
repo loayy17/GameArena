@@ -4,6 +4,7 @@ const en = {
   search: "Search friends...",
   send: "Send",
   placeholder: "Type a message...",
+  back: "Back",
   online: "Online",
   playing: "Playing",
   offline: "Offline",

@@ -24,9 +24,7 @@ import { sidebarNav } from "@/domain/constant/sidebarNav";
 function SidebarBrand() {
   return (
     <>
-      <GIconTile gradient="brand" size="sm">
-        <Hexagon size={20} />
-      </GIconTile>
+      <GIconTile gradient="bg-primary" size="sm" icon={Hexagon} />
       <span className="font-bold text-text text-lg whitespace-nowrap">
         Game<span className="text-primary">Arena</span>
       </span>
@@ -142,12 +140,13 @@ function SidebarFooter() {
 }
 
 function Sidebar() {
+  const t = useTranslation({ en, ar }) as TSidebarTranslation;
   return (
     <GAside
       side="start"
       widthExpanded="w-60"
       mode="inline"
-      ariaLabel="Main navigation"
+      ariaLabel={t.mainNavigation}
       collapsedIcon={<Menu size={20} />}
       expandedBrand={<SidebarBrand />}
       footer={<SidebarFooter />}>

@@ -11,18 +11,13 @@ enum ErrorCodeEnum {
   // Email
   OtpInvalid = 2001,
   OtpExpired = 2002,
-  OtpAlreadyUsed = 2003,
   EmailNotFound = 2004,
   EmailAlreadyExists = 2005,
   EmailAlreadyVerified = 2006,
-  OtpGenerationFailed = 2007,
   RateLimited = 2008,
 
   // User
   UserNotFound = 3001,
-  UserAlreadyExists = 3002,
-  NoUsersFound = 3003,
-  NoFriendsFound = 3004,
 
   // Friend
   RequestAlreadyExists = 4001,
@@ -31,10 +26,15 @@ enum ErrorCodeEnum {
   FriendRequestNotFound = 4004,
   IsNotFriend = 4005,
 
+  // Block
+  AlreadyBlocked = 4006,
+  NotBlocked = 4007,
+  CannotSelfBlock = 4008,
+  UserBlockedYou = 4009,
+
   // Game
   RoomNotFound = 5001,
   PlayerNotFound = 5002,
-  MatchSaveFailed = 5003,
   InvalidGameType = 5004,
   InvalidRoomId = 5005,
 

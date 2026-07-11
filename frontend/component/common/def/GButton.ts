@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import type { GRounded } from "../tokens";
 
 interface GButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
@@ -7,7 +6,7 @@ interface GButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   rightIcon?: ReactNode;
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "success" | "link" | "dangerOutline";
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "icon";
-  rounded?: GRounded;
+  rounded?: "sm" | "md" | "lg" | "full";
   loadingText?: string;
   fullWidth?: boolean;
   fab?: boolean;

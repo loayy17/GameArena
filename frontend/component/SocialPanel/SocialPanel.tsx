@@ -160,6 +160,7 @@ function SocialBody() {
 
 function SocialPanelInner() {
   const { gameInvites } = useDashboardNotifications();
+  const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
 
   const collapsedIcon = (
     <span className="relative inline-flex">
@@ -173,7 +174,7 @@ function SocialPanelInner() {
       side="end"
       widthExpanded="w-80"
       mode="inline"
-      ariaLabel="Friends and invites"
+      ariaLabel={t.friendsAndInvites}
       collapsedIcon={collapsedIcon}
       expandedBrand={<SocialBrand />}>
       <SocialBody />

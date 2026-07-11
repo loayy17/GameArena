@@ -3,47 +3,29 @@
 
 import clsx from "clsx";
 import type { GAvatarProps } from "./def/GAvatar";
-import { avatarSize, gradient, rounded } from "./tokens";
 
-function GAvatar({
-  firstName,
-  lastName,
-  userName,
-  src,
-  size = "sm",
-  shape = "rounded",
-  gradient: gradientProp = "subtle-brand",
-  className,
-}: GAvatarProps) {
-  const initials =
-    ((firstName?.charAt(0) ?? "") + (lastName?.charAt(0) ?? "")).toUpperCase() ||
-    userName?.charAt(0).toUpperCase() ||
-    "?";
+const avatarSize: Record<string, string> = {
+  xs: "w-8 h-8 min-w-8 text-xs",
+  sm: "w-10 h-10 min-w-10 text-sm",
+  md: "w-16 h-16 min-w-16 text-lg",
+  lg: "w-20 h-20 min-w-20 text-2xl",
+  xl: "w-24 h-24 min-w-24 text-3xl",
+};
 
-  const shapeClass = shape === "circle" ? rounded.full : rounded.md;
+function GAvatar({ firstName, lastName, userName, src, size = "sm", shape = "rounded", gradient, className }: GAvatarProps) {
+  const initials = ((firstName?.charAt(0) ?? "") + (lastName?.charAt(0) ?? "")).toUpperCase() || userName?.charAt(0).toUpperCase() || "?";
+  const shapeClass = shape === "circle" ? "rounded-full" : "rounded-[var(--radius-md)]";
 
   if (src) {
     return (
       <div className={clsx("relative shrink-0", className)}>
-        <img
-          src={src}
-          alt=""
-          className={clsx("object-cover", avatarSize[size], shapeClass)}
-        />
+        <img src={src} alt="" className={clsx("object-cover", avatarSize[size], shapeClass)} />
       </div>
     );
   }
 
   return (
-    <div
-      className={clsx(
-        "flex shrink-0 items-center justify-center font-bold text-text",
-        avatarSize[size],
-        shapeClass,
-        gradient[gradientProp],
-        className,
-      )}
-    >
+    <div className={clsx("flex shrink-0 items-center justify-center font-bold text-text", avatarSize[size], shapeClass, gradient, className)}>
       {initials}
     </div>
   );

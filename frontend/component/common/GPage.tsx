@@ -1,6 +1,12 @@
 import clsx from "clsx";
 import type { GPageProps } from "./def/GPage";
-import { pageWidth } from "./tokens";
+
+const pageWidth: Record<string, string> = {
+  sm: "max-w-xl",
+  md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-7xl",
+};
 
 function GPage({ children, width = "md", className }: GPageProps) {
   return (

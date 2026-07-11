@@ -21,9 +21,7 @@ function GamesPage() {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <header className="mb-8">
         <div className="mb-6 flex justify-center">
-          <GIconTile gradient="game-cyan" size="lg">
-            <GIcon icon={Gamepad2} size="lg" color="inherit" className="text-text" />
-          </GIconTile>
+          <GIconTile gradient="bg-primary-muted" size="lg" icon={Gamepad2} className="text-text" />
         </div>
 
         <h1 className="mb-2 text-4xl font-black tracking-tight text-text">{t.title}</h1>
@@ -37,9 +35,9 @@ function GamesPage() {
             key={game.type}
             name={t[game.name]}
             desc={t[game.description]}
+            onClick={() => handleGameSelect(game.path)}
             gradient={game.gradient}
             playLabel={t.play}
-            onClick={() => handleGameSelect(game.path)}
           />
         ))}
       </div>

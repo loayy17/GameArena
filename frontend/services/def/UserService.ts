@@ -8,16 +8,19 @@ import type { IUserRepository } from "@/repositories/meta/IUserRepository";
 
 class UserService implements IUserService {
   constructor(private repo: IUserRepository) {}
-  getById(userId: string): TPromise<IUser> {
-    return this.repo.getById(userId);
+
+  async profile(): TPromise<IUser> {
+    const result = await this.repo.profile();
+    if (result.data) result.data.fullName = (result.data.firstName || "") + " " + (result.data.lastName || "");
+    return result;
   }
 
-  profile(): TPromise<IUser> {
-    return this.repo.profile();
-  }
-
-  list(data: IUserFilterRequest): TPromise<IUserSummary[]> {
-    return this.repo.list(data);
+  async list(data: IUserFilterRequest): TPromise<IUserSummary[]> {
+    const result = await this.repo.list(data);
+    result.data?.forEach((user) => {
+      user.fullName = (user.firstName || "") + " " + (user.lastName || "");
+    });
+    return result;
   }
 }
 

@@ -22,10 +22,6 @@ class AuthService implements IAuthService {
     return this.repo.logout();
   }
 
-  refreshToken(): TPromise<void> {
-    return this.repo.refreshToken();
-  }
-
   forgotPassword(data: IForgotPasswordRequest): TPromise<void> {
     return this.repo.forgotPassword(data);
   }

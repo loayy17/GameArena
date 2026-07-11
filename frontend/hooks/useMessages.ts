@@ -131,7 +131,6 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     loadingMessages,
     error,
     selectFriend,
-    setSelectedFriendId,
     sendMessage,
   };
 }

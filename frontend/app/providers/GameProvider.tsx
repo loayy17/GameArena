@@ -44,6 +44,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => {
       gameConnection.off("gameState", updateState);
       gameConnection.off("OpponentDisconnected", opponentDisconnect);
+      gameConnection.onreconnected(() => {});
     };
   }, [gameConnection]);
 

@@ -1,7 +1,9 @@
 using backend.Domain;
 using backend.Enums;
+using backend.Hubs;
 using backend.Services.Interface;
 using backend.Utils;
+using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
 namespace backend.Services
@@ -11,6 +13,13 @@ namespace backend.Services
         private readonly ConcurrentDictionary<string, BaseGameRoom> _rooms = new();
         private readonly ConcurrentDictionary<string, string> _playerToRoom = new();
         private readonly Lock _matchLock = new();
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _gameLoops = new();
+        private readonly IHubContext<GameHub> _hubContext;
+
+        public GameRoomService(IHubContext<GameHub> hubContext)
+        {
+            _hubContext = hubContext;
+        }
 
         public (BaseGameRoom room, bool isNew) FindOrCreateRoom(GamesKind gameType, string playerId, string username)
         {
@@ -100,12 +109,64 @@ namespace backend.Services
 
         public void RemoveRoomAndPlayers(string roomId)
         {
+            StopGameLoop(roomId);
             if (_rooms.TryRemove(roomId, out var room))
             {
                 if (room.Player1Id != null)
                     _playerToRoom.TryRemove(room.Player1Id, out _);
                 if (room.Player2Id != null)
                     _playerToRoom.TryRemove(room.Player2Id, out _);
+            }
+        }
+
+        public void StartGameLoop(string roomId)
+        {
+            StopGameLoop(roomId);
+
+            if (!_rooms.TryGetValue(roomId, out var room) || room is not PingPongRoom)
+                return;
+
+            var cts = new CancellationTokenSource();
+            _gameLoops[roomId] = cts;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    while (!cts.Token.IsCancellationRequested)
+                    {
+                        await Task.Delay(50, cts.Token);
+
+                        if (!_rooms.TryGetValue(roomId, out var currentRoom) || currentRoom is not PingPongRoom pong)
+                            break;
+
+                        if (!pong.HasStarted || pong.IsFinished)
+                            break;
+
+                        pong.Tick();
+                        pong.TickBot();
+
+                        await _hubContext.Clients.Group(roomId)
+                            .SendAsync("gameState", pong.GetStatePayload());
+
+                        if (pong.IsFinished)
+                            break;
+                    }
+                }
+                catch (OperationCanceledException) { }
+                finally
+                {
+                    _gameLoops.TryRemove(roomId, out _);
+                }
+            }, cts.Token);
+        }
+
+        public void StopGameLoop(string roomId)
+        {
+            if (_gameLoops.TryRemove(roomId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
             }
         }
     }

@@ -4,10 +4,9 @@ import type { IUserSummary } from "./IUserSummary";
 
 interface IMatchHistory {
   id: string;
-  opponentName: string;
-  result: MatchStatusEnum;
   completedAt: Date;
   isWinner: boolean;
+  result: MatchStatusEnum;
   opponent: IUserSummary;
   kind: GamesKindEnum;
 }

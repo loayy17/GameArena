@@ -5,7 +5,21 @@ import { ChevronDown } from "lucide-react";
 import { forwardRef } from "react";
 import { GLabel } from "./GLabel";
 import type { GSelectProps } from "./def/GSelect";
-import { focusRing, inputSize, rounded, transition } from "./tokens";
+
+const rounded: Record<string, string> = {
+  sm: "rounded-[var(--radius-sm)]",
+  md: "rounded-[var(--radius-md)]",
+  lg: "rounded-[var(--radius-lg)]",
+  full: "rounded-full",
+};
+
+const inputSize: Record<string, string> = {
+  xs: "px-1 py-1.5 text-xs",
+  sm: "px-1 py-1 text-sm",
+  md: "px-2 py-2 text-sm",
+  lg: "px-2 py-2.5 text-base",
+  xl: "px-3 py-3 text-base",
+};
 
 const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
   (
@@ -37,8 +51,8 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
             className={clsx(
               "w-full appearance-none border border-border bg-bg-card text-text outline-none",
               rounded.md,
-              transition,
-              focusRing,
+              "transition-colors duration-150",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
               inputSize[size],
               startIcon && "ps-9",
               "pe-9",

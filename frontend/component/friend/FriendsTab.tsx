@@ -13,13 +13,9 @@ import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
 import type { FriendsTabProps } from "./def/FriendsTab";
 
-function FriendsTab({
-  onMessage,
-  onInvite,
-  onNavigateToSearch,
-}: FriendsTabProps) {
+function FriendsTab({ onMessage, onInvite, onNavigateToSearch }: FriendsTabProps) {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
-  const { friends, loading, reload } = useFriendList();
+  const { friends, loading } = useFriendList();
 
   if (loading) {
     return (
@@ -41,11 +37,7 @@ function FriendsTab({
 
   if (friends.length === 0) {
     return (
-      <GEmpty
-        icon={<GIcon icon={Users} size="xl" color="muted" />}
-        title={t.noFriendsTitle}
-        description={t.noFriendsDescription}
-      >
+      <GEmpty icon={<GIcon icon={Users} size="xl" color="muted" />} title={t.noFriendsTitle} description={t.noFriendsDescription}>
         <GButton onClick={onNavigateToSearch} className="mt-4">
           {t.addFriend}
         </GButton>
@@ -56,12 +48,7 @@ function FriendsTab({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {friends.map((friend) => (
-        <FriendCard
-          key={friend.id}
-          user={friend}
-          onMessage={() => onMessage(friend.id)}
-          onInvite={() => onInvite(friend.id)}
-        />
+        <FriendCard key={friend.id} user={friend} onMessage={() => onMessage(friend.id)} onInvite={() => onInvite(friend.id)} />
       ))}
     </div>
   );

@@ -3,61 +3,75 @@ import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
-import { Gamepad2, ArrowRight, MessagesSquare, UserPlus } from "lucide-react";
+import { ArrowLeft, Gamepad2, MessagesSquare, UserPlus } from "lucide-react";
 import { ar } from "./i18n/ar.i18n";
 import { en, type THomeTranslation } from "./i18n/en.i18n";
 import { GamesList } from "@/domain/constant/games";
 import { RecentHistorySection } from "@/component/history/RecentHistorySection";
 import { GPage } from "@/component/common/GPage";
-import { GStatCard } from "@/component/common/GStatCard";
 import { GIconTile } from "@/component/common/GIconTile";
 import { GCard } from "@/component/common/GCard";
-import { GIcon } from "@/component/common/GIcon";
-
-function getGreeting(t: THomeTranslation) {
-  const hour = new Date().getHours();
-  if (hour < 12) return t.greeting.morning;
-  if (hour < 18) return t.greeting.afternoon;
-  return t.greeting.evening;
-}
+import { GameCard } from "@/component/games/common/GameCard";
+import { useRouter } from "next/navigation";
 
 function Home() {
   const { user } = useAuth();
   const t = useTranslation({ en, ar }) as THomeTranslation;
   const { friendRequestCount, unreadMessageCount } = useDashboardNotifications();
-
+  const router = useRouter();
+  const handleGameSelect = (path: string) => {
+    router.push(`/games/${path}`);
+  };
   const stats = [
-    { label: t.stats.gamesAvailable, value: GamesList.length, icon: Gamepad2, iconColor: "primary" as const, href: "/games" },
-    { label: t.stats.unreadMessages, value: unreadMessageCount, icon: MessagesSquare, iconColor: "primary" as const, href: "/messages" },
-    { label: t.stats.friendRequests, value: friendRequestCount, icon: UserPlus, iconColor: "warning" as const, href: "/friends" },
+    {
+      label: t.stats.gamesAvailable,
+      value: GamesList.length,
+      icon: Gamepad2,
+      gradient: "bg-primary",
+      href: "/games",
+    },
+    {
+      label: t.stats.unreadMessages,
+      value: unreadMessageCount,
+      icon: MessagesSquare,
+      gradient: "bg-success",
+      href: "/messages",
+    },
+    {
+      label: t.stats.friendRequests,
+      value: friendRequestCount,
+      icon: UserPlus,
+      gradient: "bg-warning",
+      href: "/friends?tab=requests",
+    },
   ];
 
   return (
     <GPage width="md" className="py-8 sm:py-10">
       <div className="flex items-center gap-3">
-        <GIconTile gradient="brand" size="md">
-          <GIcon icon={Gamepad2} size="md" color="inherit" className="text-text" />
-        </GIconTile>
+        <GIconTile gradient="bg-primary" size="md" icon={Gamepad2} className="text-text" />
         <div className="min-w-0">
-          <p className="text-sm font-medium text-primary truncate">
-            {getGreeting(t)}
-            {user?.firstName ? `, ${user.firstName}` : ""}
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-text">GameArena</h1>
+          <p className="text-sm font-medium text-primary truncate">{t.welcome(user?.firstName || "")}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text">{t.brand}</h1>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {stats.map(({ label, value, icon, iconColor, href }) => {
-          const card = <GStatCard label={label} value={value} icon={icon} iconColor={iconColor} />;
-          return href ? (
-            <Link key={label} href={href}>
-              {card}
-            </Link>
-          ) : (
-            <div key={label}>{card}</div>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        {stats.map(({ label, value, icon, gradient, href }) => (
+          <Link key={label} href={href}>
+            <GCard
+              variant="interactive"
+              className="flex items-center gap-4 p-4 transition-all hover:-translate-y-1
+        ">
+              <GIconTile gradient={gradient} size="md" icon={icon} className="text-text" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xl font-black">{value}</p>
+                <p className="mt-1 truncate text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+              </div>
+              <ArrowLeft size={16} />
+            </GCard>
+          </Link>
+        ))}
       </div>
 
       <RecentHistorySection
@@ -67,26 +81,20 @@ function Home() {
         emptyDescription={t.recentHistory.emptyDescription}
       />
 
-      <div>
+      <div className="mt-8">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-3">{t.enterArena}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {GamesList.map((game) => {
-            const Icon = game.icon;
-            return (
-              <Link key={game.name} href={"games/" + game.path}>
-                <GCard variant="interactive" className="flex items-center gap-4">
-                  <GIconTile gradient={game.gradient} size="md">
-                    <GIcon icon={Icon} size="md" color="inherit" className="text-text" />
-                  </GIconTile>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-text">{t.games[game.name]}</h3>
-                    <p className="text-text-secondary text-sm truncate">{t.games[game.description]}</p>
-                  </div>
-                  <GIcon icon={ArrowRight} size="md" />
-                </GCard>
-              </Link>
-            );
-          })}
+        <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3">
+          {GamesList.map((game) => (
+            <GameCard
+              key={game.type}
+              name={t.games[game.name]}
+              desc={t.games[game.description]}
+              icon={game.icon}
+              gradient={game.gradient}
+              onClick={() => handleGameSelect(game.path)}
+              playLabel={t.playNow}
+            />
+          ))}
         </div>
       </div>
     </GPage>

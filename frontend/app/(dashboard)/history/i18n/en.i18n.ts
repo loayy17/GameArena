@@ -26,6 +26,7 @@ const en = {
     [GamesKindEnum.Snake]: "Snake",
     [GamesKindEnum.TicTacToe]: "Tic Tac Toe",
     [GamesKindEnum.PingPong]: "Ping Pong",
+    [GamesKindEnum.None]: "Unknown",
   },
   empty: {
     title: "No matches yet",

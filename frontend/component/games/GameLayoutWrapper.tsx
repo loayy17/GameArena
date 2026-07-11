@@ -4,8 +4,7 @@ import { Play, UserPlus } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { friendService } from "@/services/def/FriendService";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import { useFriendList } from "@/hooks/useFriends";
 import { useTranslation } from "@/hooks/useSetting";
 import { en as gameEn, type GameTranslations } from "@/component/i18n/Game/en.i18n";
 import { ar as gameAr } from "@/component/i18n/Game/ar.i18n";
@@ -17,8 +16,6 @@ import { GameResult } from "@/component/games/common/GameResult";
 import { GButton } from "@/component/common/GButton";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { TNullable } from "@/domain/type/TCommon";
-import type { IUserSummary } from "@/domain/meta/IUserSummary";
-import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
 interface GameLayoutProps {
   children: ReactNode;
@@ -32,10 +29,8 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
 
   const { state, roomId, isSearching, isConnected, opponentDisconnected, findMatch, startGame, inviteToRoom, leaveGame, resetGame } = game;
 
-  // Use ref to prevent calling findMatch multiple times
   const hasInitiatedMatch = useRef(false);
 
-  // Auto-trigger findMatch when navigating to game page without state
   useEffect(() => {
     if (!roomId && !isSearching && !hasInitiatedMatch.current) {
       hasInitiatedMatch.current = true;
@@ -47,9 +42,9 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   const myName = user?.userName || t.game.you;
 
   const [showInvitePicker, setShowInvitePicker] = useState(false);
-  const [friends, setFriends] = useState<IUserSummary[]>([]);
-  const [loadingFriends, setLoadingFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { friends, loading: loadingFriends } = useFriendList();
 
   const gameInfo = useMemo(() => {
     switch (gameType) {
@@ -64,26 +59,6 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
     }
   }, [gameType, t]);
 
-  // Load friends
-  useEffect(() => {
-    let ignore = false;
-    if (!roomId && friends.length === 0) {
-      setLoadingFriends(true);
-      friendService
-        .getFriends({ name: null, userStatus: UserStatusEnum.All })
-        .then((res: IApiResponse<IUserSummary[]>) => {
-          if (!ignore) setFriends(res.data ?? []);
-        })
-        .catch(() => {})
-        .finally(() => {
-          if (!ignore) setLoadingFriends(false);
-        });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [roomId, friends.length]);
-
   const filteredFriends = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
     if (!term) return friends;
@@ -96,7 +71,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   };
 
   const opponentName = isBotGame
-    ? "AI Bot"
+    ? t.game.aiBot
     : state?.player1Id === user?.id
       ? state?.player2Username || t.game.opponent
       : state?.player1Username || t.game.opponent;
@@ -109,7 +84,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   // STAGE 1: Lobby
   if (!roomId) {
     return (
-      <div className="flex items-center justify-center min-h-[600px] p-4">
+      <div className="flex items-center justify-center min-h-150 p-4">
         <GameLobby
           isSearching={isSearching}
           isConnected={isConnected}
@@ -120,7 +95,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
             subtitle: gameInfo.description,
             findMatch: t.lobby.findMatch,
             connecting: t.lobby.connecting,
-            tabs: { quick: "Quick", invite: "Invite" },
+            tabs: { quick: t.lobby.quick, invite: t.lobby.invite },
             searchFriends: t.waiting.searchFriends,
             noFriendsFound: t.waiting.noFriendsFound,
             searchingTitle: t.lobby.searchingTitle,
@@ -135,7 +110,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   // STAGE 2: Waiting for opponent
   if (roomId && !state?.player2Id) {
     return (
-      <div className="flex items-center justify-center min-h-[600px] p-4">
+      <div className="flex items-center justify-center min-h-150 p-4">
         <div className="w-full max-w-lg space-y-6">
           <GamePlayersHeader
             player1={{
@@ -157,6 +132,10 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
             myName={myName}
             player1Fallback={t.game.player1}
             player2Fallback={t.game.waiting}
+            vsLabel={t.game.vs}
+            youSuffix={t.game.youSuffix}
+            aiBotLabel={t.game.aiBot}
+            turnLabel={t.game.turn}
           />
 
           <p className="text-center text-text-secondary text-sm">{t.waiting.subtitle}</p>
@@ -185,7 +164,10 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
             friends={filteredFriends}
             onSelect={handleInviteToRoom}
             onClose={() => setShowInvitePicker(false)}
-            noFriendsText={t.waiting.noFriendsFound}
+            title={t.invite.title}
+            cancelLabel={t.invite.cancel}
+            searchPlaceholder={t.invite.searchFriends}
+            noFriendsText={t.invite.noFriends}
           />
         </div>
       </div>
@@ -196,7 +178,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   if (roomId && state?.player2Id && !state.hasStarted) {
     const isHost = user?.id === state.player1Id;
     return (
-      <div className="flex items-center justify-center min-h-[600px] p-4">
+      <div className="flex items-center justify-center min-h-150 p-4">
         <div className="w-full max-w-lg bg-bg-card border border-border rounded-lg p-8 text-center relative">
           <div className="absolute top-0 inset-x-0 h-0.5 bg-primary" />
           <h2 className="text-2xl font-black text-text mb-6">{t.ready.title}</h2>
@@ -206,18 +188,18 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
               <div className="w-20 h-20 rounded-md flex items-center justify-center border-2 border-accent bg-accent-muted">
                 <span className="text-3xl font-bold text-accent">{gameInfo.symbol1}</span>
               </div>
-              <span className="text-sm font-bold mt-3 text-text truncate max-w-[7rem]">
+              <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
                 {state.player1Id === user?.id ? t.game.you : state.player1Username}
               </span>
             </div>
 
-            <div className="text-text-muted font-black italic text-xl">VS</div>
+            <div className="text-text-muted font-black italic text-xl">{t.game.vs}</div>
 
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 rounded-md flex items-center justify-center border-2 border-warning bg-warning-bg">
                 <span className="text-3xl font-bold text-warning">{gameInfo.symbol2}</span>
               </div>
-              <span className="text-sm font-bold mt-3 text-text truncate max-w-[7rem]">
+              <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
                 {state.player2Id === user?.id ? t.game.you : state.player2Username}
               </span>
             </div>
@@ -243,7 +225,7 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
     const isMyTurn = state.currentTurnPlayerId === user?.id;
 
     return (
-      <div className="flex items-center justify-center min-h-[600px] p-4">
+      <div className="flex items-center justify-center min-h-150 p-4">
         <div className="w-full max-w-lg space-y-6">
           <GamePlayersHeader
             player1={{
@@ -265,6 +247,10 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
             myName={myName}
             player1Fallback={t.game.player1}
             player2Fallback={t.game.player2}
+            vsLabel={t.game.vs}
+            youSuffix={t.game.youSuffix}
+            aiBotLabel={t.game.aiBot}
+            turnLabel={t.game.turn}
           />
 
           {!state.isFinished && (

@@ -3,7 +3,32 @@
 import clsx from "clsx";
 import { forwardRef } from "react";
 import type { GNavIndicator, GNavItemProps, GNavProps } from "./def/GNav";
-import { focusRing, navBase, navIndicator, transition } from "./tokens";
+
+const navBase = {
+  item: "relative flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium min-w-0",
+  itemIdle: "text-text-secondary hover:bg-primary-muted hover:text-text",
+  itemActive: "bg-primary-muted text-primary font-semibold",
+};
+
+const navIndicator: Record<GNavIndicator, { active: string; idle: string }> = {
+  start: {
+    active: "border-s-[3px] border-s-primary",
+    idle: "border-s-[3px] border-s-transparent",
+  },
+  end: {
+    active: "border-e-[3px] border-e-primary",
+    idle: "border-e-[3px] border-e-transparent",
+  },
+  top: {
+    active: "border-t-[3px] border-t-primary",
+    idle: "border-t-[3px] border-t-transparent",
+  },
+  bottom: {
+    active: "border-b-[3px] border-b-primary",
+    idle: "border-b-[3px] border-b-transparent",
+  },
+  none: { active: "", idle: "" },
+};
 
 function getIndicatorClass(active: boolean, indicator: GNavIndicator) {
   if (indicator === "none") return "";
@@ -18,8 +43,8 @@ const GNavItem = forwardRef<HTMLButtonElement, GNavItemProps>(
         type="button"
         className={clsx(
           navBase.item,
-          transition,
-          focusRing,
+          "transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           getIndicatorClass(active, indicator),
           active ? navBase.itemActive : navBase.itemIdle,
           collapsed && "justify-center px-2",

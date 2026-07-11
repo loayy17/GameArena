@@ -7,7 +7,15 @@ import type { TPromise } from "@/domain/type/TCommon";
 class MatchHistoryService implements IMatchHistoryService {
   constructor(private repository: IMatchHistoryRepository) {}
   async getMatchHistory(): TPromise<IMatchHistory[]> {
-    return this.repository.getMatchHistory();
+    const result = await this.repository.getMatchHistory();
+    result.data?.forEach((match) => {
+      match.completedAt = new Date(match.completedAt);
+      match.opponent = {
+        ...match.opponent,
+        fullName: (match.opponent.firstName || "") + " " + (match.opponent.lastName || ""),
+      };
+    });
+    return result;
   }
 }
 

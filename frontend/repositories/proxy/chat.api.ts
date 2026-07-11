@@ -5,10 +5,6 @@ const chatApi = clientFactory(`${baseURL}chat`, {
     verb: "get",
     template: "/messages/{friendId}",
   },
-  getUnreadCount: {
-    verb: "get",
-    template: "/unreadMessages/count",
-  },
 });
 
 export { chatApi };

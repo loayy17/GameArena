@@ -2,7 +2,6 @@
 
 import clsx from "clsx";
 import { forwardRef } from "react";
-import { focusRing, rounded } from "./tokens";
 import type { GCheckboxProps } from "./def/GCheckbox";
 
 const GCheckbox = forwardRef<HTMLInputElement, GCheckboxProps>(
@@ -12,9 +11,7 @@ const GCheckbox = forwardRef<HTMLInputElement, GCheckboxProps>(
         ref={ref}
         type="checkbox"
         className={clsx(
-          "h-5 w-5 accent-primary",
-          rounded.sm,
-          focusRing,
+          "h-5 w-5 accent-primary rounded-[var(--radius-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           className,
         )}
         {...props}

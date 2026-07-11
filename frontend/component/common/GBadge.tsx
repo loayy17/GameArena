@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import type { GBadgeProps } from "./def/GBadge";
-import { rounded } from "./tokens";
 
 const variants = {
   primary: "bg-primary/10 text-primary border-primary/20",
@@ -26,8 +25,7 @@ function GBadge({
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 font-semibold border",
-        rounded.full,
+        "inline-flex items-center gap-1.5 font-semibold border rounded-full",
         variants[variant],
         sizes[size],
         className,

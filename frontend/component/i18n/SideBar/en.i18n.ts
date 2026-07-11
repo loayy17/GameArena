@@ -8,6 +8,7 @@ const en = {
   settings: "Settings",
   logout: "Logout",
   user: "User",
+  mainNavigation: "Main navigation",
 };
 
 type TSidebarTranslation = typeof en;

@@ -13,7 +13,7 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
 
   return (
-    <GCard variant="interactive" padding="md" className="flex flex-col items-center">
+    <GCard padding="md" className="flex flex-col items-center">
       <div className="relative">
         <GAvatar
           firstName={user.firstName}
@@ -24,27 +24,13 @@ const FriendCard = ({ user, onMessage, onInvite }: IFriendCardProps) => {
         />
         <GStatusDot status={user.status} />
       </div>
-      <h3 className="text-text font-semibold mt-2">
-        {user.fullName ??
-          [user.firstName, user.lastName].filter(Boolean).join(" ")}
-      </h3>
+      <h3 className="text-text font-semibold mt-2">{user.fullName ?? [user.firstName, user.lastName].filter(Boolean).join(" ")}</h3>
       <p className="text-text-secondary text-sm">@{user.userName}</p>
       <div className="flex gap-2 mt-4 w-full">
-        <GButton
-          onClick={onMessage}
-          size="sm"
-          className="flex-1"
-          leftIcon={<MessageSquare size={16} />}
-        >
+        <GButton onClick={onMessage} size="sm" className="flex-1" leftIcon={<MessageSquare size={16} />}>
           {t.message}
         </GButton>
-        <GButton
-          onClick={onInvite}
-          variant="secondary"
-          size="sm"
-          className="flex-1"
-          leftIcon={<Gamepad2 size={16} />}
-        >
+        <GButton onClick={onInvite} variant="secondary" size="sm" className="flex-1" leftIcon={<Gamepad2 size={16} />}>
           {t.invite}
         </GButton>
       </div>

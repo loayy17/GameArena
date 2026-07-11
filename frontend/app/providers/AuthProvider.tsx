@@ -27,23 +27,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let ignore = false;
 
-    const fetchProfile = async () => {
-      try {
-        const res = await userService.profile();
-        if (!ignore) setUser(res.data ?? null);
-      } catch {
-        if (!ignore) setUser(null);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
+    const init = async () => {
+      await loadUser();
+      if (!ignore) setLoading(false);
     };
 
-    void fetchProfile();
+    void init();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadUser]);
 
   const refreshUser = useCallback(async () => {
     setLoading(true);

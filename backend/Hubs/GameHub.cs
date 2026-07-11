@@ -30,6 +30,7 @@ namespace backend.Hubs
 
         private async Task FinishGameAndSave(BaseGameRoom room, string? roomId)
         {
+            _roomService.StopGameLoop(roomId!);
             await _eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
             await _matchHistoryService.SaveMatchHistoryAsync(room);
             _roomService.RemoveRoomAndPlayers(roomId!);
@@ -69,8 +70,15 @@ namespace backend.Hubs
 
                 if (!room.HasStarted)
                 {
-                    _roomService.RemoveRoomAndPlayers(roomId!);
-                    if (room.IsFull) await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
+                    if (room.IsFull)
+                    {
+                        _roomService.TryRemovePlayer(playerId);
+                        await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
+                    }
+                    else
+                    {
+                        _roomService.RemoveRoomAndPlayers(roomId!);
+                    }
                     return;
                 }
 
@@ -172,6 +180,11 @@ namespace backend.Hubs
 
             await _eventBus.PublishAsync(new GameStartedEvent(playerId, room.Player2Id!));
             await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
+
+            if (room is PingPongRoom)
+            {
+                _roomService.StartGameLoop(roomId!);
+            }
         }
 
         public async Task LeaveGame()

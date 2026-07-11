@@ -22,10 +22,6 @@ class AuthRepository implements IAuthRepository {
     return this.api.logout();
   }
 
-  refreshToken(): TPromise<void> {
-    return this.api.refresh();
-  }
-
   forgotPassword(data: IForgotPasswordRequest): TPromise<void> {
     return this.api.forgotPassword(data);
   }

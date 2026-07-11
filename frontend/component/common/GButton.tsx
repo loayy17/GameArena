@@ -6,7 +6,6 @@ import { useTranslation } from "@/hooks/useSetting";
 import { en, type GButtonTranslation } from "@/component/i18n/GButton/en.i18n";
 import { ar } from "@/component/i18n/GButton/ar.i18n";
 import type { GButtonProps } from "./def/GButton";
-import { buttonSize, focusRing, rounded, transition } from "./tokens";
 
 const variants = {
   primary: "bg-primary text-on-primary hover:bg-primary-hover",
@@ -20,6 +19,21 @@ const variants = {
   link: "bg-transparent text-primary hover:text-primary-hover underline-offset-4 hover:underline h-auto p-0",
   dangerOutline:
     "border border-danger/30 text-danger bg-transparent hover:bg-danger-bg",
+};
+
+const buttonSize: Record<string, string> = {
+  xs: "h-7 px-2 text-xs gap-1",
+  sm: "h-9 px-3 text-sm gap-1.5",
+  md: "h-11 px-5 text-sm gap-2",
+  lg: "h-12 px-6 text-base gap-2",
+  xl: "h-14 px-8 text-lg gap-2.5",
+};
+
+const rounded: Record<string, string> = {
+  sm: "rounded-[var(--radius-sm)]",
+  md: "rounded-[var(--radius-md)]",
+  lg: "rounded-[var(--radius-lg)]",
+  full: "rounded-full",
 };
 
 const GButton = forwardRef<HTMLButtonElement, GButtonProps>(
@@ -58,8 +72,8 @@ const GButton = forwardRef<HTMLButtonElement, GButtonProps>(
           variant !== "link" && buttonSize[isIconOnly ? "sm" : size],
           isIconOnly && "h-10 w-10 p-0",
           variant !== "link" && rounded[roundedProp],
-          transition,
-          focusRing,
+          "transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           variants[variant],
           fullWidth && "w-full",
           fab && "fixed z-40",

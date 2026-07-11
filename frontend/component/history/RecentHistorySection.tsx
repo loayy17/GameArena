@@ -7,13 +7,14 @@ import { useMatchHistory } from "@/hooks/useMatchHistory";
 import { GSpinner } from "@/component/common/GSpinner";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
-import { MatchHistoryCard } from "./MatchHistoryCard";
+import { GCard } from "@/component/common/GCard";
 import { ar } from "@/app/(dashboard)/history/i18n/ar.i18n";
 import { en, type THistoryTranslation } from "@/app/(dashboard)/history/i18n/en.i18n";
 import type { TLocale } from "@/domain/type/TCommon";
 import type { RecentHistorySectionProps } from "./def/RecentHistorySection";
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
-import { GStatCard } from "../common/GStatCard";
+import { MatchHistoryItem } from "./MatchHistoryItem";
+import { GIconTile } from "../common/GIconTile";
 
 function RecentHistorySection({ title, viewAll, emptyTitle, emptyDescription, limit = 3 }: RecentHistorySectionProps) {
   const [locale] = useLocale() as [TLocale, (l: TLocale) => void];
@@ -44,24 +45,25 @@ function RecentHistorySection({ title, viewAll, emptyTitle, emptyDescription, li
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-3">
             {items.map((item) => (
-              <GStatCard key={item.label} {...item} size="sm" />
+              <GCard key={item.label} className="flex items-center gap-3">
+                <GIconTile gradient={`bg-${item.iconColor}`} size="md" icon={item.icon} className="text-text" />
+                <div>
+                  <p className="text-xl font-bold ">{item.value}</p>
+                  <p className="text-xs text-text-secondary mt-1">{item.label}</p>
+                </div>
+              </GCard>
             ))}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {matches.map((match) => (
-              <MatchHistoryCard
+              <MatchHistoryItem
                 key={match.id}
                 match={match}
-                compact
-                gameName={historyT.games[match.kind as keyof typeof historyT.games]}
-                resultLabel={
-                  match.result === MatchStatusEnum.Win
-                    ? historyT.results.win
-                    : match.result === MatchStatusEnum.Lost
-                      ? historyT.results.loss
-                      : historyT.results.draw
-                }
-                playedAtLabel={new Date(match.completedAt).toLocaleString(locale)}
+                winLabel={historyT.results.win}
+                lossLabel={historyT.results.loss}
+                drawLabel={historyT.results.draw}
+                gameLabel={historyT.games[match.kind as keyof typeof historyT.games]}
+                locale={locale}
                 versusLabel={historyT.versus}
               />
             ))}

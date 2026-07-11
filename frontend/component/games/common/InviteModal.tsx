@@ -15,6 +15,9 @@ interface InviteModalProps {
   friends: IUserSummary[];
   onSelect: (friendId: string) => void;
   onClose: () => void;
+  title?: string;
+  cancelLabel?: string;
+  searchPlaceholder?: string;
   noFriendsText?: string;
 }
 
@@ -26,6 +29,9 @@ function InviteModal({
   friends,
   onSelect,
   onClose,
+  title = "Invite a Friend",
+  cancelLabel = "Cancel",
+  searchPlaceholder = "Search friends...",
   noFriendsText = "No friends found",
 }: InviteModalProps) {
   if (!open) return null;
@@ -33,15 +39,15 @@ function InviteModal({
   return (
     <div className="bg-surface/50 border border-border/60 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-text">Invite a Friend</h3>
+        <h3 className="text-sm font-semibold text-text">{title}</h3>
         <GButton onClick={onClose} variant="secondary" size="sm">
-          Cancel
+          {cancelLabel}
         </GButton>
       </div>
       <GInputSearch
         value={searchQuery}
         onChange={onSearchChange}
-        placeholder="Search friends..."
+        placeholder={searchPlaceholder}
       />
       <div className="mt-3 max-h-40 overflow-y-auto custom-scrollbar">
         {loading ? (
