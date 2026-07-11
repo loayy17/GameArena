@@ -8,7 +8,6 @@ import { useFriendList } from "@/hooks/useFriends";
 import { useTranslation } from "@/hooks/useSetting";
 import { en as gameEn, type GameTranslations } from "@/component/i18n/Game/en.i18n";
 import { ar as gameAr } from "@/component/i18n/Game/ar.i18n";
-import { GameLobby } from "@/component/games/common/GameLobby";
 import { InviteModal } from "@/component/games/common/InviteModal";
 import { GamePlayersHeader } from "@/component/games/common/GamePlayersHeader";
 import { GameTurnIndicator } from "@/component/games/common/GameTurnIndicator";
@@ -16,6 +15,7 @@ import { GameResult } from "@/component/games/common/GameResult";
 import { GButton } from "@/component/common/GButton";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { TNullable } from "@/domain/type/TCommon";
+import { GSpinner } from "../common/GSpinner";
 
 interface GameLayoutProps {
   children: ReactNode;
@@ -32,11 +32,11 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
   const hasInitiatedMatch = useRef(false);
 
   useEffect(() => {
-    if (!roomId && !isSearching && !hasInitiatedMatch.current) {
+    if (!roomId && !isSearching && !hasInitiatedMatch.current && isConnected) {
       hasInitiatedMatch.current = true;
       findMatch(gameType);
     }
-  }, [roomId, isSearching, findMatch, gameType]);
+  }, [roomId, isSearching, findMatch, gameType, isConnected]);
 
   const isBotGame = state?.isBotGame ?? false;
   const myName = user?.userName || t.game.you;
@@ -81,28 +81,12 @@ export function GameLayoutWrapper({ children, gameType }: GameLayoutProps) {
     setShowInvitePicker(false);
   };
 
-  // STAGE 1: Lobby
-  if (!roomId) {
+  // STAGE 1: spinner while create room
+  if (!roomId || !state) {
     return (
+      // spinner while searching for opponent
       <div className="flex items-center justify-center min-h-150 p-4">
-        <GameLobby
-          isSearching={isSearching}
-          isConnected={isConnected}
-          findMatch={() => findMatch(gameType)}
-          resetGame={resetGame}
-          t={{
-            title: gameInfo.name,
-            subtitle: gameInfo.description,
-            findMatch: t.lobby.findMatch,
-            connecting: t.lobby.connecting,
-            tabs: { quick: t.lobby.quick, invite: t.lobby.invite },
-            searchFriends: t.waiting.searchFriends,
-            noFriendsFound: t.waiting.noFriendsFound,
-            searchingTitle: t.lobby.searchingTitle,
-            searchingSubtitle: t.lobby.searchingSubtitle,
-            cancelSearch: t.lobby.cancelSearch,
-          }}
-        />
+        <GSpinner size="lg" />
       </div>
     );
   }

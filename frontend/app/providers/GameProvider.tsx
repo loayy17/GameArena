@@ -7,6 +7,7 @@ import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IGameState } from "./def/IGameState";
 import type { IGameContext } from "./def/IGameContext";
+import { useRouter } from "next/navigation";
 
 const GameContext = createContext<TNullable<IGameContext>>(null);
 
@@ -17,12 +18,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [isSearching, setIsSearching] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const searchingRef = useRef(false);
-
+  const router = useRouter();
   const reset = useCallback(() => {
     setState(null);
     setIsSearching(false);
     setOpponentDisconnected(false);
-  }, []);
+    router.push("/games");
+  }, [router]);
 
   useEffect(() => {
     searchingRef.current = isSearching;

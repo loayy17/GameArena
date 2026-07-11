@@ -1,5 +1,6 @@
 using backend.Domain;
 using backend.Enums;
+using backend.Events;
 using backend.Hubs;
 using backend.Services.Interface;
 using backend.Utils;
@@ -15,10 +16,12 @@ namespace backend.Services
         private readonly Lock _matchLock = new();
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _gameLoops = new();
         private readonly IHubContext<GameHub> _hubContext;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public GameRoomService(IHubContext<GameHub> hubContext)
+        public GameRoomService(IHubContext<GameHub> hubContext, IServiceScopeFactory scopeFactory)
         {
             _hubContext = hubContext;
+            _scopeFactory = scopeFactory;
         }
 
         public (BaseGameRoom room, bool isNew) FindOrCreateRoom(GamesKind gameType, string playerId, string username)
@@ -150,13 +153,8 @@ namespace backend.Services
 
                         if (pong.IsFinished)
                         {
-                            if (_rooms.TryRemove(roomId, out var finishedRoom))
-                            {
-                                if (finishedRoom.Player1Id != null)
-                                    _playerToRoom.TryRemove(finishedRoom.Player1Id, out _);
-                                if (finishedRoom.Player2Id != null)
-                                    _playerToRoom.TryRemove(finishedRoom.Player2Id, out _);
-                            }
+                            await FinishPongMatchAsync(pong);
+                            RemoveRoomAndPlayers(roomId);
                             break;
                         }
                     }
@@ -167,6 +165,22 @@ namespace backend.Services
                     _gameLoops.TryRemove(roomId, out _);
                 }
             }, cts.Token);
+        }
+
+        private async Task FinishPongMatchAsync(PingPongRoom pong)
+        {
+            if (pong.IsBotGame) return;
+
+            if (!Guid.TryParse(pong.Player1Id, out var _)
+                || !Guid.TryParse(pong.Player2Id, out var _))
+                return;
+
+            using var scope = _scopeFactory.CreateScope();
+            var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
+            await eventBus.PublishAsync(new GameFinishedEvent(pong.Player1Id!, pong.Player2Id!));
+
+            var matchHistory = scope.ServiceProvider.GetRequiredService<IMatchHistoryService>();
+            await matchHistory.SaveMatchHistoryAsync(pong);
         }
 
         public void StopGameLoop(string roomId)

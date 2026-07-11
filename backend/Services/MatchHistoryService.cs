@@ -27,13 +27,17 @@ namespace backend.Services
             if (room?.Player1Id == null || room.Player2Id == null)
                 throw new AppException(room == null ? ErrorCode.RoomNotFound : ErrorCode.PlayerNotFound);
 
+            if (!Guid.TryParse(room.Player1Id, out var p1)
+                || !Guid.TryParse(room.Player2Id, out var p2))
+                return;
+
             _context.MatchHistories.Add(new MatchHistory
             {
                 RoomId = room.RoomId,
                 GameType = room.GameType,
-                Player1Id = Guid.Parse(room.Player1Id!),
-                Player2Id = Guid.Parse(room.Player2Id!),
-                WinnerId = room.WinnerPlayerId != null ? Guid.Parse(room.WinnerPlayerId) : null,
+                Player1Id = p1,
+                Player2Id = p2,
+                WinnerId = room.WinnerPlayerId != null && Guid.TryParse(room.WinnerPlayerId, out var w) ? w : null,
                 CompletedAt = DateTime.UtcNow,
                 Status = room.WinnerPlayerId != null ? MatchStatus.Win : MatchStatus.Draw
             });

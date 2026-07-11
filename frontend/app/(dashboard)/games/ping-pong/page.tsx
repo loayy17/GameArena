@@ -1,37 +1,84 @@
 "use client";
 
 import clsx from "clsx";
+import { useEffect, useRef } from "react";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { IPingPongGameState } from "@/app/providers/def/IGameState";
 
 function PingPongPage() {
-  const { state } = useGame();
+  const { state, sendAction } = useGame();
+  const { user } = useAuth();
+  const keysDown = useRef<Set<string>>(new Set());
+  const rafId = useRef<number | null>(null);
 
-  // GameLayoutWrapper handles all stages - we only render board when state has game-specific fields
+  const stateRef = useRef(state);
+  const userRef = useRef(user);
+  const sendActionRef = useRef(sendAction);
+  stateRef.current = state;
+  userRef.current = user;
+  sendActionRef.current = sendAction;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "w", "W", "s", "S"].includes(e.key)) {
+        e.preventDefault();
+        keysDown.current.add(e.key);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keysDown.current.delete(e.key);
+    };
+
+    const tick = () => {
+      const s = stateRef.current;
+      const u = userRef.current;
+
+      if (!s || !u) {
+        rafId.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (!s.isFinished && keysDown.current.size > 0) {
+        const send = sendActionRef.current;
+        if (keysDown.current.has("ArrowUp") || keysDown.current.has("w") || keysDown.current.has("W")) {
+          send({ type: "MOVE_PADDLE", direction: "UP" });
+        } else if (keysDown.current.has("ArrowDown") || keysDown.current.has("s") || keysDown.current.has("S")) {
+          send({ type: "MOVE_PADDLE", direction: "DOWN" });
+        }
+      }
+
+      rafId.current = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    rafId.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      keysDown.current.clear();
+      if (rafId.current !== null) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+    };
+  }, []);
+
   if (!state || !("ballPosition" in state)) {
     return <GameLayoutWrapper gameType={GamesKindEnum.PingPong}>{null}</GameLayoutWrapper>;
   }
 
   const pongState = state as IPingPongGameState;
-  const ballPosition = pongState.ballPosition;
-  const player1PaddleY = pongState.player1PaddleY;
-  const player2PaddleY = pongState.player2PaddleY;
-  const player1Score = pongState.player1Score;
-  const player2Score = pongState.player2Score;
-  const isFinished = pongState.isFinished;
-
-  const boardWidth = 600;
-  const boardHeight = 400;
-  const paddleWidth = 10;
-  const paddleHeight = 80;
-  const ballSize = 10;
+  const { ballPosition, player1PaddleY, player2PaddleY, player1Score, player2Score, isFinished } = pongState;
 
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.PingPong}>
       <div className="bg-bg-card border border-border rounded-3xl p-5">
-        {/* Score display */}
         <div className="flex justify-center gap-8 mb-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-accent">{player1Score}</div>
@@ -44,40 +91,22 @@ function PingPongPage() {
           </div>
         </div>
 
-        {/* Game canvas */}
-        <div className="relative bg-surface border-2 border-border-light rounded-lg mx-auto" style={{ width: boardWidth, height: boardHeight }}>
-          {/* Center line */}
+        <div className="relative bg-surface border-2 border-border-light rounded-lg mx-auto" style={{ width: 600, height: 400 }}>
           <div className="absolute inset-y-0 left-1/2 w-px border-l-2 border-dashed border-border opacity-50" />
 
-          {/* Player 1 paddle (left) */}
           <div
             className="absolute left-2 bg-accent rounded"
-            style={{
-              width: paddleWidth,
-              height: paddleHeight,
-              top: player1PaddleY,
-            }}
+            style={{ width: 10, height: 80, top: player1PaddleY }}
           />
 
-          {/* Player 2 paddle (right) */}
           <div
             className="absolute right-2 bg-warning rounded"
-            style={{
-              width: paddleWidth,
-              height: paddleHeight,
-              top: player2PaddleY,
-            }}
+            style={{ width: 10, height: 80, top: player2PaddleY }}
           />
 
-          {/* Ball */}
           <div
             className={clsx("absolute bg-primary rounded-full", !isFinished && "animate-pulse")}
-            style={{
-              width: ballSize,
-              height: ballSize,
-              left: ballPosition.x,
-              top: ballPosition.y,
-            }}
+            style={{ width: 10, height: 10, left: ballPosition.x, top: ballPosition.y }}
           />
         </div>
 

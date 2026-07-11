@@ -12,7 +12,9 @@ const ConnectionContext = createContext<IConnectionContext | undefined>(undefine
 function createConnection(name: string): HubConnection {
   return new HubConnectionBuilder()
     .withUrl(`${BASE_URL}/${name}`, { withCredentials: true })
-    .withAutomaticReconnect()
+    .withAutomaticReconnect({ nextRetryDelayInMilliseconds: (retryContext) => Math.min(retryContext.elapsedMilliseconds * 1.5, 30000) })
+    .withKeepAliveInterval(15_000)
+    .withServerTimeout(60_000)
     .configureLogging(process.env.NODE_ENV === "development" ? LogLevel.Information : LogLevel.Error)
     .build();
 }
