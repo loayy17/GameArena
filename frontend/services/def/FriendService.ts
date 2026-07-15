@@ -142,20 +142,20 @@ class FriendService implements IFriendService {
 
   // ── SignalR invocations ────────────────────────────────────────────────
 
-  invokeSocialData(): Promise<void> {
-    return requireConnection(this.connection, "Social").invoke("RequestSocialData");
+  async invokeSocialData(): Promise<void> {
+    await requireConnection(this.connection, "Social").invoke("RequestSocialData");
   }
 
-  invokeFriends(): Promise<void> {
-    return requireConnection(this.connection, "Social").invoke("RequestFriends");
+  async invokeFriends(): Promise<void> {
+    await requireConnection(this.connection, "Social").invoke("RequestFriends");
   }
 
-  invokeFriendRequests(): Promise<void> {
-    return requireConnection(this.connection, "Social").invoke("RequestFriendRequests");
+  async invokeFriendRequests(): Promise<void> {
+    await requireConnection(this.connection, "Social").invoke("RequestFriendRequests");
   }
 
-  invokeBlocked(): Promise<void> {
-    return requireConnection(this.connection, "Social").invoke("RequestBlocked");
+  async invokeBlocked(): Promise<void> {
+    await requireConnection(this.connection, "Social").invoke("RequestBlocked");
   }
 }
 

@@ -35,8 +35,8 @@ class NotificationService implements INotificationService {
     });
   }
 
-  requestCounters(): Promise<void> {
-    return requireConnection(this.connection, "Social").invoke("RequestCounters");
+  async requestCounters(): Promise<void> {
+    await requireConnection(this.connection, "Social").invoke("RequestCounters");
   }
 
   onCountersUpdate(handler: (data: { friendRequests: number; unreadMessages: number }) => void): () => void {

@@ -50,10 +50,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ── Initial state sync ──────────────────────────────────────────────
   useEffect(() => {
+    if (!isGameConnected) return;
     gameService.requestCurrentState()
       .then((value) => { if (value) setState(value); })
       .finally(() => setIsInitialSyncDone(true));
-  }, []);
+  }, [isGameConnected]);
 
   // ── Actions ─────────────────────────────────────────────────────────
   const findMatch = useCallback(

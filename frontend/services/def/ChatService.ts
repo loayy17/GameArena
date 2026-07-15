@@ -49,7 +49,8 @@ class ChatService implements IChatService {
   }
 
   async sendMessage(receiverId: string, content: string): Promise<void> {
-    await requireConnection(this.connection, "Chat").invoke("SendPrivateMessage", receiverId, content);
+    const conn = requireConnection(this.connection, "Chat");
+    await conn.invoke("SendPrivateMessage", receiverId, content);
   }
 
   onPrivateMessage(handler: (message: IMessage) => void): () => void {
