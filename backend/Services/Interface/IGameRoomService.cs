@@ -7,7 +7,7 @@ namespace backend.Services.Interface
     public interface IGameRoomService
     {
         (BaseGameRoom room, bool isNew) FindOrCreateRoom(GamesKind gameType, string playerId, string username);
-        BaseGameRoom CreatePrivateRoom(GamesKind gameType, string playerId, string username, string invitedPlayerId);
+        BaseGameRoom CreatePrivateRoom(GamesKind gameType, string playerId, string username, string? invitedPlayerId);
         bool TryGetRoom(string roomId, out BaseGameRoom? room);
         bool TryRemoveRoom(string roomId);
         bool TryGetPlayerRoom(string playerId, out string? roomId);

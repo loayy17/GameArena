@@ -32,14 +32,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     router.push("/games");
   }, [router]);
 
-  const clearGameState = useCallback(() => {
-    setState(null);
-    setIsSearching(false);
-    setOpponentDisconnected(false);
-    setPendingPlayAgainRequest(null);
-    setRequestedPlayAgain(false);
-  }, []);
-
   // ── SignalR subscriptions via service ───────────────────────────────
   useEffect(() => {
     const offState = gameService.onGameState((value) => {
@@ -52,6 +44,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     const offDisconnect = gameService.onOpponentDisconnect(() => {
       setOpponentDisconnected(true);
+      setPendingPlayAgainRequest(null);
+      setRequestedPlayAgain(false);
     });
 
     const offPlayAgainReq = gameService.onPlayAgainRequest((data) => {
@@ -97,12 +91,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const findMatch = useCallback(
     async (game: GamesKindEnum) => {
       if (isSearching) return;
-      clearGameState();
+      setState(null);
+      setIsSearching(false);
+      setOpponentDisconnected(false);
+      setPendingPlayAgainRequest(null);
+      setRequestedPlayAgain(false);
       setLastGameType(game);
       setIsSearching(true);
-      await gameService.findMatch(game);
+      try { await gameService.findMatch(game); }
+      catch { setIsSearching(false); }
     },
-    [clearGameState, isSearching],
+    [isSearching],
   );
 
   const startGame = useCallback(
@@ -128,26 +127,49 @@ export function GameProvider({ children }: { children: ReactNode }) {
   );
 
   const leaveGame = useCallback(async () => {
-    await gameService.leaveGame();
+    try { await gameService.leaveGame(); }
+    catch { /* navigate regardless */ }
     goToLobby();
   }, [goToLobby]);
 
   const requestPlayAgain = useCallback(async () => {
     setRequestedPlayAgain(true);
-    await gameService.requestPlayAgain();
+    try { await gameService.requestPlayAgain(); }
+    catch { setRequestedPlayAgain(false); }
   }, []);
 
+  // ── Timeout: reset requestedPlayAgain after 30s ─────────────────────
+  useEffect(() => {
+    if (!requestedPlayAgain) return;
+    const timer = setTimeout(() => {
+      setRequestedPlayAgain(false);
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [requestedPlayAgain]);
+
   const respondPlayAgain = useCallback(async (accept: boolean) => {
-    setPendingPlayAgainRequest(null);
-    await gameService.respondPlayAgain(accept);
-    if (!accept) goToLobby();
+    try {
+      await gameService.respondPlayAgain(accept);
+      setPendingPlayAgainRequest(null);
+      if (!accept) goToLobby();
+    } catch {
+      // keep dialog open so user can retry or use Go to Lobby
+    }
   }, [goToLobby]);
 
   const resetGame = useCallback(async () => {
-    if (isSearching) await gameService.cancelSearch();
-    await gameService.leaveGame();
+    try {
+      if (isSearching) await gameService.cancelSearch();
+    } catch { /* ignore */ }
+    try { await gameService.leaveGame(); }
+    catch { /* navigate regardless */ }
     goToLobby();
   }, [goToLobby, isSearching]);
+
+  const createLobby = useCallback(async (gameKind: GamesKindEnum) => {
+    try { await gameService.createLobby(gameKind); }
+    catch { /* ignore */ }
+  }, []);
 
   const sendAction = useCallback(
     async (action: object) => {
@@ -175,6 +197,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       requestPlayAgain,
       respondPlayAgain,
       resetGame,
+      createLobby,
       sendAction,
     }),
     [
@@ -194,6 +217,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       requestPlayAgain,
       respondPlayAgain,
       resetGame,
+      createLobby,
       sendAction,
     ],
   );

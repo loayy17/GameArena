@@ -20,6 +20,7 @@ interface IGameContext {
   requestPlayAgain(): Promise<void>;
   respondPlayAgain(accept: boolean): Promise<void>;
   resetGame(): Promise<void>;
+  createLobby(gameKind: GamesKindEnum): Promise<void>;
   sendAction(action: object): Promise<void>;
 }
 

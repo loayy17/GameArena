@@ -31,7 +31,8 @@ namespace backend.Domain
         {
             WinnerPlayerId = null;
             WinnerSymbol = null;
-            HasStarted = false;
+            IsFinished = false;
+            HasStarted = true;
             CurrentTurnPlayerId = Player1Id;
         }
 

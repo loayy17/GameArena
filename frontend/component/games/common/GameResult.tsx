@@ -23,6 +23,8 @@ function GameResult({
   const isDraw = winnerPlayerId === "";
   const isWin = !isDraw && winnerPlayerId === userId;
   const isLoss = !isDraw && winnerPlayerId != null && !isWin;
+  const gameOver = isDraw || isWin || isLoss;
+  const leftAfterGame = opponentDisconnected && gameOver;
 
   // ── Play Again request dialog ──────────────────────────────────────
   if (pendingRequest) {
@@ -52,8 +54,27 @@ function GameResult({
   let title: string;
   let description: string;
   let color: string;
+  let sessionEnded = false;
 
-  if (opponentDisconnected) {
+  if (leftAfterGame) {
+    sessionEnded = true;
+    if (isWin) {
+      icon = <GIcon icon={Trophy} size="4xl" color="warning" />;
+      title = t.victory;
+      description = t.victoryDesc;
+      color = "text-warning";
+    } else if (isDraw) {
+      icon = <GIcon icon={Handshake} size="4xl" color="primary" className="text-neon-cyan" />;
+      title = t.draw;
+      description = t.drawDesc;
+      color = "text-neon-cyan";
+    } else {
+      icon = <GIcon icon={Frown} size="4xl" color="danger" />;
+      title = t.defeat;
+      description = t.defeatDesc;
+      color = "text-error";
+    }
+  } else if (opponentDisconnected) {
     icon = <GIcon icon={Trophy} size="4xl" color="success" />;
     title = t.opponentForfeited;
     description = t.opponentForfeitedDesc;
@@ -90,7 +111,11 @@ function GameResult({
         </p>
       )}
       <div className="flex gap-4 mt-8 w-full max-w-xs">
-        {requestedPlayAgain ? (
+        {sessionEnded ? (
+          <GButton onClick={onLobby} variant="secondary" className="flex-1" leftIcon={<GIcon icon={Home} size="sm" color="inherit" />}>
+            {endT.lobby}
+          </GButton>
+        ) : requestedPlayAgain ? (
           <GButton disabled className="flex-1">
             <Loader className="animate-spin mr-2 h-4 w-4 inline" />
             {endT.waiting}
@@ -100,14 +125,16 @@ function GameResult({
             {endT.playAgain}
           </GButton>
         )}
-        <GButton
-          onClick={onLobby}
-          variant="secondary"
-          className="flex-1"
-          leftIcon={<GIcon icon={Home} size="sm" color="inherit" />}
-        >
-          {endT.lobby}
-        </GButton>
+        {!sessionEnded && (
+          <GButton
+            onClick={onLobby}
+            variant="secondary"
+            className="flex-1"
+            leftIcon={<GIcon icon={Home} size="sm" color="inherit" />}
+          >
+            {endT.lobby}
+          </GButton>
+        )}
       </div>
     </GCard>
   );

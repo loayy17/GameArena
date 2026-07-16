@@ -16,7 +16,6 @@ public class TicTacToeRoom : BaseGameRoom
         board = Board,
         currentTurnPlayerId = CurrentTurnPlayerId,
         winnerPlayerId = WinnerPlayerId,
-        winnerSymbol = WinnerSymbol,
         isFinished = IsFinished,
         hasStarted = HasStarted,
         isFull = IsFull,

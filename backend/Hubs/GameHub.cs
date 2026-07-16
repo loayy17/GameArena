@@ -108,7 +108,7 @@ namespace backend.Hubs
             if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
                 return;
 
-            await _roomService.RequestPlayAgainAsync(roomId, playerId);
+            await _roomService.RequestPlayAgainAsync(roomId!, playerId);
         }
 
         public async Task RespondPlayAgain(bool accept)
@@ -117,7 +117,7 @@ namespace backend.Hubs
             if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
                 return;
 
-            await _roomService.RespondPlayAgainAsync(roomId, playerId, accept);
+            await _roomService.RespondPlayAgainAsync(roomId!, playerId, accept);
         }
 
         public async Task SendAction(JsonElement action)
@@ -157,15 +157,10 @@ namespace backend.Hubs
             room.HasStarted = true;
             room.CurrentTurnPlayerId = room.Player1Id!;
 
-            await PublishGameStartedEvent(room);
+            await _eventBus.PublishAsync(new GameStartedEvent(room.Player1Id!, room.Player2Id!));
             await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
 
             _roomService.StartGameLoop(roomId!);
-        }
-
-        private async Task PublishGameStartedEvent(BaseGameRoom room)
-        {
-            await _eventBus.PublishAsync(new GameStartedEvent(room.Player1Id!, room.Player2Id!));
         }
 
         public async Task LeaveGame()
@@ -179,6 +174,7 @@ namespace backend.Hubs
             {
                 room.IsFinished = true;
                 await _roomService.FinishAndCleanupAsync(room, roomId!);
+                await Clients.OthersInGroup(roomId!).SendAsync("OpponentDisconnected");
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
                 return;
             }
@@ -202,15 +198,10 @@ namespace backend.Hubs
             {
                 room.ReplacePlayerWithBot(playerId);
                 room.MakeBotMove();
-                await PublishGameLeftEvent(playerId);
+                await _eventBus.PublishAsync(new GameLeftEvent(playerId));
             }
 
             await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
-        }
-
-        private async Task PublishGameLeftEvent(string playerId)
-        {
-            await _eventBus.PublishAsync(new GameLeftEvent(playerId));
         }
 
         public async Task InviteToRoom(string friendId)
@@ -253,6 +244,15 @@ namespace backend.Hubs
                 _roomService.TryRemovePlayer(playerId);
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
             }
+        }
+
+        public async Task CreateLobby(GamesKind gameType)
+        {
+            var playerId = GetPlayerId();
+            string username = Context.User?.Identity?.Name ?? "Player";
+            var room = _roomService.CreatePrivateRoom(gameType, playerId, username, null);
+            await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
+            await Clients.Caller.SendAsync("gameState", room.GetStatePayload());
         }
 
         public async Task InviteFriend(string friendId, GamesKind gameType)

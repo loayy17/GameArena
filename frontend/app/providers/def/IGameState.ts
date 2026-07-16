@@ -16,7 +16,6 @@ export interface IGameStateBase {
 
 export interface ITicTacToeGameState extends IGameStateBase {
   board: string[];
-  winnerSymbol?: string;
 }
 
 // Snake specific state

@@ -14,6 +14,7 @@ interface IGameService {
   cancelSearch(): Promise<void>;
   sendAction(action: object): Promise<void>;
   acceptInvite(roomId: string): Promise<void>;
+  createLobby(gameKind: GamesKindEnum): Promise<void>;
 
   onGameState(handler: (state: IGameState) => void): () => void;
   onOpponentDisconnect(handler: () => void): () => void;

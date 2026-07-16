@@ -74,59 +74,57 @@ class GameService implements IGameService {
 
   // ── Invoke methods ──────────────────────────────────────────────────────
 
-  async requestCurrentState(): Promise<IGameState | null> {
+  private async invoke<T = void>(method: string, ...args: unknown[]): Promise<T> {
     const conn = await this.ensureConnection();
-    return conn.invoke("GetCurrentState");
+    return conn.invoke(method, ...args);
+  }
+
+  async requestCurrentState(): Promise<IGameState | null> {
+    return this.invoke<IGameState | null>("GetCurrentState");
   }
 
   async findMatch(gameKind: GamesKindEnum): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("FindMatch", gameKind);
+    await this.invoke("FindMatch", gameKind);
   }
 
   async startGame(friendId: string | null, gameKind: GamesKindEnum): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("StartGame", friendId, gameKind);
+    await this.invoke("StartGame", friendId, gameKind);
   }
 
   async inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("InviteFriend", friendId, gameKind);
+    await this.invoke("InviteFriend", friendId, gameKind);
   }
 
   async inviteToRoom(friendId: string): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("InviteToRoom", friendId);
+    await this.invoke("InviteToRoom", friendId);
   }
 
   async leaveGame(): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("LeaveGame");
+    await this.invoke("LeaveGame");
   }
 
   async requestPlayAgain(): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("RequestPlayAgain");
+    await this.invoke("RequestPlayAgain");
   }
 
   async respondPlayAgain(accept: boolean): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("RespondPlayAgain", accept);
+    await this.invoke("RespondPlayAgain", accept);
   }
 
   async cancelSearch(): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("CancelSearch");
+    await this.invoke("CancelSearch");
   }
 
   async sendAction(action: object): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("SendAction", action);
+    await this.invoke("SendAction", action);
   }
 
   async acceptInvite(roomId: string): Promise<void> {
-    const conn = await this.ensureConnection();
-    await conn.invoke("AcceptInvite", roomId);
+    await this.invoke("AcceptInvite", roomId);
+  }
+
+  async createLobby(gameKind: GamesKindEnum): Promise<void> {
+    await this.invoke("CreateLobby", gameKind);
   }
 
   // ── Subscriptions ────────────────────────────────────────────────────────

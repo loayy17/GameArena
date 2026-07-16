@@ -6,7 +6,6 @@ interface GameReadyProps {
   gameInfo: GameInfo;
   t: Record<string, any>;
   onStart: (opponentId: string) => void;
-  onCancel: () => void;
 }
 
 export type { GameReadyProps };

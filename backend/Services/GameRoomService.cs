@@ -16,7 +16,7 @@ namespace backend.Services
         private readonly ConcurrentDictionary<string, string> _playerToRoom = new();
         private readonly Lock _matchLock = new();
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _gameLoops = new();
-        private readonly ConcurrentDictionary<string, string?> _playAgainRequests = new();
+        private readonly ConcurrentDictionary<string, string> _playAgainRequests = new();
         private readonly IHubContext<GameHub> _hubContext;
         private readonly IServiceScopeFactory _scopeFactory;
 
@@ -57,7 +57,7 @@ namespace backend.Services
             }
         }
 
-        public BaseGameRoom CreatePrivateRoom(GamesKind gameType, string playerId, string username, string invitedPlayerId)
+        public BaseGameRoom CreatePrivateRoom(GamesKind gameType, string playerId, string username, string? invitedPlayerId)
         {
             BaseGameRoom room = gameType switch
             {
@@ -115,6 +115,7 @@ namespace backend.Services
         public void RemoveRoomAndPlayers(string roomId)
         {
             StopGameLoop(roomId);
+            _playAgainRequests.TryRemove(roomId, out _);
             if (_rooms.TryRemove(roomId, out var room))
             {
                 if (room.Player1Id != null)
@@ -130,7 +131,7 @@ namespace backend.Services
 
             room.HandleAction(playerId, action);
 
-            if (!room.IsFinished && room.IsBotGame)
+            if (room.IsBotGame)
                 room.MakeBotMove();
 
             await _hubContext.Clients.Group(roomId)
@@ -144,6 +145,16 @@ namespace backend.Services
         {
             if (!_rooms.TryGetValue(roomId, out var room) || room.WinnerPlayerId == null)
                 return;
+
+            if (room.IsBotGame)
+            {
+                room.ResetForNewRound();
+                if (room.NeedsGameLoop)
+                    StartGameLoop(roomId);
+                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
+                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+                return;
+            }
 
             // Check if the other player already requested -> auto-accept
             var otherId = playerId == room.Player1Id ? room.Player2Id : room.Player1Id;
@@ -242,12 +253,6 @@ namespace backend.Services
 
                         if (!currentRoom.HasStarted)
                             break;
-
-                        if (currentRoom.WinnerPlayerId != null)
-                        {
-                            await FinishAndCleanupAsync(currentRoom, roomId, false);
-                            break;
-                        }
 
                         currentRoom.Tick();
 
