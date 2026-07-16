@@ -11,6 +11,7 @@ export interface IGameStateBase {
   isFinished: boolean;
   currentTurnPlayerId?: string;
   winnerPlayerId?: string;
+  score: [number, number];
 }
 
 export interface ITicTacToeGameState extends IGameStateBase {

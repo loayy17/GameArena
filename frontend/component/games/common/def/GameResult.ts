@@ -16,9 +16,9 @@ interface GameResultEndTranslations {
 
 interface GameResultProps {
   winnerPlayerId?: string;
-  isFinished: boolean;
   userId?: string;
   opponentDisconnected: boolean;
+  score?: [number, number];
   t: GameResultTranslations;
   endT: GameResultEndTranslations;
   onPlayAgain: () => void;

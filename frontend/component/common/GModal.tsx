@@ -50,14 +50,12 @@ function GModal({
       aria-modal="true"
       aria-label={ariaLabel}
       aria-describedby={ariaDescription ? "modal-description" : undefined}
-      {...props}
-    >
+      {...props}>
       <GBackdrop onClick={closeOnBackdrop ? onClose : () => {}} />
       <GCard
         padding={cardPadding}
-        className={clsx("relative z-10 mx-auto w-full", sizeStyles[size])}
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-      >
+        className={clsx("relative z-50 mx-auto w-full", sizeStyles[size])}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         {ariaDescription && (
           <p id="modal-description" className="sr-only">
             {ariaDescription}
@@ -70,4 +68,3 @@ function GModal({
 }
 
 export { GModal };
-

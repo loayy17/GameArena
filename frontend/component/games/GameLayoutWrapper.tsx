@@ -17,7 +17,7 @@ function GameLayoutWrapper({ children, gameType }: GameLayoutWrapperProps) {
   const game = useGame();
   const t = useTranslation({ en: gameEn, ar: gameAr }) as GameTranslations;
 
-  const { state, isConnected, isInitialSyncDone, opponentDisconnected, findMatch, startGame, inviteToRoom, leaveGame, resetGame } = game;
+  const { state, isConnected, isInitialSyncDone, opponentDisconnected, findMatch, startGame, inviteToRoom, leaveGame, playAgain, resetGame } = game;
 
   const hasInitiatedMatch = useRef(false);
 
@@ -69,8 +69,8 @@ function GameLayoutWrapper({ children, gameType }: GameLayoutWrapperProps) {
       gameInfo={gameInfo}
       t={t}
       opponentDisconnected={opponentDisconnected}
-      onPlayAgain={() => findMatch(gameType)}
-      onLobby={resetGame}
+      onPlayAgain={playAgain}
+      onLobby={leaveGame}
       onLeave={leaveGame}>
       {children}
     </GameActive>

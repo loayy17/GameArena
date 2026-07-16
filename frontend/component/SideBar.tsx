@@ -148,7 +148,7 @@ function Sidebar() {
       widthExpanded="w-60"
       mode="inline"
       ariaLabel={t.mainNavigation}
-      collapsedIcon={<GIcon icon={Menu} size="md" color="inherit" />}
+      collapsedIcon={<GIconTile icon={Menu} size="md" />}
       expandedBrand={<SidebarBrand />}
       footer={<SidebarFooter />}>
       <SidebarNav />

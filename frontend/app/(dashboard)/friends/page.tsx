@@ -74,27 +74,37 @@ function FriendsPage() {
 
   const tabLoading = useMemo(() => {
     switch (activeTab) {
-      case "friends": return friendsLoading;
-      case "requests": 
-      case "sent": return requestsLoading;
-      case "blocked": return blockedLoading;
-      default: return false;
+      case "friends":
+        return friendsLoading;
+      case "requests":
+      case "sent":
+        return requestsLoading;
+      case "blocked":
+        return blockedLoading;
+      default:
+        return false;
     }
   }, [activeTab, friendsLoading, requestsLoading, blockedLoading]);
 
-  const tabs = useMemo<GTabItem<TFriendsTab>[]>(() => [
-    { id: "friends", label: t.friends, icon: <GIcon icon={Users} size="sm" color="inherit" /> },
-    { id: "requests", label: t.requests, icon: <GIcon icon={UserCheck} size="sm" color="inherit" />, badge: requestCount || undefined },
-    { id: "sent", label: t.sentRequests, icon: <GIcon icon={Send} size="sm" color="inherit" />, badge: sentRequestCount || undefined },
-    { id: "blocked", label: t.blockedUsers, icon: <GIcon icon={ShieldBan} size="sm" color="inherit" />, badge: blockedCount || undefined },
-    { id: "search", label: t.search, icon: <GIcon icon={Search} size="sm" color="inherit" /> },
-  ], [t, requestCount, sentRequestCount, blockedCount]);
+  const tabs = useMemo<GTabItem<TFriendsTab>[]>(
+    () => [
+      { id: "friends", label: t.friends, icon: <GIcon icon={Users} size="sm" color="inherit" /> },
+      { id: "requests", label: t.requests, icon: <GIcon icon={UserCheck} size="sm" color="inherit" />, badge: requestCount || undefined },
+      { id: "sent", label: t.sentRequests, icon: <GIcon icon={Send} size="sm" color="inherit" />, badge: sentRequestCount || undefined },
+      { id: "blocked", label: t.blockedUsers, icon: <GIcon icon={ShieldBan} size="sm" color="inherit" />, badge: blockedCount || undefined },
+      { id: "search", label: t.search, icon: <GIcon icon={Search} size="sm" color="inherit" /> },
+    ],
+    [t, requestCount, sentRequestCount, blockedCount],
+  );
 
-  const changeTab = useCallback((tab: TFriendsTab) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("tab", tab);
-    router.push(`/friends?${params.toString()}`, { scroll: false });
-  }, [router, searchParams]);
+  const changeTab = useCallback(
+    (tab: TFriendsTab) => {
+      const params = new URLSearchParams(searchParams);
+      params.set("tab", tab);
+      router.push(`/friends?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const renderTab = () => {
     switch (activeTab) {
@@ -113,32 +123,13 @@ function FriendsPage() {
         );
 
       case "requests":
-        return (
-          <RequestsTab
-            requests={requests}
-            onAccept={acceptRequest}
-            onDecline={declineRequest}
-            t={t}
-          />
-        );
+        return <RequestsTab requests={requests} onAccept={acceptRequest} onDecline={declineRequest} t={t} />;
 
       case "sent":
-        return (
-          <SentRequestsTab
-            sentRequests={sentRequests}
-            onCancel={cancelFriendRequest}
-            t={t}
-          />
-        );
+        return <SentRequestsTab sentRequests={sentRequests} onCancel={cancelFriendRequest} t={t} />;
 
       case "blocked":
-        return (
-          <BlockedUsersTab
-            blockedUsers={blockedUsers}
-            onUnblock={unblockUser}
-            t={t}
-          />
-        );
+        return <BlockedUsersTab blockedUsers={blockedUsers} onUnblock={unblockUser} t={t} />;
 
       case "search":
         return <SearchTab />;
@@ -164,17 +155,14 @@ function FriendsPage() {
       </GCard>
 
       <GCard padding="sm" className="space-y-4">
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <GTabs tabs={tabs} value={activeTab} onChange={changeTab} direction="V" variant="pills" fullWidth />
         </div>
-
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <GTabs tabs={tabs} value={activeTab} onChange={changeTab} variant="pills" fullWidth />
         </div>
 
-        <div className="pt-1 text-start gap-3">
-          {tabLoading ? <FriendsSkeleton /> : renderTab()}
-        </div>
+        <div className="pt-1 text-start gap-3">{tabLoading ? <FriendsSkeleton /> : renderTab()}</div>
       </GCard>
     </GPage>
   );

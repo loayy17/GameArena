@@ -9,6 +9,7 @@ interface IGameService {
   inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void>;
   inviteToRoom(friendId: string): Promise<void>;
   leaveGame(): Promise<void>;
+  playAgain(): Promise<void>;
   cancelSearch(): Promise<void>;
   sendAction(action: object): Promise<void>;
   acceptInvite(roomId: string): Promise<void>;

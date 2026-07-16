@@ -25,8 +25,15 @@ public class TicTacToeRoom : BaseGameRoom
         player1Id = Player1Id,
         player1Username = Player1Username,
         player2Id = Player2Id,
-        player2Username = Player2Username
+        player2Username = Player2Username,
+        score = Score
     };
+
+    public override void ResetForNewRound()
+    {
+        base.ResetForNewRound();
+        Board = [.. Enumerable.Repeat(".", 9)];
+    }
 
     public override void HandleAction(string playerId, JsonElement action)
     {
@@ -41,7 +48,7 @@ public class TicTacToeRoom : BaseGameRoom
             var cell = cellProp.GetInt32();
 
             if (
-                IsFinished
+                WinnerPlayerId != null
                 || !IsFull
                 || playerId != CurrentTurnPlayerId
                 || (playerId != Player1Id && playerId != Player2Id)
@@ -55,15 +62,15 @@ public class TicTacToeRoom : BaseGameRoom
 
             if (GameHelper.CheckWinTicTacToe(Board))
             {
-                IsFinished = true;
                 WinnerPlayerId = playerId;
                 WinnerSymbol = Board[cell];
+                if (playerId == Player1Id) Score[0]++; else Score[1]++;
                 return;
             }
 
             if (Board.All(x => x != "."))
             {
-                IsFinished = true;
+                WinnerPlayerId = "";
                 return;
             }
 
@@ -78,7 +85,7 @@ public class TicTacToeRoom : BaseGameRoom
     {
         lock (_lock)
         {
-            if (IsFinished || CurrentTurnPlayerId == null) return;
+            if (WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
 
             var botId = Player1Id == "__BOT__" ? Player1Id : Player2Id;
             if (CurrentTurnPlayerId != botId) return;
@@ -91,15 +98,15 @@ public class TicTacToeRoom : BaseGameRoom
 
             if (GameHelper.CheckWinTicTacToe(Board))
             {
-                IsFinished = true;
                 WinnerPlayerId = botId;
                 WinnerSymbol = Board[botMove];
+                if (botId == Player1Id) Score[0]++; else Score[1]++;
                 return;
             }
 
             if (Board.All(x => x != "."))
             {
-                IsFinished = true;
+                WinnerPlayerId = "";
                 return;
             }
 

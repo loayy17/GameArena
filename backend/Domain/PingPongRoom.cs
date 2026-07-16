@@ -27,8 +27,8 @@ namespace backend.Domain
         private const int WinScore = 5;
         private const float PaddleLeftEdge = 0.03f;
         private const float PaddleRightEdge = 0.97f;
-        private const float InitialBallSpeed = 0.008f;
-        private const float BallSpeedRamp = 1.0005f;
+        private const float InitialBallSpeed = 0.012f;
+        private const float BallSpeedRamp = 1.002f;
 
         private const string ActionMovePaddle = "MOVE_PADDLE";
         private const string DirectionUp = "UP";
@@ -65,7 +65,7 @@ namespace backend.Domain
 
         private void AdvanceBall()
         {
-            if (IsFinished || !HasStarted) return;
+            if (WinnerPlayerId != null || !HasStarted) return;
 
             BallPX += BallVX;
             BallPY += BallVY;
@@ -101,8 +101,8 @@ namespace backend.Domain
                 ScoreP1++;
                 if (ScoreP1 >= WinScore)
                 {
-                    IsFinished = true;
                     WinnerPlayerId = Player1Id;
+                    Score[0]++;
                     return;
                 }
                 ResetBall();
@@ -113,8 +113,8 @@ namespace backend.Domain
                 ScoreP2++;
                 if (ScoreP2 >= WinScore)
                 {
-                    IsFinished = true;
                     WinnerPlayerId = Player2Id;
+                    Score[1]++;
                     return;
                 }
                 ResetBall();
@@ -171,8 +171,23 @@ namespace backend.Domain
             player1PaddleY = PadYP1 * BoardHeightPx,
             player2PaddleY = PadYP2 * BoardHeightPx,
             player1Score = ScoreP1,
-            player2Score = ScoreP2
+            player2Score = ScoreP2,
+            score = Score
         };
+
+        public override void ResetForNewRound()
+        {
+            base.ResetForNewRound();
+            ScoreP1 = 0;
+            ScoreP2 = 0;
+            PadYP1 = 0.4f;
+            PadHP1 = 0.2f;
+            PadVP1 = 0.02f;
+            PadYP2 = 0.4f;
+            PadHP2 = 0.2f;
+            PadVP2 = 0.02f;
+            ResetBall();
+        }
 
         public override void HandleAction(string playerId, JsonElement action)
         {

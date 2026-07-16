@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Bell, UsersRound, MailQuestion } from "lucide-react";
+import { Users, Bell, UsersRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState } from "react";
 
@@ -23,6 +23,7 @@ import { GIcon } from "@/component/common/GIcon";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { GButton } from "../common/GButton";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
+import { GIconTile } from "../common/GIconTile";
 type SocialPanelTab = "friends" | "invites";
 
 interface FriendsContextValue {
@@ -135,8 +136,7 @@ function SocialExpanded() {
       </div>
 
       <div className="flex-1 p-4 space-y-4">
-              {activeTab === "invites" ? (
-                  
+        {activeTab === "invites" ? (
           <GameInvitesList onAfterAccept={() => isCompact && closeMobile()} />
         ) : loading ? (
           <div className="flex justify-center py-10">
@@ -163,7 +163,7 @@ function SocialPanelInner() {
 
   const collapsedIcon = (
     <span className="relative inline-flex">
-      <GIcon icon={Users} size="md" color="inherit" />
+      <GIconTile icon={Users} size="md" />
       {gameInvites.length > 0 && <span className="absolute -top-1 -inset-e-1 w-2 h-2 rounded-full bg-primary ring-2 ring-bg-sidebar" />}
     </span>
   );

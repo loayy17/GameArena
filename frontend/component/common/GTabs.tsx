@@ -5,10 +5,7 @@ import { GBadge } from "./GBadge";
 import { GNav, GNavItem } from "./GNav";
 import type { GTabsProps } from "./def/GTabs";
 
-const variantStyles: Record<
-  string,
-  { tab: string; active: string; idle: string; list?: string }
-> = {
+const variantStyles: Record<string, { tab: string; active: string; idle: string; list?: string }> = {
   pills: {
     tab: "px-4 py-2 rounded-md text-sm font-medium",
     active: "bg-primary text-on-primary",
@@ -22,8 +19,7 @@ const variantStyles: Record<
   },
   sidebar: {
     tab: "px-3 py-2.5 text-sm font-medium",
-    active:
-      "bg-primary-muted text-primary font-semibold border-s-[3px] border-s-primary",
+    active: "bg-primary-muted text-primary font-semibold border-s-[3px] border-s-primary",
     idle: "text-text-secondary hover:bg-primary-muted hover:text-text border-s-[3px] border-s-transparent",
   },
   default: {
@@ -67,22 +63,13 @@ function GTabs<T extends string | number>({
                 active={active}
                 indicator="start"
                 onClick={() => onChange(tab.id)}
-                icon={
-                  renderIcon !== undefined ? renderIcon(tab, active) : tab.icon
-                }
-                label={
-                  renderLabel !== undefined
-                    ? renderLabel(tab, active)
-                    : tab.label
-                }
+                icon={renderIcon !== undefined ? renderIcon(tab, active) : tab.icon}
+                label={renderLabel !== undefined ? renderLabel(tab, active) : tab.label}
                 badge={
                   renderBadge !== undefined ? (
                     renderBadge(tab, active)
                   ) : tab.badge != null && tab.badge > 0 ? (
-                    <GBadge
-                      size="sm"
-                      className="ms-auto min-w-5 justify-center"
-                    >
+                    <GBadge size="sm" className="ms-auto min-w-5 justify-center">
                       {tab.badge}
                     </GBadge>
                   ) : undefined
@@ -93,12 +80,7 @@ function GTabs<T extends string | number>({
           })}
         </GNav>
         {children && (
-          <div
-            role="tabpanel"
-            id={`tabpanel-${String(value)}`}
-            aria-labelledby={`tab-${String(value)}`}
-            className="pt-4"
-          >
+          <div role="tabpanel" id={`tabpanel-${String(value)}`} aria-labelledby={`tab-${String(value)}`} className="pt-4">
             {children}
           </div>
         )}
@@ -117,8 +99,7 @@ function GTabs<T extends string | number>({
           styles.list,
           fullWidth && direction === "H" && "w-full",
           className,
-        )}
-      >
+        )}>
         {tabs.map((tab) => {
           const active = value === tab.id;
           return (
@@ -137,8 +118,7 @@ function GTabs<T extends string | number>({
                 active ? styles.active : styles.idle,
                 fullWidth && direction === "H" && "flex-1 justify-center",
                 tabClassName,
-              )}
-            >
+              )}>
               {renderIcon !== undefined ? renderIcon(tab, active) : tab.icon}
               {renderLabel !== undefined ? renderLabel(tab, active) : tab.label}
               {renderBadge !== undefined ? (
@@ -154,12 +134,7 @@ function GTabs<T extends string | number>({
       </div>
 
       {children && (
-        <div
-          role="tabpanel"
-          id={`tabpanel-${String(value)}`}
-          aria-labelledby={`tab-${String(value)}`}
-          className="pt-4"
-        >
+        <div role="tabpanel" id={`tabpanel-${String(value)}`} aria-labelledby={`tab-${String(value)}`} className="pt-4">
           {children}
         </div>
       )}

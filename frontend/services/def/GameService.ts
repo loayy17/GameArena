@@ -69,6 +69,10 @@ class GameService implements IGameService {
     await requireConnection(this.connection, "Game").invoke("LeaveGame");
   }
 
+  async playAgain(): Promise<void> {
+    await requireConnection(this.connection, "Game").invoke("PlayAgain");
+  }
+
   async cancelSearch(): Promise<void> {
     await requireConnection(this.connection, "Game").invoke("CancelSearch");
   }

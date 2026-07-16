@@ -1,4 +1,4 @@
-import { CircleX, Volleyball, Worm } from "lucide-react";
+import { Grid3X3, Volleyball, Worm } from "lucide-react";
 import { GamesKindEnum } from "../enum/GamesKindEnum";
 
 const GamesList = [
@@ -6,7 +6,7 @@ const GamesList = [
     name: "ticTacToe",
     description: "ticTacToeDesc",
     type: GamesKindEnum.TicTacToe,
-    icon: CircleX,
+    icon: Grid3X3,
     path: "tic-tac-toe",
     gradient: "text-primary",
     animation: "/tic_tac_toe_1.json",

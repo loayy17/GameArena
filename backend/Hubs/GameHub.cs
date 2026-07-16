@@ -36,9 +36,11 @@ namespace backend.Hubs
             {
                 room!.DisconnectedPlayerId = playerId;
 
-                if (room.IsFinished)
+                if (room.WinnerPlayerId != null)
                 {
-                    _roomService.RemoveRoomAndPlayers(roomId!);
+                    room.IsFinished = true;
+                    await _roomService.FinishAndCleanupAsync(room, roomId!);
+                    await Clients.Group(roomId!).SendAsync("OpponentDisconnected");
                     return;
                 }
 
@@ -100,12 +102,22 @@ namespace backend.Hubs
             }
         }
 
+        public async Task PlayAgain()
+        {
+            var playerId = GetPlayerId();
+            if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
+                return;
+
+            await _roomService.PlayAgainAsync(roomId);
+        }
+
         public async Task SendAction(JsonElement action)
         {
             var playerId = GetPlayerId();
 
             if (!TryGetPlayerRoom(playerId, out var room, out var roomId)
                 || room!.IsFinished
+                || (room.WinnerPlayerId != null)
                 || (room.Player1Id != playerId && room.Player2Id != playerId))
                 return;
 
@@ -151,8 +163,16 @@ namespace backend.Hubs
         {
             var playerId = GetPlayerId();
 
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room!.IsFinished)
+            if (!TryGetPlayerRoom(playerId, out var room, out var roomId))
                 return;
+
+            if (room!.WinnerPlayerId != null)
+            {
+                room.IsFinished = true;
+                await _roomService.FinishAndCleanupAsync(room, roomId!);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
+                return;
+            }
 
             if (!room.HasStarted || room.Player2Id == null)
             {

@@ -21,10 +21,19 @@ namespace backend.Domain
         public string? DisconnectedPlayerId { get; set; }
         public bool IsBotGame { get; set; } = false;
         public string? CurrentTurnPlayerId { get; set; }
+        public int[] Score { get; set; } = [0, 0];
 
         public abstract object GetStatePayload();
 
         public abstract void HandleAction(string playerId, JsonElement action);
+
+        public virtual void ResetForNewRound()
+        {
+            WinnerPlayerId = null;
+            WinnerSymbol = null;
+            HasStarted = false;
+            CurrentTurnPlayerId = Player1Id;
+        }
 
         public virtual bool NeedsGameLoop => false;
 
@@ -51,7 +60,6 @@ namespace backend.Domain
 
         public virtual void OnPlayerDisconnected(string disconnectedPlayerId)
         {
-            IsFinished = true;
             WinnerPlayerId = disconnectedPlayerId == Player1Id ? Player2Id : Player1Id;
         }
     }

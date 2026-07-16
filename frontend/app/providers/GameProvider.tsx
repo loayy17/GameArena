@@ -95,8 +95,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     goToLobby();
   }, [goToLobby]);
 
+  const playAgain = useCallback(async () => {
+    await gameService.playAgain();
+  }, []);
+
   const resetGame = useCallback(async () => {
     if (isSearching) await gameService.cancelSearch();
+    await gameService.leaveGame();
     goToLobby();
   }, [goToLobby, isSearching]);
 
@@ -121,6 +126,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       inviteFriend,
       inviteToRoom,
       leaveGame,
+      playAgain,
       resetGame,
       sendAction,
     }),
@@ -136,6 +142,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       inviteFriend,
       inviteToRoom,
       leaveGame,
+      playAgain,
       resetGame,
       sendAction,
     ],

@@ -135,11 +135,25 @@ namespace backend.Services
             await _hubContext.Clients.Group(roomId)
                 .SendAsync("gameState", room.GetStatePayload());
 
-            if (room.IsFinished)
-                await FinishAndCleanupAsync(room, roomId);
+            if (room.WinnerPlayerId != null)
+                await FinishAndCleanupAsync(room, roomId, false);
         }
 
-        public async Task FinishAndCleanupAsync(BaseGameRoom room, string roomId)
+        public async Task PlayAgainAsync(string roomId)
+        {
+            if (!_rooms.TryGetValue(roomId, out var room) || room.WinnerPlayerId == null)
+                return;
+
+            room.ResetForNewRound();
+
+            if (room.NeedsGameLoop)
+                StartGameLoop(roomId);
+
+            await _hubContext.Clients.Group(roomId)
+                .SendAsync("gameState", room.GetStatePayload());
+        }
+
+        public async Task FinishAndCleanupAsync(BaseGameRoom room, string roomId, bool removeRoom = true)
         {
             StopGameLoop(roomId);
             if (!room.IsBotGame)
@@ -155,7 +169,8 @@ namespace backend.Services
                     await matchHistory.SaveMatchHistoryAsync(room);
                 }
             }
-            RemoveRoomAndPlayers(roomId);
+            if (removeRoom)
+                RemoveRoomAndPlayers(roomId);
         }
 
         public void StartGameLoop(string roomId)
@@ -180,17 +195,23 @@ namespace backend.Services
                         if (!_rooms.TryGetValue(roomId, out var currentRoom))
                             break;
 
-                        if (!currentRoom.HasStarted || currentRoom.IsFinished)
+                        if (!currentRoom.HasStarted)
                             break;
+
+                        if (currentRoom.WinnerPlayerId != null)
+                        {
+                            await FinishAndCleanupAsync(currentRoom, roomId, false);
+                            break;
+                        }
 
                         currentRoom.Tick();
 
                         await _hubContext.Clients.Group(roomId)
                             .SendAsync("gameState", currentRoom.GetStatePayload());
 
-                        if (currentRoom.IsFinished)
+                        if (currentRoom.WinnerPlayerId != null)
                         {
-                            await FinishAndCleanupAsync(currentRoom, roomId);
+                            await FinishAndCleanupAsync(currentRoom, roomId, false);
                             break;
                         }
                     }

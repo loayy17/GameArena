@@ -9,17 +9,17 @@ import type { GameResultProps } from "./def/GameResult";
 
 function GameResult({
   winnerPlayerId,
-  isFinished,
   userId,
   opponentDisconnected,
+  score,
   t,
   endT,
   onPlayAgain,
   onLobby,
 }: GameResultProps) {
-  const isWin = winnerPlayerId === userId;
-  const isDraw = isFinished && !winnerPlayerId;
-  const isLoss = isFinished && !isWin && !isDraw && !opponentDisconnected;
+  const isDraw = winnerPlayerId === "";
+  const isWin = !isDraw && winnerPlayerId === userId;
+  const isLoss = !isDraw && winnerPlayerId != null && !isWin;
 
   let icon: React.ReactNode;
   let title: string;
@@ -57,6 +57,11 @@ function GameResult({
       <p className="text-text-secondary text-sm mt-2 max-w-xs leading-relaxed">
         {description}
       </p>
+      {score && (
+        <p className="text-text-secondary text-xs mt-1">
+          Score: {score[0]} - {score[1]}
+        </p>
+      )}
       <div className="flex gap-4 mt-8 w-full max-w-xs">
         <GButton onClick={onPlayAgain} className="flex-1">
           {endT.playAgain}

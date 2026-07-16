@@ -7,7 +7,8 @@ const en = {
   message: "Message",
   invite: "Invite",
   addFriend: "Add Friend",
-  subtitle: "Find friends, review incoming requests, and search for new players without leaving the page.",
+  subtitle:
+    "Manage your social network in one place. Browse your friends, review incoming and sent friend requests, discover new players, and manage blocked users without leaving the page.",
   community: "Community",
   noFriendsTitle: "No friends yet",
   noFriendsDescription: "Search for users and add them as friends.",

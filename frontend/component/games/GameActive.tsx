@@ -54,7 +54,7 @@ function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlay
           player2Colors={gameInfo.player2Colors}
         />
 
-        {!state.isFinished && (
+        {!(state.winnerPlayerId || state.isFinished) && (
           <GameTurnIndicator
             isMyTurn={isMyTurn}
             currentTurnText={t.game.yourTurn}
@@ -67,9 +67,9 @@ function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlay
 
           <GameResult
             winnerPlayerId={state.winnerPlayerId}
-            isFinished={state.isFinished}
             userId={user?.id}
             opponentDisconnected={opponentDisconnected}
+            score={state.score}
             t={{
               opponentForfeited: t.result.opponentForfeited,
               opponentForfeitedDesc: t.result.opponentForfeitedDesc,
@@ -89,7 +89,7 @@ function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlay
           />
         </div>
 
-        {!state.isFinished && (
+        {!(state.winnerPlayerId || state.isFinished) && (
           <div className="flex justify-center">
             <GButton onClick={onLeave} variant="dangerOutline" size="sm">
               {t.game.leaveGame}
