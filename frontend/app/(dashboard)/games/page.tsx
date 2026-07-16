@@ -60,6 +60,7 @@ function GamesPage() {
             desc={t[game.description]}
             onClick={() => handleGameSelect(game.path)}
             gradient={game.gradient}
+            animation={game.animation}
             playLabel={t.play}
           />
         ))}

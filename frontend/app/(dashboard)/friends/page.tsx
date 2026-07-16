@@ -172,7 +172,7 @@ function FriendsPage() {
           <GTabs tabs={tabs} value={activeTab} onChange={changeTab} variant="pills" fullWidth />
         </div>
 
-        <div className="pt-1 text-start">
+        <div className="pt-1 text-start gap-3">
           {tabLoading ? <FriendsSkeleton /> : renderTab()}
         </div>
       </GCard>

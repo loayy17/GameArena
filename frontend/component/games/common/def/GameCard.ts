@@ -6,6 +6,7 @@ interface GameCardProps {
   icon?: LucideIcon;
   iconColor?: string;
   gradient?: string;
+  animation?: string;
   onClick: () => void;
   playLabel: string;
 }

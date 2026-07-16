@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
-import { ArrowLeft, Gamepad2, MessagesSquare, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gamepad2, MessagesSquare, UserPlus } from "lucide-react";
 import { GIcon } from "@/component/common/GIcon";
 import { ar } from "./i18n/ar.i18n";
 import { en, type THomeTranslation } from "./i18n/en.i18n";
@@ -69,7 +69,7 @@ function Home() {
                 <p className="text-xl font-black">{value}</p>
                 <p className="mt-1 truncate text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
               </div>
-              <GIcon icon={ArrowLeft} size="sm" color="inherit" />
+              <GIcon icon={ArrowRight} size="sm" color="inherit" />
             </GCard>
           </Link>
         ))}
@@ -92,6 +92,7 @@ function Home() {
               desc={t.games[game.description]}
               icon={game.icon}
               gradient={game.gradient}
+              animation={game.animation}
               onClick={() => handleGameSelect(game.path)}
               playLabel={t.playNow}
             />

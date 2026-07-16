@@ -9,6 +9,7 @@ const GamesList = [
     icon: CircleX,
     path: "tic-tac-toe",
     gradient: "text-primary",
+    animation: "/tic_tac_toe_1.json",
   },
   {
     name: "snake",
@@ -17,6 +18,7 @@ const GamesList = [
     path: "snake",
     icon: Worm,
     gradient: "text-success",
+    animation: "/Snake.json",
   },
   {
     name: "pong",
@@ -25,6 +27,7 @@ const GamesList = [
     path: "ping-pong",
     icon: Volleyball,
     gradient: "text-success",
+    animation: "/ping-pong.json",
   },
 ] as const;
 export { GamesList };

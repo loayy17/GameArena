@@ -41,7 +41,7 @@ function SentRequestsTab({ sentRequests, onCancel, t }: SentRequestsTabProps) {
       actions={(friend) => {
         const isBusy = actionId === friend.id;
         return (
-          <div className="flex gap-1">
+          <div className="flex gap-3">
             <GIconTile icon={isBusy ? Loader2 : X} size="sm" gradient="text-danger" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
               onClick={async () => {
                 setActionId(friend.id);
