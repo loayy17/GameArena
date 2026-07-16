@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { Home, Trophy, Frown, Handshake } from "lucide-react";
+import { Home, Trophy, Frown, Handshake, Loader } from "lucide-react";
 import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
 import { GCard } from "@/component/common/GCard";
@@ -16,10 +16,37 @@ function GameResult({
   endT,
   onPlayAgain,
   onLobby,
+  requestedPlayAgain,
+  onRespondPlayAgain,
+  pendingRequest,
 }: GameResultProps) {
   const isDraw = winnerPlayerId === "";
   const isWin = !isDraw && winnerPlayerId === userId;
   const isLoss = !isDraw && winnerPlayerId != null && !isWin;
+
+  // ── Play Again request dialog ──────────────────────────────────────
+  if (pendingRequest) {
+    return (
+      <GCard padding="lg" className="absolute inset-0 bg-bg/95 flex flex-col items-center justify-center text-center z-20">
+        <h2 className="text-xl font-black text-text-primary">{endT.playAgainRequest}</h2>
+        <p className="text-text-secondary text-sm mt-2">
+          {pendingRequest.requesterUsername}
+        </p>
+        <div className="flex gap-4 mt-8 w-full max-w-xs">
+          <GButton onClick={() => onRespondPlayAgain?.(true)} className="flex-1">
+            {endT.accept}
+          </GButton>
+          <GButton
+            onClick={() => onRespondPlayAgain?.(false)}
+            variant="dangerOutline"
+            className="flex-1"
+          >
+            {endT.reject}
+          </GButton>
+        </div>
+      </GCard>
+    );
+  }
 
   let icon: React.ReactNode;
   let title: string;
@@ -63,9 +90,16 @@ function GameResult({
         </p>
       )}
       <div className="flex gap-4 mt-8 w-full max-w-xs">
-        <GButton onClick={onPlayAgain} className="flex-1">
-          {endT.playAgain}
-        </GButton>
+        {requestedPlayAgain ? (
+          <GButton disabled className="flex-1">
+            <Loader className="animate-spin mr-2 h-4 w-4 inline" />
+            {endT.waiting}
+          </GButton>
+        ) : (
+          <GButton onClick={onPlayAgain} className="flex-1">
+            {endT.playAgain}
+          </GButton>
+        )}
         <GButton
           onClick={onLobby}
           variant="secondary"

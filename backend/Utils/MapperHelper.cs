@@ -83,16 +83,24 @@ namespace backend.Utils
                 ? matchHistory.Player2
                 : matchHistory.Player1;
 
+            var isP1 = matchHistory.Player1Id == userId;
+            var myScore = isP1 ? matchHistory.Player1Score : matchHistory.Player2Score;
+            var opponentScore = isP1 ? matchHistory.Player2Score : matchHistory.Player1Score;
+
             return new MatchHistoryResponse
             {
                 Id = matchHistory.Id,
                 Kind = matchHistory.GameType,
                 CompletedAt = matchHistory.CompletedAt,
                 Opponent = ToDtoSummary(opponent),
-                IsWinner = matchHistory.WinnerId == userId,
-                Result = matchHistory.WinnerId == null
-                    ? MatchStatus.Draw
-                    : (matchHistory.WinnerId == userId ? MatchStatus.Win : MatchStatus.Lost)
+                Player1Score = matchHistory.Player1Score,
+                Player2Score = matchHistory.Player2Score,
+                IsWinner = myScore > opponentScore,
+                Result = myScore > opponentScore
+                    ? MatchStatus.Win
+                    : myScore < opponentScore
+                        ? MatchStatus.Lost
+                        : MatchStatus.Draw
             };
         }
        

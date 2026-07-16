@@ -10,12 +10,15 @@ interface IGameContext {
   opponentDisconnected: boolean;
   isInitialSyncDone: boolean;
   lastGameType: GamesKindEnum | null;
+  pendingPlayAgainRequest: { requesterId: string; requesterUsername: string } | null;
+  requestedPlayAgain: boolean;
   findMatch(gameKind: GamesKindEnum): Promise<void>;
   startGame(friendId: TNullable<string>, gameKind: GamesKindEnum): Promise<void>;
   inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void>;
   inviteToRoom(friendId: string): Promise<void>;
   leaveGame(): Promise<void>;
-  playAgain(): Promise<void>;
+  requestPlayAgain(): Promise<void>;
+  respondPlayAgain(accept: boolean): Promise<void>;
   resetGame(): Promise<void>;
   sendAction(action: object): Promise<void>;
 }

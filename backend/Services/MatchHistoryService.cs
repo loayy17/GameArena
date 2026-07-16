@@ -37,9 +37,9 @@ namespace backend.Services
                 GameType = room.GameType,
                 Player1Id = p1,
                 Player2Id = p2,
-                WinnerId = room.WinnerPlayerId != null && Guid.TryParse(room.WinnerPlayerId, out var w) ? w : null,
-                CompletedAt = DateTime.UtcNow,
-                Status = room.WinnerPlayerId != null ? MatchStatus.Win : MatchStatus.Draw
+                Player1Score = room.Score?[0] ?? 0,
+                Player2Score = room.Score?[1] ?? 0,
+                CompletedAt = DateTime.UtcNow
             });
             await _context.SaveChangesAsync();
         }

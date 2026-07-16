@@ -9,7 +9,7 @@ import type { IGameState } from "@/app/providers/def/IGameState";
 import type { GameInfo } from "./gameConfig";
 import type { GameActiveProps } from "./def/GameActive";
 
-function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlayAgain, onLobby, onLeave }: GameActiveProps) {
+function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlayAgain, onLobby, onLeave, requestedPlayAgain, onRespondPlayAgain, pendingRequest }: GameActiveProps) {
   const { user } = useAuth();
   const isBotGame = state.isBotGame;
   const opponentName = isBotGame
@@ -83,9 +83,16 @@ function GameActive({ state, gameInfo, t, opponentDisconnected, children, onPlay
             endT={{
               playAgain: t.result.playAgain,
               lobby: t.result.backToLobby,
+              waiting: t.result.waiting,
+              accept: t.result.accept,
+              reject: t.result.reject,
+              playAgainRequest: t.result.playAgainRequest,
             }}
             onPlayAgain={onPlayAgain}
             onLobby={onLobby}
+            requestedPlayAgain={requestedPlayAgain}
+            onRespondPlayAgain={onRespondPlayAgain}
+            pendingRequest={pendingRequest}
           />
         </div>
 

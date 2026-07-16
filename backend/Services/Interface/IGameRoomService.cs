@@ -17,7 +17,8 @@ namespace backend.Services.Interface
         void StartGameLoop(string roomId);
         void StopGameLoop(string roomId);
         Task ProcessActionAsync(string roomId, string playerId, JsonElement action);
-        Task PlayAgainAsync(string roomId);
+        Task RequestPlayAgainAsync(string roomId, string playerId);
+        Task RespondPlayAgainAsync(string roomId, string playerId, bool accept);
         Task FinishAndCleanupAsync(BaseGameRoom room, string roomId, bool removeRoom = true);
     }
 }

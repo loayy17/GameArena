@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useConnections } from "@/app/providers/ConnectionProvider";
 import { gameService } from "@/services/def/GameService";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
@@ -18,12 +18,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [isInitialSyncDone, setIsInitialSyncDone] = useState(false);
   const [lastGameType, setLastGameType] = useState<GamesKindEnum | null>(null);
+  const [pendingPlayAgainRequest, setPendingPlayAgainRequest] = useState<{ requesterId: string; requesterUsername: string } | null>(null);
+  const [requestedPlayAgain, setRequestedPlayAgain] = useState(false);
   const router = useRouter();
+  const syncAttempted = useRef(false);
 
   const goToLobby = useCallback(() => {
     setState(null);
     setIsSearching(false);
     setOpponentDisconnected(false);
+    setPendingPlayAgainRequest(null);
+    setRequestedPlayAgain(false);
     router.push("/games");
   }, [router]);
 
@@ -31,6 +36,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(null);
     setIsSearching(false);
     setOpponentDisconnected(false);
+    setPendingPlayAgainRequest(null);
+    setRequestedPlayAgain(false);
   }, []);
 
   // ── SignalR subscriptions via service ───────────────────────────────
@@ -39,21 +46,51 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState(value);
       setIsSearching(false);
       setOpponentDisconnected(false);
+      setPendingPlayAgainRequest(null);
+      setRequestedPlayAgain(false);
     });
 
     const offDisconnect = gameService.onOpponentDisconnect(() => {
       setOpponentDisconnected(true);
     });
 
-    return () => { offState(); offDisconnect(); };
-  }, []);
+    const offPlayAgainReq = gameService.onPlayAgainRequest((data) => {
+      setPendingPlayAgainRequest(data);
+    });
+
+    const offPlayAgainRes = gameService.onPlayAgainResponse((data) => {
+      setRequestedPlayAgain(false);
+      if (!data.accepted) {
+        goToLobby();
+      }
+    });
+
+    return () => { offState(); offDisconnect(); offPlayAgainReq(); offPlayAgainRes(); };
+  }, [goToLobby]);
 
   // ── Initial state sync ──────────────────────────────────────────────
   useEffect(() => {
-    if (!isGameConnected) return;
-    gameService.requestCurrentState()
-      .then((value) => { if (value) setState(value); })
-      .finally(() => setIsInitialSyncDone(true));
+    if (!isGameConnected || syncAttempted.current) return;
+    syncAttempted.current = true;
+
+    let cancelled = false;
+    let retries = 0;
+    const maxRetries = 10;
+
+    const attempt = () => {
+      gameService.requestCurrentState()
+        .then((value) => { if (value && !cancelled) setState(value); })
+        .catch(() => {
+          if (!cancelled && retries < maxRetries) {
+            retries++;
+            setTimeout(attempt, 150 * retries);
+          }
+        })
+        .finally(() => { if (!cancelled) setIsInitialSyncDone(true); });
+    };
+
+    attempt();
+    return () => { cancelled = true; };
   }, [isGameConnected]);
 
   // ── Actions ─────────────────────────────────────────────────────────
@@ -95,9 +132,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     goToLobby();
   }, [goToLobby]);
 
-  const playAgain = useCallback(async () => {
-    await gameService.playAgain();
+  const requestPlayAgain = useCallback(async () => {
+    setRequestedPlayAgain(true);
+    await gameService.requestPlayAgain();
   }, []);
+
+  const respondPlayAgain = useCallback(async (accept: boolean) => {
+    setPendingPlayAgainRequest(null);
+    await gameService.respondPlayAgain(accept);
+    if (!accept) goToLobby();
+  }, [goToLobby]);
 
   const resetGame = useCallback(async () => {
     if (isSearching) await gameService.cancelSearch();
@@ -121,12 +165,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       opponentDisconnected,
       isInitialSyncDone,
       lastGameType,
+      pendingPlayAgainRequest,
+      requestedPlayAgain,
       findMatch,
       startGame,
       inviteFriend,
       inviteToRoom,
       leaveGame,
-      playAgain,
+      requestPlayAgain,
+      respondPlayAgain,
       resetGame,
       sendAction,
     }),
@@ -137,12 +184,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       opponentDisconnected,
       isInitialSyncDone,
       lastGameType,
+      pendingPlayAgainRequest,
+      requestedPlayAgain,
       findMatch,
       startGame,
       inviteFriend,
       inviteToRoom,
       leaveGame,
-      playAgain,
+      requestPlayAgain,
+      respondPlayAgain,
       resetGame,
       sendAction,
     ],

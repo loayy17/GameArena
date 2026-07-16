@@ -102,13 +102,22 @@ namespace backend.Hubs
             }
         }
 
-        public async Task PlayAgain()
+        public async Task RequestPlayAgain()
         {
             var playerId = GetPlayerId();
             if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
                 return;
 
-            await _roomService.PlayAgainAsync(roomId);
+            await _roomService.RequestPlayAgainAsync(roomId, playerId);
+        }
+
+        public async Task RespondPlayAgain(bool accept)
+        {
+            var playerId = GetPlayerId();
+            if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
+                return;
+
+            await _roomService.RespondPlayAgainAsync(roomId, playerId, accept);
         }
 
         public async Task SendAction(JsonElement action)

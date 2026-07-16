@@ -11,6 +11,9 @@ interface GameActiveProps {
   onPlayAgain: () => void;
   onLobby: () => void;
   onLeave: () => void;
+  requestedPlayAgain: boolean;
+  onRespondPlayAgain?: (accept: boolean) => void;
+  pendingRequest?: { requesterId: string; requesterUsername: string } | null;
 }
 
 export type { GameActiveProps };

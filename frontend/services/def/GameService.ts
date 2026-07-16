@@ -4,13 +4,30 @@ import type { IGameInvite } from "@/domain/meta/INotification";
 import type { IGameState } from "@/app/providers/def/IGameState";
 import type { IGameService } from "../meta/IGameService";
 import type { Handler } from "../lib/signalRUtils";
-import { requireConnection } from "../lib/signalRUtils";
 import { SubscriptionManager } from "../lib/SubscriptionManager";
 
 class GameService implements IGameService {
   private connection: HubConnection | null = null;
   private subs = new SubscriptionManager();
   private reconnectHandlers = new Set<() => void>();
+  private _connectionReady: Promise<void>;
+  private _resolveConnectionReady!: () => void;
+
+  constructor() {
+    this._connectionReady = new Promise((r) => { this._resolveConnectionReady = r; });
+  }
+
+  private async ensureConnection(): Promise<HubConnection> {
+    if (this.connection) return this.connection;
+    await Promise.race([
+      this._connectionReady,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error("Game connection not established")), 10000)
+      ),
+    ]);
+    if (!this.connection) throw new Error("Game connection not established");
+    return this.connection;
+  }
 
   handleReconnect(): void {
     this.requestCurrentState().catch(() => {});
@@ -27,6 +44,8 @@ class GameService implements IGameService {
       this.connection.off("gameState");
       this.connection.off("OpponentDisconnected");
       this.connection.off("game:invite");
+      this.connection.off("playAgainRequest");
+      this.connection.off("playAgainResponse");
     }
     this.connection = connection;
 
@@ -41,48 +60,73 @@ class GameService implements IGameService {
     this.connection.on("game:invite", (data: unknown) => {
       this.subs.dispatch("game:invite", data);
     });
+
+    this.connection.on("playAgainRequest", (data: unknown) => {
+      this.subs.dispatch("game:playAgainRequest", data);
+    });
+
+    this.connection.on("playAgainResponse", (data: unknown) => {
+      this.subs.dispatch("game:playAgainResponse", data);
+    });
+
+    this._resolveConnectionReady();
   }
 
   // ── Invoke methods ──────────────────────────────────────────────────────
 
   async requestCurrentState(): Promise<IGameState | null> {
-    return requireConnection(this.connection, "Game").invoke("GetCurrentState");
+    const conn = await this.ensureConnection();
+    return conn.invoke("GetCurrentState");
   }
 
   async findMatch(gameKind: GamesKindEnum): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("FindMatch", gameKind);
+    const conn = await this.ensureConnection();
+    await conn.invoke("FindMatch", gameKind);
   }
 
   async startGame(friendId: string | null, gameKind: GamesKindEnum): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("StartGame", friendId, gameKind);
+    const conn = await this.ensureConnection();
+    await conn.invoke("StartGame", friendId, gameKind);
   }
 
   async inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("InviteFriend", friendId, gameKind);
+    const conn = await this.ensureConnection();
+    await conn.invoke("InviteFriend", friendId, gameKind);
   }
 
   async inviteToRoom(friendId: string): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("InviteToRoom", friendId);
+    const conn = await this.ensureConnection();
+    await conn.invoke("InviteToRoom", friendId);
   }
 
   async leaveGame(): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("LeaveGame");
+    const conn = await this.ensureConnection();
+    await conn.invoke("LeaveGame");
   }
 
-  async playAgain(): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("PlayAgain");
+  async requestPlayAgain(): Promise<void> {
+    const conn = await this.ensureConnection();
+    await conn.invoke("RequestPlayAgain");
+  }
+
+  async respondPlayAgain(accept: boolean): Promise<void> {
+    const conn = await this.ensureConnection();
+    await conn.invoke("RespondPlayAgain", accept);
   }
 
   async cancelSearch(): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("CancelSearch");
+    const conn = await this.ensureConnection();
+    await conn.invoke("CancelSearch");
   }
 
   async sendAction(action: object): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("SendAction", action);
+    const conn = await this.ensureConnection();
+    await conn.invoke("SendAction", action);
   }
 
   async acceptInvite(roomId: string): Promise<void> {
-    await requireConnection(this.connection, "Game").invoke("AcceptInvite", roomId);
+    const conn = await this.ensureConnection();
+    await conn.invoke("AcceptInvite", roomId);
   }
 
   // ── Subscriptions ────────────────────────────────────────────────────────
@@ -97,6 +141,14 @@ class GameService implements IGameService {
 
   onGameInvite(handler: (invite: IGameInvite) => void): () => void {
     return this.subs.subscribe("game:invite", handler as Handler);
+  }
+
+  onPlayAgainRequest(handler: (data: { requesterId: string; requesterUsername: string }) => void): () => void {
+    return this.subs.subscribe("game:playAgainRequest", handler as Handler);
+  }
+
+  onPlayAgainResponse(handler: (data: { accepted: boolean }) => void): () => void {
+    return this.subs.subscribe("game:playAgainResponse", handler as Handler);
   }
 }
 

@@ -72,6 +72,10 @@ const en = {
     defeatDesc: "Good effort, but opponent claimed victory this time.",
     playAgain: "Play Again",
     backToLobby: "Back to Lobby",
+    waiting: "Waiting...",
+    accept: "Accept",
+    reject: "Reject",
+    playAgainRequest: "wants to play again!",
   },
 };
 

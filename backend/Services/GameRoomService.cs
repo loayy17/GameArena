@@ -16,6 +16,7 @@ namespace backend.Services
         private readonly ConcurrentDictionary<string, string> _playerToRoom = new();
         private readonly Lock _matchLock = new();
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _gameLoops = new();
+        private readonly ConcurrentDictionary<string, string?> _playAgainRequests = new();
         private readonly IHubContext<GameHub> _hubContext;
         private readonly IServiceScopeFactory _scopeFactory;
 
@@ -139,38 +140,82 @@ namespace backend.Services
                 await FinishAndCleanupAsync(room, roomId, false);
         }
 
-        public async Task PlayAgainAsync(string roomId)
+        public async Task RequestPlayAgainAsync(string roomId, string playerId)
         {
             if (!_rooms.TryGetValue(roomId, out var room) || room.WinnerPlayerId == null)
                 return;
 
-            room.ResetForNewRound();
+            // Check if the other player already requested -> auto-accept
+            var otherId = playerId == room.Player1Id ? room.Player2Id : room.Player1Id;
+            if (otherId == null) return;
 
-            if (room.NeedsGameLoop)
-                StartGameLoop(roomId);
+            if (_playAgainRequests.TryGetValue(roomId, out var requester)
+                && requester == otherId)
+            {
+                // Both want to play again -> accept immediately
+                _playAgainRequests.TryRemove(roomId, out _);
+                room.ResetForNewRound();
+                if (room.NeedsGameLoop)
+                    StartGameLoop(roomId);
+                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
+                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+                return;
+            }
 
-            await _hubContext.Clients.Group(roomId)
-                .SendAsync("gameState", room.GetStatePayload());
+            _playAgainRequests[roomId] = playerId;
+
+            var requesterUsername = playerId == room.Player1Id ? room.Player1Username : room.Player2Username;
+            await _hubContext.Clients.User(otherId).SendAsync("playAgainRequest", new
+            {
+                requesterId = playerId,
+                requesterUsername
+            });
+        }
+
+        public async Task RespondPlayAgainAsync(string roomId, string playerId, bool accept)
+        {
+            _playAgainRequests.TryRemove(roomId, out _);
+
+            if (!_rooms.TryGetValue(roomId, out var room)) return;
+
+            if (accept)
+            {
+                room.ResetForNewRound();
+                if (room.NeedsGameLoop)
+                    StartGameLoop(roomId);
+                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
+                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+            }
+            else
+            {
+                room.IsFinished = true;
+                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = false });
+                await FinishAndCleanupAsync(room, roomId, true);
+            }
         }
 
         public async Task FinishAndCleanupAsync(BaseGameRoom room, string roomId, bool removeRoom = true)
         {
             StopGameLoop(roomId);
-            if (!room.IsBotGame)
-            {
-                if (Guid.TryParse(room.Player1Id, out var _)
-                    && Guid.TryParse(room.Player2Id, out var _))
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
-                    await eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
+            _playAgainRequests.TryRemove(roomId, out _);
 
-                    var matchHistory = scope.ServiceProvider.GetRequiredService<IMatchHistoryService>();
-                    await matchHistory.SaveMatchHistoryAsync(room);
-                }
-            }
             if (removeRoom)
+            {
+                if (!room.IsBotGame)
+                {
+                    if (Guid.TryParse(room.Player1Id, out var _)
+                        && Guid.TryParse(room.Player2Id, out var _))
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
+                        await eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
+
+                        var matchHistory = scope.ServiceProvider.GetRequiredService<IMatchHistoryService>();
+                        await matchHistory.SaveMatchHistoryAsync(room);
+                    }
+                }
                 RemoveRoomAndPlayers(roomId);
+            }
         }
 
         public void StartGameLoop(string roomId)

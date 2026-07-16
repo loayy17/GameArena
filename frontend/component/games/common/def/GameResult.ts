@@ -12,6 +12,10 @@ interface GameResultTranslations {
 interface GameResultEndTranslations {
   playAgain: string;
   lobby: string;
+  waiting: string;
+  accept: string;
+  reject: string;
+  playAgainRequest: string;
 }
 
 interface GameResultProps {
@@ -23,6 +27,9 @@ interface GameResultProps {
   endT: GameResultEndTranslations;
   onPlayAgain: () => void;
   onLobby: () => void;
+  requestedPlayAgain: boolean;
+  onRespondPlayAgain?: (accept: boolean) => void;
+  pendingRequest?: { requesterId: string; requesterUsername: string } | null;
 }
 
 export type { GameResultProps, GameResultTranslations, GameResultEndTranslations };

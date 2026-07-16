@@ -72,6 +72,10 @@ const ar = {
     defeatDesc: "جهد جيد، لكن الخصم حقق النصر هذه المرة.",
     playAgain: "العب مرة أخرى",
     backToLobby: "العودة إلى اللوبي",
+    waiting: "انتظار...",
+    accept: "قبول",
+    reject: "رفض",
+    playAgainRequest: "يريد اللعب مرة أخرى!",
   },
 };
 

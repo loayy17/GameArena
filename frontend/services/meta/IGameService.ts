@@ -9,7 +9,8 @@ interface IGameService {
   inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void>;
   inviteToRoom(friendId: string): Promise<void>;
   leaveGame(): Promise<void>;
-  playAgain(): Promise<void>;
+  requestPlayAgain(): Promise<void>;
+  respondPlayAgain(accept: boolean): Promise<void>;
   cancelSearch(): Promise<void>;
   sendAction(action: object): Promise<void>;
   acceptInvite(roomId: string): Promise<void>;
@@ -17,6 +18,8 @@ interface IGameService {
   onGameState(handler: (state: IGameState) => void): () => void;
   onOpponentDisconnect(handler: () => void): () => void;
   onGameInvite(handler: (invite: IGameInvite) => void): () => void;
+  onPlayAgainRequest(handler: (data: { requesterId: string; requesterUsername: string }) => void): () => void;
+  onPlayAgainResponse(handler: (data: { accepted: boolean }) => void): () => void;
 }
 
 export type { IGameService };
