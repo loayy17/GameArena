@@ -9,7 +9,6 @@ function GTile({ user, size = "md" }: GTileProps) {
       userName={user.userName}
       size={size}
       shape="circle"
-      gradient="brand"
     />
   );
 }

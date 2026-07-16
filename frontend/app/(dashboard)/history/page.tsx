@@ -34,17 +34,19 @@ export default function MatchHistoryPage() {
   );
 
   return (
-    <GPage width="md">
-      <GPageHeader
-        badge={
-          <GBadge>
-            <GIcon icon={History} size="xs" color="primary" />
-            {t.badge}
-          </GBadge>
-        }
-        title={t.title}
-        subtitle={t.subtitle}
-      />
+    <GPage width="lg">
+      <GCard padding="md">
+        <GPageHeader
+          badge={
+            <GBadge>
+              <GIcon icon={History} size="xs" color="primary" />
+              {t.badge}
+            </GBadge>
+          }
+          title={t.title}
+          subtitle={t.subtitle}
+        />
+      </GCard>
 
       <GCard padding="sm">
         <GTabs tabs={tabs} value={filter} onChange={setFilter} variant="pills" fullWidth className="mb-4" />

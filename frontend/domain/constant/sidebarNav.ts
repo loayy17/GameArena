@@ -3,7 +3,6 @@ import {
   Home,
   MessageSquare,
   Settings,
-  UserCircle,
   Users,
   History,
 } from "lucide-react";
@@ -19,7 +18,6 @@ const sidebarNav = [
   },
   { id: "games", labelKey: "games", icon: Gamepad2 },
   { id: "history", labelKey: "history", icon: History },
-  { id: "profile", labelKey: "profile", icon: UserCircle },
   { id: "settings", labelKey: "settings", icon: Settings },
 ];
 

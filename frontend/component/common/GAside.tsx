@@ -22,7 +22,7 @@ interface GAsideProps {
 
   /** Shown as the collapsed header button (desktop) and as the
    *  default FAB icon (compact). Embed a notification dot inside
-   *  it yourself if you need one — see SocialPanel for an example. */
+   *  it yourself if you need one. */
   collapsedIcon: ReactNode;
   expandedBrand: ReactNode;
 

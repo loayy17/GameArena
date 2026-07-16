@@ -9,7 +9,10 @@ import { useTranslation } from "@/hooks/useSetting";
 import { ar } from "./i18n/ar.i18n";
 import { en, type TGamesTranslation } from "./i18n/en.i18n";
 
-import { GIconTile } from "@/component/common/GIconTile";
+import { GPage } from "@/component/common/GPage";
+import { GPageHeader } from "@/component/common/GPageHeader";
+import { GCard } from "@/component/common/GCard";
+import { GBadge } from "@/component/common/GBadge";
 import { GameCard } from "@/component/games/common/GameCard";
 import { GButton } from "@/component/common/GButton";
 import { GModal } from "@/component/common/GModal";
@@ -41,30 +44,35 @@ function GamesPage() {
   const handleCancelLeave = () => setPendingPath(null);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <header className="mb-8">
-        <div className="mb-6 flex justify-center">
-          <GIconTile gradient="bg-primary-muted" size="lg" icon={Gamepad2} className="text-text" />
+    <GPage width="lg">
+      <GCard padding="md">
+        <GPageHeader
+          badge={
+            <GBadge>
+              <GIcon icon={Gamepad2} size="xs" color="primary" />
+              {t.badge}
+            </GBadge>
+          }
+          title={t.title}
+          subtitle={t.subtitle}
+        />
+      </GCard>
+
+      <GCard padding="sm" className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {GamesList.map((game) => (
+            <GameCard
+              key={game.type}
+              name={t[game.name]}
+              desc={t[game.description]}
+              onClick={() => handleGameSelect(game.path)}
+              gradient={game.gradient}
+              animation={game.animation}
+              playLabel={t.play}
+            />
+          ))}
         </div>
-
-        <h1 className="mb-2 text-4xl font-black tracking-tight text-text">{t.title}</h1>
-
-        <p className="text-sm text-text-secondary">{t.subtitle}</p>
-      </header>
-
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {GamesList.map((game) => (
-          <GameCard
-            key={game.type}
-            name={t[game.name]}
-            desc={t[game.description]}
-            onClick={() => handleGameSelect(game.path)}
-            gradient={game.gradient}
-            animation={game.animation}
-            playLabel={t.play}
-          />
-        ))}
-      </div>
+      </GCard>
 
       <GModal open={pendingPath !== null} onClose={handleCancelLeave} role="alertdialog" ariaLabel="Leave game confirmation">
         <div className="text-center">
@@ -81,7 +89,7 @@ function GamesPage() {
           </div>
         </div>
       </GModal>
-    </div>
+    </GPage>
   );
 }
 export default GamesPage;

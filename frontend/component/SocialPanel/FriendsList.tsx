@@ -54,7 +54,6 @@ export function FriendsList({ friends, messageLabel, query, activeLabel, actions
               firstName={friend.firstName}
               lastName={friend.lastName}
               userName={friend.userName}
-              gradient="bg-primary"
               size="sm"
               shape="circle"
             />

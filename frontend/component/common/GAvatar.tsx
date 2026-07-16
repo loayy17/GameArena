@@ -2,6 +2,7 @@
 "use client";
 
 import clsx from "clsx";
+import { getNearPrimaryColor } from "@/lib/getNearPrimaryColor";
 import type { GAvatarProps } from "./def/GAvatar";
 
 const avatarSize: Record<string, string> = {
@@ -15,6 +16,8 @@ const avatarSize: Record<string, string> = {
 function GAvatar({ firstName, lastName, userName, src, size = "sm", shape = "rounded", gradient, className }: GAvatarProps) {
   const initials = ((firstName?.charAt(0) ?? "") + (lastName?.charAt(0) ?? "")).toUpperCase() || userName?.charAt(0).toUpperCase() || "?";
   const shapeClass = shape === "circle" ? "rounded-full" : "rounded-[var(--radius-md)]";
+  const seed = `${firstName ?? ""}${lastName ?? ""}${userName ?? ""}` || initials;
+  const autoColor = !gradient ? getNearPrimaryColor(seed) : undefined;
 
   if (src) {
     return (
@@ -25,7 +28,10 @@ function GAvatar({ firstName, lastName, userName, src, size = "sm", shape = "rou
   }
 
   return (
-    <div className={clsx("flex shrink-0 items-center justify-center font-bold text-text", avatarSize[size], shapeClass, gradient, className)}>
+    <div
+      className={clsx("flex shrink-0 items-center justify-center font-bold text-white", avatarSize[size], shapeClass, gradient, className)}
+      style={autoColor ? { backgroundColor: autoColor } : undefined}
+    >
       {initials}
     </div>
   );

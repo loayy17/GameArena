@@ -4,7 +4,6 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Sidebar } from "@/component/SideBar";
-import { SocialPanel } from "@/component/SocialPanel/SocialPanel";
 import { ConnectionProvider } from "@/app/providers/ConnectionProvider";
 import { GameProvider } from "@/app/providers/GameProvider";
 import { DashboardNotificationsProvider } from "@/app/providers/DashboardNotificationsProvider";
@@ -46,7 +45,6 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="flex h-screen w-screen bg-bg text-text overflow-hidden font-sans antialiased">
             <Sidebar />
             <main className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide relative">{children}</main>
-            <SocialPanel />
           </div>
           <ActiveGameBanner />
         </DashboardNotificationsProvider>

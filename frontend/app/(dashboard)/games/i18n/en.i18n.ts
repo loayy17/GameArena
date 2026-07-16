@@ -1,6 +1,7 @@
 const en = {
   title: "Games",
-  subtitle: "Choose your game",
+  subtitle: "Pick a game and jump into a match with friends or online players.",
+  badge: "Arena",
   play: "Play",
   ticTacToe: "Tic Tac Toe",
   ticTacToeDesc: "3×3 tactical duel",
