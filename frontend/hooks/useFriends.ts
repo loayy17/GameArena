@@ -27,7 +27,9 @@ function useFriendList() {
     });
 
     if (isSocialConnected) {
-      friendService.invokeSocialData().catch(() => {});
+      friendService.invokeSocialData().catch(() => {}).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
 
     return () => { off1(); off2(); };
@@ -35,7 +37,7 @@ function useFriendList() {
 
   const reload = useCallback(() => {
     setLoading(true);
-    friendService.invokeFriends().catch(() => {});
+    friendService.invokeFriends().catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const onlineCount = useMemo(
@@ -62,7 +64,9 @@ function useFriendRequests() {
     });
 
     if (isSocialConnected) {
-      friendService.invokeFriendRequests().catch(() => {});
+      friendService.invokeFriendRequests().catch(() => {}).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
 
     return () => { off1(); };
@@ -70,7 +74,7 @@ function useFriendRequests() {
 
   const reload = useCallback(() => {
     setLoading(true);
-    friendService.invokeFriendRequests().catch(() => {});
+    friendService.invokeFriendRequests().catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const accept = useCallback(async (senderId: string) => {
@@ -117,7 +121,9 @@ function useBlockedUsers() {
     });
 
     if (isSocialConnected) {
-      friendService.invokeBlocked().catch(() => {});
+      friendService.invokeBlocked().catch(() => {}).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
 
     return () => { off1(); };
@@ -125,7 +131,7 @@ function useBlockedUsers() {
 
   const reload = useCallback(() => {
     setLoading(true);
-    friendService.invokeBlocked().catch(() => {});
+    friendService.invokeBlocked().catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return { blockedUsers, loading, reload };

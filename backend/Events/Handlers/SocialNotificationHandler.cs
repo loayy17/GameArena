@@ -30,6 +30,14 @@ public class SocialNotificationHandler(
                 senderName = eventHappen.SenderName
             });
 
+        await _notificationService.CreateNotificationAsync(
+            eventHappen.ReceiverId,
+            "FriendRequest",
+            "Friend Request",
+            $"{eventHappen.SenderName} sent you a friend request",
+            eventHappen.SenderId.ToString()
+        );
+
         await NotifyRequestChangeAsync(eventHappen.SenderId, eventHappen.ReceiverId);
     }
 
@@ -41,6 +49,14 @@ public class SocialNotificationHandler(
                 friendId = eventHappen.AccepterId,
                 friendName = eventHappen.AccepterName
             });
+
+        await _notificationService.CreateNotificationAsync(
+            eventHappen.SenderId,
+            "FriendRequestAccepted",
+            "Friend Request Accepted",
+            $"{eventHappen.AccepterName} accepted your friend request",
+            eventHappen.AccepterId.ToString()
+        );
 
         await Task.WhenAll(
             _notificationService.SendCountersAsync(eventHappen.SenderId),
@@ -89,6 +105,18 @@ public class SocialNotificationHandler(
                 content = eventHappen.Content,
                 sentAt = eventHappen.SentAt
             });
+
+        var preview = eventHappen.Content.Length > 50
+            ? eventHappen.Content[..50] + "..."
+            : eventHappen.Content;
+
+        await _notificationService.CreateNotificationAsync(
+            eventHappen.ReceiverId,
+            "NewMessage",
+            "New Message",
+            preview,
+            eventHappen.SenderId.ToString()
+        );
 
         await _notificationService.SendCountersAsync(eventHappen.ReceiverId);
     }
@@ -144,10 +172,8 @@ public class SocialNotificationHandler(
     private async Task SetPresenceAndBroadcastAsync(string userId, UserStatus status, string eventName)
     {
         if (string.IsNullOrEmpty(userId) || userId == "__BOT__") return;
-        if (status == UserStatus.InGame)
-            _presence.SetInGame(userId);
-        else
-            _presence.SetOnline(userId);
+
+       if (!_presence.SetActivity(userId, status)) return;
 
         if (!Guid.TryParse(userId, out var userGuid)) return;
         var friendIds = await _socialReadService.GetFriendIdsAsync(userGuid);

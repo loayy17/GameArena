@@ -127,26 +127,30 @@ class GameService implements IGameService {
     await this.invoke("CreateLobby", gameKind);
   }
 
+  private on<T>(key: string, handler: (data: T) => void): () => void {
+    return this.subs.subscribe(key, handler as Handler);
+  }
+
   // ── Subscriptions ────────────────────────────────────────────────────────
 
   onGameState(handler: (state: IGameState) => void): () => void {
-    return this.subs.subscribe("game:state", handler as Handler);
+    return this.on("game:state", handler);
   }
 
   onOpponentDisconnect(handler: () => void): () => void {
-    return this.subs.subscribe("game:disconnect", handler as Handler);
+    return this.on<void>("game:disconnect", handler);
   }
 
   onGameInvite(handler: (invite: IGameInvite) => void): () => void {
-    return this.subs.subscribe("game:invite", handler as Handler);
+    return this.on("game:invite", handler);
   }
 
   onPlayAgainRequest(handler: (data: { requesterId: string; requesterUsername: string }) => void): () => void {
-    return this.subs.subscribe("game:playAgainRequest", handler as Handler);
+    return this.on("game:playAgainRequest", handler);
   }
 
   onPlayAgainResponse(handler: (data: { accepted: boolean }) => void): () => void {
-    return this.subs.subscribe("game:playAgainResponse", handler as Handler);
+    return this.on("game:playAgainResponse", handler);
   }
 }
 

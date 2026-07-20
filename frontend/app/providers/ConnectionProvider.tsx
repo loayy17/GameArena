@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import type { HubConnection } from "@microsoft/signalr";
 import type { IConnectionContext } from "@/domain/meta/IConnectionContext";
@@ -94,6 +94,19 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
     };
   }, []);
 
+  // Gracefully stop all hubs (e.g. on logout) so the server's
+  // OnDisconnectedAsync fires and broadcasts presence going offline.
+  const stopConnections = useCallback(async () => {
+    const conns = [chatRef.current, gameRef.current, socialRef.current];
+    chatRef.current = null;
+    gameRef.current = null;
+    socialRef.current = null;
+    await Promise.all(conns.map((c) => c?.stop().catch(() => {})));
+    setChatConnection(null);
+    setGameConnection(null);
+    setSocialConnection(null);
+  }, []);
+
   // ── Initialize services with connections ─────────────────────────────
   useEffect(() => {
     if (socialConnection) friendService.setConnection(socialConnection);
@@ -120,8 +133,9 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       isGameConnected: gameConnection !== null,
       isSocialConnected: socialConnection !== null,
       socialReconnectKey,
+      stopConnections,
     }),
-    [chatConnection, gameConnection, socialConnection, socialReconnectKey],
+    [chatConnection, gameConnection, socialConnection, socialReconnectKey, stopConnections],
   );
 
   return (

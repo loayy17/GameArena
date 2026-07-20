@@ -10,9 +10,8 @@ import { en, type TFriendsTranslation } from "./i18n/en.i18n";
 
 import { GTabs } from "@/component/common/GTabs";
 import { GCard } from "@/component/common/GCard";
-import { GSkeleton } from "@/component/common/GSkeleton";
 import { GPage } from "@/component/common/GPage";
-import { GPageHeader } from "@/component/common/GPageHeader";
+import { PageHeader } from "@/component/common/PageHeader";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 
@@ -35,12 +34,12 @@ function FriendsSkeleton() {
     <>
       {Array.from({ length: 6 }).map((_, i) => (
         <GCard key={i} padding="md" className="flex items-center mb-3">
-          <GSkeleton variant="rect" className="w-16 h-16 mr-2" />
+          <div className="animate-pulse bg-surface rounded-[var(--radius-md)] w-16 h-16 me-2" />
           <div className="flex-1">
-            <GSkeleton variant="text" className="w-24 h-4 mb-1" />
-            <GSkeleton variant="text" className="w-24 h-4 mb-1" />
+            <div className="animate-pulse bg-surface h-4 rounded-sm w-24 mb-1" />
+            <div className="animate-pulse bg-surface h-4 rounded-sm w-24 mb-1" />
           </div>
-          <GSkeleton variant="text" className="w-16 h-8 ml-auto" />
+          <div className="animate-pulse bg-surface h-8 rounded-sm w-16 ms-auto" />
         </GCard>
       ))}
     </>
@@ -141,18 +140,17 @@ function FriendsPage() {
 
   return (
     <GPage width="lg">
-      <GCard padding="md">
-        <GPageHeader
-          badge={
-            <GBadge>
-              <GIcon icon={Gamepad2} size="xs" color="primary" />
-              {t.community}
-            </GBadge>
-          }
-          title={t.friends}
-          subtitle={t.subtitle}
-        />
-      </GCard>
+      <PageHeader
+        icon={Users}
+        title={t.friends}
+        subtitle={t.subtitle}
+        badge={
+          <GBadge>
+            <GIcon icon={Gamepad2} size="xs" color="primary" />
+            {t.community}
+          </GBadge>
+        }
+      />
 
       <GCard padding="sm" className="space-y-4">
         <div className="lg:hidden">

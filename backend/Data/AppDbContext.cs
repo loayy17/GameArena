@@ -13,6 +13,7 @@ namespace backend.Data
         public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<MatchHistory> MatchHistories { get; set; }
         public DbSet<Block> Blocks { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // tokens
@@ -108,6 +109,19 @@ namespace backend.Data
                 .WithMany(u => u.MatchesAsPlayer2)
                 .HasForeignKey(m => m.Player2Id)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // notifications
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.IsRead });
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => n.CreatedAt);
         }
     }
 }

@@ -9,23 +9,23 @@ import { useTranslation } from "@/hooks/useSetting";
 import { ar } from "./i18n/ar.i18n";
 import { en, type TGamesTranslation } from "./i18n/en.i18n";
 
-import { GIconTile } from "@/component/common/GIconTile";
 import { GameCard } from "@/component/games/common/GameCard";
 import { GButton } from "@/component/common/GButton";
 import { GModal } from "@/component/common/GModal";
-import { GamesList } from "@/domain/constant/games";
+import { GamesList, GamesMap } from "@/domain/constant/games";
 import { useGame } from "@/app/providers/GameProvider";
+import { GBadge } from "@/component/common/GBadge";
+import { PageHeader } from "@/component/common/PageHeader";
+import { GPage } from "@/component/common/GPage";
 
 function GamesPage() {
   const router = useRouter();
-  const t = useTranslation({ en, ar }) as TGamesTranslation;
+  const t = useTranslation({ en, ar }) as TGamesTranslation & Record<string, string>;
   const { state, leaveGame } = useGame();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
 
-  const isInGame = state !== null;
-
   const handleGameSelect = (path: string) => {
-    if (isInGame) {
+    if (state) {
       setPendingPath(path);
       return;
     }
@@ -38,50 +38,57 @@ function GamesPage() {
     setPendingPath(null);
   };
 
-  const handleCancelLeave = () => setPendingPath(null);
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <header className="mb-8">
-        <div className="mb-6 flex justify-center">
-          <GIconTile gradient="bg-primary-muted" size="lg" icon={Gamepad2} className="text-text" />
-        </div>
-
-        <h1 className="mb-2 text-4xl font-black tracking-tight text-text">{t.title}</h1>
-
-        <p className="text-sm text-text-secondary">{t.subtitle}</p>
-      </header>
-
+    <GPage width="lg">
+      <PageHeader
+        icon={Gamepad2}
+        title={t.games}
+        subtitle={t.chooseGame}
+        badge={
+          <GBadge>
+            <GIcon icon={Gamepad2} size="xs" color="primary" />
+            {t.play}
+          </GBadge>
+        }
+      />
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {GamesList.map((game) => (
-          <GameCard
-            key={game.type}
-            name={t[game.name]}
-            desc={t[game.description]}
-            onClick={() => handleGameSelect(game.path)}
-            gradient={game.gradient}
-            animation={game.animation}
-            playLabel={t.play}
-          />
-        ))}
+        {GamesList.map((game) => {
+          const gameConfig = GamesMap[game.id];
+          return (
+            <GameCard
+              key={game.id}
+              name={t[gameConfig.name]}
+              desc={t[gameConfig.description]}
+              onClick={() => handleGameSelect(gameConfig.path)}
+              gradientClass={gameConfig.gradientClass}
+              animation={gameConfig.animation}
+              playLabel={t.play}
+              page
+            />
+          );
+        })}
       </div>
-
-      <GModal open={pendingPath !== null} onClose={handleCancelLeave} role="alertdialog" ariaLabel="Leave game confirmation">
+      <GModal
+        open={Boolean(state) && pendingPath !== null}
+        onClose={() => setPendingPath(null)}
+        role="alertdialog"
+        ariaLabel="Leave game confirmation">
         <div className="text-center">
           <GIcon icon={ArrowRightFromLine} size="3xl" color="warning" className="mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-text mb-2">Leave current game?</h2>
-          <p className="text-sm text-text-secondary mb-6">You have an active game. Leave it to start a new one?</p>
+          <h2 className="text-xl font-bold text-text mb-2">{t.leaveTitle}</h2>
+          <p className="text-sm text-text-secondary mb-6">{t.leaveDesc}</p>
           <div className="flex gap-3">
-            <GButton onClick={handleCancelLeave} variant="secondary" fullWidth>
-              Cancel
+            <GButton onClick={() => setPendingPath(null)} variant="secondary" fullWidth>
+              {t.cancel}
             </GButton>
             <GButton onClick={handleConfirmLeave} variant="danger" fullWidth>
-              Leave & Start New
+              {t.leaveConfirm}
             </GButton>
           </div>
         </div>
       </GModal>
-    </div>
+    </GPage>
   );
 }
+
 export default GamesPage;

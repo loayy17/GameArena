@@ -5,7 +5,6 @@ import { Loader2, ShieldBan } from "lucide-react";
 import { FriendsList } from "../SocialPanel/FriendsList";
 import { GEmpty } from "../common/GEmpty";
 import { GIcon } from "../common/GIcon";
-import { GIconTile } from "../common/GIconTile";
 import type { BlockedUsersTabProps } from "./def/FriendsTab";
 import type { TNullable } from "@/domain/type/TCommon";
 
@@ -27,11 +26,7 @@ function BlockedUsersTab({ blockedUsers, onUnblock, t }: BlockedUsersTabProps) {
         const isBusy = actionId === friend.id;
         return (
           <div className="flex gap-1">
-            <GIconTile
-              icon={isBusy ? Loader2 : ShieldBan}
-              size="sm"
-              gradient="text-success"
-              className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
+            <GIcon icon={isBusy ? Loader2 : ShieldBan} size="sm" tile tileSize="sm" tileGradient="bg-success/10" tileColor="success" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
               onClick={async () => {
                 setActionId(friend.id);
                 try { await onUnblock(friend.id); } finally { setActionId(null); }

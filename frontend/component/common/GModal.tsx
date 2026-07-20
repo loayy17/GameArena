@@ -35,6 +35,11 @@ function GModal({
     [closeOnEscape, onClose],
   );
 
+  const handleBackdropClick = useCallback(() => {
+    if (!closeOnBackdrop) return;
+    onClose();
+  }, [closeOnBackdrop, onClose]);
+
   useEffect(() => {
     if (!open) return;
     document.addEventListener("keydown", handleKeyDown);
@@ -48,10 +53,10 @@ function GModal({
       className={clsx("fixed inset-0 z-50 flex items-center justify-center", className)}
       role={role}
       aria-modal="true"
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? "modal"}
       aria-describedby={ariaDescription ? "modal-description" : undefined}
       {...props}>
-      <GBackdrop onClick={closeOnBackdrop ? onClose : () => {}} />
+      <GBackdrop onClick={handleBackdropClick} />
       <GCard
         padding={cardPadding}
         className={clsx("relative z-50 mx-auto w-full", sizeStyles[size])}

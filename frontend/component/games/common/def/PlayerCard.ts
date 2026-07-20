@@ -9,13 +9,8 @@ interface PlayerCardProps {
   playerUsername?: string;
   symbol?: string;
   isBot?: boolean;
-  isYou?: boolean;
-  myName: string;
   fallbackName: string;
   isTurn: boolean;
-  youSuffix?: string;
-  aiBotLabel?: string;
-  turnLabel?: string;
   symbolColors?: PlayerColors;
 }
 

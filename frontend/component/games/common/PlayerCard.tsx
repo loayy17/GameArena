@@ -2,23 +2,28 @@
 
 import { Bot, User } from "lucide-react";
 import clsx from "clsx";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { GIcon } from "@/component/common/GIcon";
 import type { PlayerCardProps } from "./def/PlayerCard";
 
 function PlayerCard({
-  playerId: _playerId,
+  playerId,
   playerUsername,
   symbol,
   isBot,
-  isYou,
-  myName,
   fallbackName,
   isTurn,
-  youSuffix = "(You)",
-  aiBotLabel = "AI Bot",
-  turnLabel = "Turn",
   symbolColors,
 }: PlayerCardProps) {
+  const { user } = useAuth();
+  const t = useGameTranslation();
+  const isYou = playerId === user?.id;
+  const myName = user?.userName ?? t.game.you;
+  const youSuffix = t.game.youSuffix;
+  const aiBotLabel = t.game.aiBot;
+  const turnLabel = t.game.turn;
+
   const name = isYou
     ? `${myName} ${youSuffix}`
     : isBot
@@ -36,7 +41,7 @@ function PlayerCard({
         )}
       >
         {isBot ? (
-          <GIcon icon={Bot} size="xl" color="inherit" className={symbol === "X" ? "text-neon-blue" : "text-neon-magenta"} />
+          <GIcon icon={Bot} size="xl" color="inherit" className={symbol === "X" ? "text-neon-cyan" : "text-neon-magenta"} />
         ) : (
           <GIcon icon={User} size="xl" color="secondary" />
         )}

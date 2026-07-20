@@ -1,5 +1,6 @@
 using System.Text.Json;
 using backend.Enums;
+using backend.Utils;
 
 namespace backend.Domain
 {
@@ -22,6 +23,16 @@ namespace backend.Domain
         public bool IsBotGame { get; set; } = false;
         public string? CurrentTurnPlayerId { get; set; }
         public int[] Score { get; set; } = [0, 0];
+
+        public static BaseGameRoom Create(GamesKind gameType)
+        {
+            return gameType switch
+            {
+                GamesKind.TicTacToe => new TicTacToeRoom(),
+                GamesKind.PingPong => new PingPongRoom(),
+                _ => throw new AppException(ErrorCode.InvalidGameType)
+            };
+        }
 
         public abstract object GetStatePayload();
 

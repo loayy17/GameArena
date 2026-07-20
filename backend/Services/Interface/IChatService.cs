@@ -8,5 +8,6 @@ namespace backend.Services.Interface
         Task<MessageResponse> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message);
         Task<MessageResponse> CreateGlobalMessageAsync(Guid senderId, string message);
         Task<int> GetUnreadMessagesCountAsync(Guid userId);
+        Task<List<PerFriendUnreadCountResponse>> GetUnreadCountsPerFriendAsync(Guid userId);
     }
 }

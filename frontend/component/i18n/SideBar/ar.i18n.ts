@@ -4,7 +4,7 @@ const ar = {
   messages: "الرسائل",
   games: "الألعاب",
   history: "سجل المباريات",
-  profile: "الملف الشخصي",
+  notifications: "الإشعارات",
   settings: "الإعدادات",
   logout: "تسجيل الخروج",
   user: "مستخدم",

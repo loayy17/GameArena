@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "./providers/AuthProvider";
 import { getSettingFromCookie } from "@/lib/getLocaleFromCookie";
 
+const themeLocaleScript = `(function(){try{var c=document.cookie.split('; ');var m={};for(var i=0;i<c.length;i++){var p=c[i].split('=');m[p[0]]=p[1];}var loc=m.locale==='ar'?'ar':'en';var th=m.theme==='light'?'light':'dark';var d=document.documentElement;d.lang=loc;d.dir=loc==='ar'?'rtl':'ltr';d.dataset.theme=th;}catch(e){}})();`;
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,6 +34,9 @@ export default async function RootLayout({
       data-theme={theme}
       className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeLocaleScript }} />
+      </head>
       <body className="min-h-full">
         <AuthProvider>{children}</AuthProvider>
       </body>

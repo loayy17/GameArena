@@ -70,5 +70,18 @@ namespace backend.Services
         {
             return await _context.Messages.CountAsync(m => m.ReceiverId == userId && m.IsRead == false);
         }
+
+        public async Task<List<PerFriendUnreadCountResponse>> GetUnreadCountsPerFriendAsync(Guid userId)
+        {
+            return await _context.Messages
+                .Where(m => m.ReceiverId == userId && !m.IsRead)
+                .GroupBy(m => m.SenderId)
+                .Select(g => new PerFriendUnreadCountResponse
+                {
+                    FriendId = g.Key,
+                    UnreadCount = g.Count()
+                })
+                .ToListAsync();
+        }
     }
 }

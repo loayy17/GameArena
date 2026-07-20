@@ -33,13 +33,10 @@ function updateThemeDOM(theme: TTheme) {
   document.documentElement.dataset.theme = theme;
 }
 
-(() => {
-  if (typeof window === "undefined") return;
+if (typeof window !== "undefined") {
   currentLocale = (localStorage.getItem("locale") as TLocale) ?? "ar";
   currentTheme = (localStorage.getItem("theme") as TTheme) ?? "dark";
-  updateLocaleDOM(currentLocale);
-  updateThemeDOM(currentTheme);
-})();
+}
 
 function getLocale(): TLocale {
   return currentLocale;

@@ -1,6 +1,6 @@
 import type { IMessage } from "@/domain/meta/IMessage";
 import { chatApi } from "../proxy/chat.api";
-import type { IChatRepository } from "../meta/IChatRepository";
+import type { IChatRepository, IPerFriendUnreadCount } from "../meta/IChatRepository";
 import type { TPromise } from "@/domain/type/TCommon";
 
 class ChatRepository implements IChatRepository {
@@ -9,6 +9,10 @@ class ChatRepository implements IChatRepository {
 
   getMessagesByFriendId(id: string): TPromise<IMessage[]> {
     return this.api.getMessages({ friendId: id });
+  }
+
+  getPerFriendUnreadCounts(): TPromise<IPerFriendUnreadCount[]> {
+    return this.api.perFriendUnreadCounts();
   }
 
   static getInstance() {

@@ -35,8 +35,8 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     }
   }, [initialFriendId]);
 
-  const [messages, setMessages] = useState<IMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [localMessages, setLocalMessages] = useState<IMessage[]>([]);
 
   const { data: apiMessages, loading: loadingMessages, error } = useFetch(() => {
     if (!selectedFriendId) return Promise.resolve([] as IMessage[]);
@@ -45,19 +45,14 @@ export function useMessages(initialFriendId?: TNullable<string>) {
       .then((res) => (res.data ?? []).map(normalizeHistoryMessage));
   }, [selectedFriendId]);
 
-  useEffect(() => {
-    if (error) return;
-    if (loadingMessages) return;
-    if (!apiMessages) return;
-    setMessages(apiMessages);
-  }, [apiMessages, error, loadingMessages]);
+  const baseMessages = useMemo(() => apiMessages ?? [], [apiMessages]);
+  const messages = useMemo(() => [...baseMessages, ...localMessages], [baseMessages, localMessages]);
 
   const selectedFriend = useMemo<TNullable<IUserSummary>>(() => {
     if (!selectedFriendId) return null;
     return friends.find((f) => f.id === selectedFriendId) ?? null;
   }, [friends, selectedFriendId]);
 
-  // ── Subscribe to incoming messages via service ──────────────────────
   useEffect(() => {
     const off = chatService.onPrivateMessage((incoming) => {
       if (!selectedFriendId) return;
@@ -68,7 +63,7 @@ export function useMessages(initialFriendId?: TNullable<string>) {
 
       if (!isCurrentConversation) return;
 
-      setMessages((prev) =>
+      setLocalMessages((prev) =>
         prev.some((m) => areSameMessage(m, incoming))
           ? prev
           : [...prev, incoming],
@@ -76,10 +71,12 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     });
 
     return off;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFriendId]);
 
   const selectFriend = useCallback((friendId: TNullable<string>) => {
     setSelectedFriendId(friendId);
+    setLocalMessages([]);
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -94,13 +91,13 @@ export function useMessages(initialFriendId?: TNullable<string>) {
       isRead: false,
     };
 
-    setMessages((prev) => [...prev, outgoing]);
+    setLocalMessages((prev) => [...prev, outgoing]);
     setDraft("");
 
     try {
       await chatService.sendMessage(selectedFriendId, content);
     } catch {
-      setMessages((prev) => prev.filter((m) => m !== outgoing));
+      setLocalMessages((prev) => prev.filter((m) => m !== outgoing));
     }
   }, [draft, selectedFriendId, user]);
 

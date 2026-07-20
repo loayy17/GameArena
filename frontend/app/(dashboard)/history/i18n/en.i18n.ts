@@ -22,6 +22,12 @@ const en = {
     loss: "Loss",
     draw: "Draw",
   },
+  columns: {
+    game: "Game",
+    opponent: "Opponent",
+    result: "Result",
+    date: "Date",
+  },
   games: {
     [GamesKindEnum.Snake]: "Snake",
     [GamesKindEnum.TicTacToe]: "Tic Tac Toe",

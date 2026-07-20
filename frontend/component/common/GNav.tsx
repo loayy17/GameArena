@@ -2,7 +2,27 @@
 
 import clsx from "clsx";
 import { forwardRef } from "react";
-import type { GNavIndicator, GNavItemProps, GNavProps } from "./def/GNav";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+
+type GNavIndicator = "start" | "end" | "top" | "bottom" | "none";
+
+interface GNavItem {
+  id: string;
+  label?: ReactNode;
+  icon?: ReactNode;
+  badge?: ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
+interface GNavProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> {
+  items: GNavItem[];
+  orientation?: "vertical" | "horizontal";
+  indicator?: GNavIndicator;
+  collapsed?: boolean;
+  className?: string;
+}
 
 const navBase = {
   item: "relative flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium min-w-0",
@@ -35,44 +55,52 @@ function getIndicatorClass(active: boolean, indicator: GNavIndicator) {
   return active ? navIndicator[indicator].active : navIndicator[indicator].idle;
 }
 
-const GNavItem = forwardRef<HTMLButtonElement, GNavItemProps>(
-  ({ active = false, indicator = "start", icon, label, badge, collapsed = false, className, children, ...props }, ref) => {
+const GNav = forwardRef<HTMLButtonElement, GNavProps>(
+  ({ items, orientation = "vertical", indicator = "start", collapsed = false, className, ...props }, ref) => {
     return (
-      <button
-        ref={ref}
-        type="button"
+      <nav
         className={clsx(
-          navBase.item,
-          "transition-colors duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-          getIndicatorClass(active, indicator),
-          active ? navBase.itemActive : navBase.itemIdle,
-          collapsed && "justify-center px-2",
+          "flex",
+          orientation === "vertical" ? "flex-col gap-1" : "flex-row flex-wrap gap-2",
           className,
-        )}
-        aria-current={active ? "page" : undefined}
-        {...props}>
-        {children ?? (
-          <>
-            {icon && (
-              <span className={clsx("relative shrink-0", collapsed && "mx-auto")} title={collapsed && label ? String(label) : undefined}>
-                {icon}
-              </span>
-            )}
-            {!collapsed && label && <span className="min-w-0 flex-1 text-start leading-snug whitespace-normal">{label}</span>}
-            {!collapsed && badge}
-            {collapsed && badge}
-          </>
-        )}
-      </button>
+        )}>
+        {items.map((item) => {
+          const active = Boolean(item.active);
+          return (
+            <button
+              key={item.id}
+              ref={item.id === items[0]?.id ? ref : undefined}
+              type="button"
+              disabled={item.disabled}
+              onClick={item.onClick}
+              className={clsx(
+                navBase.item,
+                "transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                getIndicatorClass(active, indicator),
+                active ? navBase.itemActive : navBase.itemIdle,
+                collapsed && "justify-center px-2",
+              )}
+              aria-current={active ? "page" : undefined}
+              {...props}>
+              {item.icon && (
+                <span className={clsx("relative shrink-0", collapsed && "mx-auto")} title={collapsed && item.label ? String(item.label) : undefined}>
+                  {item.icon}
+                </span>
+              )}
+              {!collapsed && item.label && (
+                <span className="min-w-0 flex-1 text-start leading-snug whitespace-normal">{item.label}</span>
+              )}
+              {!collapsed && item.badge}
+              {collapsed && item.badge}
+            </button>
+          );
+        })}
+      </nav>
     );
   },
 );
 
-GNavItem.displayName = "GNavItem";
+GNav.displayName = "GNav";
 
-function GNav({ children, className, orientation = "vertical" }: GNavProps) {
-  return <nav className={clsx("flex", orientation === "vertical" ? "flex-col gap-1" : "flex-row flex-wrap gap-2", className)}>{children}</nav>;
-}
-
-export { GNav, GNavItem };
+export { GNav, type GNavProps, type GNavIndicator, type GNavItem };

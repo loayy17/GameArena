@@ -1,49 +1,33 @@
 "use client";
 
-import { Users, Bell, UsersRound } from "lucide-react";
+import { Users, Bell, UsersRound, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import clsx from "clsx";
 
 import { GameInvitesList } from "./GameInvitesList";
-import { GInputSearch } from "@/component/common/GInputSearch";
 import { FriendsList } from "./FriendsList";
 import { GTabs } from "@/component/common/GTabs";
-import type { GTabItem } from "@/component/common/def/GTabs";
-import { GEmpty } from "@/component/common/GEmpty";
 import { useTranslation } from "@/hooks/useSetting";
 import { useDashboardNotifications } from "@/app/providers/DashboardNotificationsProvider";
-import { useFriendList } from "@/hooks/useFriends";
+import { useFriends } from "@/hooks/useFriends";
 import { en, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
-import { GAside, useAsideCtx } from "../common/GAside";
-import { GTile } from "../common/GTile";
-import { GStatusDot } from "../common/GStatusDot";
+import { useAside } from "@/hooks/useAside";
 import { GSpinner } from "../common/GSpinner";
+import { GEmpty } from "../common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { GButton } from "../common/GButton";
-import type { IUserSummary } from "@/domain/meta/IUserSummary";
-import { GIconTile } from "../common/GIconTile";
+import { GAvatar } from "../common/GAvatar";
+import type { GTabItem } from "@/component/common/def/GTabs";
+import { GTextField } from "../common/GTextField";
+import { GBackdrop } from "../common/GBackdrop";
 type SocialPanelTab = "friends" | "invites";
-
-interface FriendsContextValue {
-  friends: IUserSummary[];
-  loading: boolean;
-  onlineCount: number;
-  reload: () => void;
-}
-
-const FriendsContext = createContext<FriendsContextValue | null>(null);
-
-function useSharedFriends() {
-  const ctx = useContext(FriendsContext);
-  if (!ctx) throw new Error("useSharedFriends must be used within FriendsProvider");
-  return ctx;
-}
 
 function SocialBrand() {
   const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
-  const { onlineCount } = useSharedFriends();
+  const { onlineCount } = useFriends();
 
   return (
     <div className="min-w-0">
@@ -60,8 +44,9 @@ function SocialBrand() {
 
 function SocialRail() {
   const router = useRouter();
-  const { friends } = useSharedFriends();
-  const { closeMobile, isCompact } = useAsideCtx();
+  const { friends } = useFriends();
+  const { closeMobile, isCompact } = useAside();
+  const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
 
   const online = friends.filter((f) => f.status === UserStatusEnum.Online).slice(0, 8);
 
@@ -72,9 +57,11 @@ function SocialRail() {
 
   if (online.length === 0) {
     return (
-      <div className="flex justify-center pt-4">
-        <GIcon icon={Users} size="md" color="muted" />
-      </div>
+      <GEmpty
+        icon={<GIcon icon={Users} size="md" color="muted" />}
+        title={t.noOnlineTitle}
+        description={t.noOnlineDescription}
+      />
     );
   }
 
@@ -87,8 +74,7 @@ function SocialRail() {
           onClick={() => goToChat(f.id)}
           title={`${f.firstName ?? ""} ${f.lastName ?? ""}`.trim() || (f.userName ?? undefined)}
           className="relative shrink-0 rounded-full transition hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-primary outline-none">
-          <GTile user={f} size="sm" />
-          <GStatusDot status={f.status} className="absolute -bottom-0.5 -inset-e-0.5 ring-2 ring-bg-sidebar" />
+          <GAvatar firstName={f.firstName} lastName={f.lastName} status={f.status} size="sm" shape="circle" />
         </GButton>
       ))}
     </div>
@@ -98,8 +84,8 @@ function SocialRail() {
 function SocialExpanded() {
   const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
   const { gameInvites } = useDashboardNotifications();
-  const { friends, loading } = useSharedFriends();
-  const { isCompact, closeMobile } = useAsideCtx();
+  const { friends, loading } = useFriends();
+  const { isCompact, closeMobile } = useAside();
 
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<SocialPanelTab>("friends");
@@ -130,7 +116,13 @@ function SocialExpanded() {
 
         {activeTab === "friends" && (
           <div className="pt-4 pb-2">
-            <GInputSearch value={query} onChange={setQuery} placeholder={t.searchPlaceholder} />
+            <GTextField
+              id="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              startIcon={<GIcon icon={Search} size="sm" color="muted" />}
+            />
           </div>
         )}
       </div>
@@ -153,43 +145,98 @@ function SocialExpanded() {
 }
 
 function SocialBody() {
-  const { collapsed, isDesktop } = useAsideCtx();
+  const { collapsed, isDesktop } = useAside();
   return collapsed && isDesktop ? <SocialRail /> : <SocialExpanded />;
 }
 
-function SocialPanelInner() {
-  const { gameInvites } = useDashboardNotifications();
+function SocialPanel() {
   const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
+  const { gameInvites } = useDashboardNotifications();
+  const aside = useAside(false);
+  const { collapsed, open, isDesktop } = aside;
+
+  const isInlineDesktop = isDesktop;
+  const isOverlay = !isInlineDesktop;
+  const showBackdrop = isOverlay && open;
 
   const collapsedIcon = (
     <span className="relative inline-flex">
-      <GIconTile icon={Users} size="md" />
+      <GIcon icon={Users} size="md" tile tileSize="md" />
       {gameInvites.length > 0 && <span className="absolute -top-1 -inset-e-1 w-2 h-2 rounded-full bg-primary ring-2 ring-bg-sidebar" />}
     </span>
   );
 
-  return (
-    <GAside
-      side="end"
-      widthExpanded="w-80"
-      mode="inline"
-      ariaLabel={t.friendsAndInvites}
-      collapsedIcon={collapsedIcon}
-      expandedBrand={<SocialBrand />}>
-      <SocialBody />
-    </GAside>
+  const asideClass = clsx(
+    "flex flex-col shrink-0 h-dvh-safe bg-bg-sidebar transition-transform duration-200",
+    "border-s border-border",
+    isInlineDesktop
+      ? collapsed
+        ? "w-20"
+        : "w-80"
+      : [
+          "fixed inset-y-0 z-50 end-0",
+          open
+            ? ["translate-x-0 shadow-2xl", "w-80"]
+            : ["ltr:translate-x-full rtl:-translate-x-full", "w-0 overflow-hidden border-0 pointer-events-none"],
+        ],
   );
-}
-
-function SocialPanel() {
-  const { friends, loading, onlineCount, reload } = useFriendList();
-
-  const value = useMemo<FriendsContextValue>(() => ({ friends, loading, onlineCount, reload }), [friends, loading, onlineCount, reload]);
 
   return (
-    <FriendsContext.Provider value={value}>
-      <SocialPanelInner />
-    </FriendsContext.Provider>
+    <>
+      {showBackdrop && <GBackdrop onClick={aside.closeMobile} />}
+
+      <aside
+        className={asideClass}
+        aria-label={t.friendsAndInvites}
+        role={isOverlay ? "dialog" : undefined}
+        aria-modal={isOverlay && open ? true : undefined}
+        aria-hidden={isOverlay && !open ? true : undefined}>
+        <header className="h-20 shrink-0 border-b border-border flex items-center px-4">
+          <div className={clsx("flex items-center w-full gap-2", collapsed && isInlineDesktop && "justify-center")}>
+            {collapsed && isInlineDesktop ? (
+              <GButton variant="ghost" size="icon" onClick={aside.expand} aria-label={`Expand ${t.friendsAndInvites}`}>
+                {collapsedIcon}
+              </GButton>
+            ) : (
+              <div className="flex-1 min-w-0 flex items-center gap-3">
+                <SocialBrand />
+              </div>
+            )}
+
+            {isInlineDesktop && !collapsed && (
+              <GButton variant="ghost" size="icon" onClick={aside.collapse} className="ms-auto" aria-label={`Collapse ${t.friendsAndInvites}`}>
+                <X size={18} />
+              </GButton>
+            )}
+
+            {isOverlay && open && (
+              <GButton variant="ghost" size="icon" onClick={aside.closeMobile} className="ms-auto" aria-label={`Close ${t.friendsAndInvites}`}>
+                <X size={20} />
+              </GButton>
+            )}
+          </div>
+        </header>
+
+        {(isInlineDesktop || open) && (
+          <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            <SocialBody />
+          </main>
+        )}
+      </aside>
+
+      {isOverlay && !open && (
+        <GButton
+          fab
+          variant="secondary"
+          size="icon"
+          rounded="full"
+          onClick={aside.openMobile}
+          className="bottom-4 end-4"
+          aria-label={`Open ${t.friendsAndInvites}`}>
+          {collapsedIcon}
+        </GButton>
+      )}
+    </>
   );
 }
 

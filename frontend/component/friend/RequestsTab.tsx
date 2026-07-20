@@ -5,8 +5,6 @@ import { Check, Loader2, UserCheck, X } from "lucide-react";
 import { FriendsList } from "../SocialPanel/FriendsList";
 import { GEmpty } from "../common/GEmpty";
 import { GIcon } from "../common/GIcon";
-import { GIconTile } from "../common/GIconTile";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import type { RequestsTabProps } from "./def/FriendsTab";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { TNullable } from "@/domain/type/TCommon";
@@ -30,7 +28,6 @@ function RequestsTab({ requests, onAccept, onDecline, t }: RequestsTabProps) {
     lastName: r.senderLastName,
     userName: r.senderUserName,
     fullName: [r.senderFirstName, r.senderLastName].filter(Boolean).join(" ") || r.senderUserName || r.senderId,
-    status: UserStatusEnum.Offline,
   }));
 
   return (
@@ -42,12 +39,12 @@ function RequestsTab({ requests, onAccept, onDecline, t }: RequestsTabProps) {
         const isBusy = actionId === friend.id;
         return (
           <div className="flex gap-1">
-            <GIconTile icon={isBusy ? Loader2 : Check} size="sm" gradient="text-success" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
+            <GIcon icon={isBusy ? Loader2 : Check} size="sm" tile tileSize="sm" tileGradient="bg-success/10" tileColor="success" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
               onClick={async () => {
                 setActionId(friend.id);
                 try { await onAccept(friend.id); } finally { setActionId(null); }
               }} />
-            <GIconTile icon={isBusy ? Loader2 : X} size="sm" gradient="text-danger" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
+            <GIcon icon={isBusy ? Loader2 : X} size="sm" tile tileSize="sm" tileGradient="bg-danger/10" tileColor="danger" className={isBusy ? "animate-spin opacity-50 pointer-events-none" : ""}
               onClick={async () => {
                 setActionId(friend.id);
                 try { await onDecline(friend.id); } finally { setActionId(null); }

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AuthLayout } from "@/app/(auth)/layout";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { AuthLayout } from "../layout";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
+import { GIcon } from "@/component/common/GIcon";
 import { OtpForm } from "@/component/auth/OtpForm";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TResetPasswordTranslation } from "./i18n/en.i18n";
@@ -12,7 +15,6 @@ import { ar } from "./i18n/ar.i18n";
 import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { passwordValidator } from "@/utils";
-import { AuthFlowAnimationEnum } from "@/domain/enum/AuthFlowAnimationEnum";
 import { authService } from "@/services/def/AuthService";
 import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 
@@ -30,6 +32,7 @@ function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ newPassword: "" });
+  const [apiError, setApiError] = useState("");
   if (!email) {
     if (typeof window !== "undefined") {
       void import("next/navigation").then(({ redirect }) => {
@@ -57,17 +60,18 @@ function ResetPasswordPage() {
 
     try {
       setLoading(true);
+      setApiError("");
       await authService.resetPassword({ email, otp, newPassword });
       router.replace("/login");
     } catch {
-      // reset failed — user stays on page
+      setApiError(t.passwordResetError);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout page={step === "otp" ? AuthFlowAnimationEnum.VERIFY_OTP : AuthFlowAnimationEnum.SET_PASSWORD}>
+    <AuthLayout>
       {step === "otp" && (
         <OtpForm
           email={email}
@@ -80,6 +84,11 @@ function ResetPasswordPage() {
 
       {step === "reset" && (
         <div className="w-full space-y-5">
+          {apiError && (
+            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+              {apiError}
+            </div>
+          )}
           <GTextField
             label={t.newPassword}
             placeholder={t.placeholder.newPassword}
@@ -93,6 +102,14 @@ function ResetPasswordPage() {
           <GButton loading={loading} onClick={reset} fullWidth>
             {t.resetPassword}
           </GButton>
+          <div className="pt-2 text-center">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors">
+              <GIcon icon={ArrowLeft} size="sm" color="inherit" className="rtl:-scale-x-100" />
+              {t.backToLogin}
+            </Link>
+          </div>
         </div>
       )}
     </AuthLayout>

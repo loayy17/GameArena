@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class SocialReadService(IDbContextFactory<AppDbContext> _contextFactory) : ISocialReadService
+    public class SocialReadService(
+        IDbContextFactory<AppDbContext> _contextFactory,
+        IUserPresenceService _presence) : ISocialReadService
     {
         public async Task<List<UserSummaryResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter)
         {
@@ -27,7 +29,14 @@ namespace backend.Services
                     u.UserName != null && u.UserName.ToLower().Contains(searchTerm));
             }
 
-            return (await query.ToListAsync()).Select(MapperHelper.ToDtoSummary).ToList();
+            return (await query.ToListAsync())
+                .Select(user =>
+                {
+                    var dto = MapperHelper.ToDtoSummary(user);
+                    dto.Status = _presence.GetStatus(user.Id.ToString());
+                    return dto;
+                })
+                .ToList();
         }
 
         public async Task<List<FriendRequestReceivedResponse>> GetReceivedRequestsAsync(Guid userId)
@@ -66,7 +75,14 @@ namespace backend.Services
                 .Select(b => b.Blocked)
                 .ToListAsync();
 
-            return blocked.Select(MapperHelper.ToDtoSummary).ToList();
+            return blocked
+                .Select(user =>
+                {
+                    var dto = MapperHelper.ToDtoSummary(user);
+                    dto.Status = _presence.GetStatus(user.Id.ToString());
+                    return dto;
+                })
+                .ToList();
         }
 
         public async Task<HashSet<Guid>> GetFriendIdsAsync(Guid userId)

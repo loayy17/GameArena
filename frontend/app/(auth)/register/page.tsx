@@ -1,11 +1,10 @@
 "use client";
-import { AuthLayout } from "@/app/(auth)/layout";
+import { AuthLayout } from "../layout";
 import { RegisterForm } from "@/component/auth/RegisterForm";
-import { AuthFlowAnimationEnum } from "@/domain/enum/AuthFlowAnimationEnum";
 
 function RegisterPage() {
   return (
-    <AuthLayout page={AuthFlowAnimationEnum.REGISTER}>
+    <AuthLayout>
       <RegisterForm />
     </AuthLayout>
   );

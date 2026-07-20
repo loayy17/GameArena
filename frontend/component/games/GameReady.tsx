@@ -2,27 +2,37 @@
 
 import { Play } from "lucide-react";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { GamePlayersHeader } from "@/component/games/common/GamePlayersHeader";
+import { useGame } from "@/app/providers/GameProvider";
+import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
 import { GCard } from "@/component/common/GCard";
-import type { IGameState } from "@/app/providers/def/IGameState";
-import type { GameInfo } from "./gameConfig";
-import type { GameReadyProps } from "./def/GameReady";
+import { getGameConfig } from "./gameConfig";
+import type { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 
-function GameReady({ state, gameInfo, t, onStart }: GameReadyProps) {
+interface GameReadyProps {
+  gameType: GamesKindEnum;
+}
+
+function GameReady({ gameType }: GameReadyProps) {
   const { user } = useAuth();
+  const { state, startGame } = useGame();
+  const t = useGameTranslation();
+
+  if (!state) return null;
+
   const isHost = user?.id === state.player1Id;
+  const gameInfo = getGameConfig(gameType);
 
   return (
-    <div className="flex items-center justify-center min-h-150 p-4">
-      <GCard padding="lg" className="w-full max-w-lg text-center relative">
-        <div className="absolute top-0 inset-x-0 h-0.5 bg-primary" />
+    <div className="flex items-center justify-center min-h-[150px] p-4">
+      <GCard padding="lg" className="w-full max-w-lg text-center relative overflow-hidden">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-accent to-secondary" />
         <h2 className="text-2xl font-black text-text mb-6">{t.ready.title}</h2>
 
         <div className="flex items-center justify-center gap-6 mb-10">
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-md flex items-center justify-center border-2 border-accent bg-accent-muted">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-accent bg-accent-muted shadow-glow">
               <span className="text-3xl font-bold text-accent">{gameInfo.symbol1}</span>
             </div>
             <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
@@ -33,7 +43,7 @@ function GameReady({ state, gameInfo, t, onStart }: GameReadyProps) {
           <div className="text-text-muted font-black italic text-xl">{t.game.vs}</div>
 
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-md flex items-center justify-center border-2 border-warning bg-warning-bg">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-warning bg-warning-bg">
               <span className="text-3xl font-bold text-warning">{gameInfo.symbol2}</span>
             </div>
             <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
@@ -44,7 +54,7 @@ function GameReady({ state, gameInfo, t, onStart }: GameReadyProps) {
 
         <GButton
           disabled={!isHost}
-          onClick={() => onStart(state.player2Id!)}
+          onClick={() => startGame(state.player2Id!, gameType)}
           fullWidth
           size="lg"
           leftIcon={<GIcon icon={Play} size="lg" color="inherit" />}>

@@ -3,7 +3,7 @@ import type { IMessage } from "@/domain/meta/IMessage";
 import type { IPrivateMessagePayload } from "@/domain/meta/IPrivateMessagePayload";
 import type { TPromise } from "@/domain/type/TCommon";
 import type { IChatService } from "../meta/IChatService";
-import type { IChatRepository } from "@/repositories/meta/IChatRepository";
+import type { IChatRepository, IPerFriendUnreadCount } from "@/repositories/meta/IChatRepository";
 import { chatRepository } from "@/repositories/def/ChatRepository";
 import type { Handler } from "../lib/signalRUtils";
 import { requireConnection } from "../lib/signalRUtils";
@@ -46,6 +46,10 @@ class ChatService implements IChatService {
 
   getMessagesByFriendId(friendId: string): TPromise<IMessage[]> {
     return this.repo.getMessagesByFriendId(friendId);
+  }
+
+  getPerFriendUnreadCounts(): TPromise<IPerFriendUnreadCount[]> {
+    return this.repo.getPerFriendUnreadCounts();
   }
 
   async sendMessage(receiverId: string, content: string): Promise<void> {

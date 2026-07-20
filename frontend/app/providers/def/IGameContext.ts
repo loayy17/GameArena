@@ -4,9 +4,9 @@ import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 
 interface IGameContext {
   state: TNullable<IGameState>;
-  roomId: TNullable<string>;
-  isSearching: boolean;
   isConnected: boolean;
+  isSearching: boolean;
+  searchError: TNullable<string>;
   opponentDisconnected: boolean;
   isInitialSyncDone: boolean;
   lastGameType: GamesKindEnum | null;

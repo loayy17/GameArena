@@ -8,11 +8,12 @@ import { GTabs } from "@/component/common/GTabs";
 import { GSpinner } from "@/component/common/GSpinner";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GCard } from "@/component/common/GCard";
-import { GPageHeader } from "@/component/common/GPageHeader";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 import { GPage } from "@/component/common/GPage";
+import { PageHeader } from "@/component/common/PageHeader";
 import { MatchHistoryItem } from "@/component/history/MatchHistoryItem";
+import { MatchHistoryTable } from "@/component/history/MatchHistoryTable";
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import { ar } from "./i18n/ar.i18n";
 import { en, type THistoryTranslation } from "./i18n/en.i18n";
@@ -34,18 +35,18 @@ export default function MatchHistoryPage() {
   );
 
   return (
-    <GPage width="md">
-      <GPageHeader
+    <GPage width="lg">
+      <PageHeader
+        icon={History}
+        title={t.title}
+        subtitle={t.subtitle}
         badge={
           <GBadge>
             <GIcon icon={History} size="xs" color="primary" />
             {t.badge}
           </GBadge>
         }
-        title={t.title}
-        subtitle={t.subtitle}
       />
-
       <GCard padding="sm">
         <GTabs tabs={tabs} value={filter} onChange={setFilter} variant="pills" fullWidth className="mb-4" />
 
@@ -64,20 +65,33 @@ export default function MatchHistoryPage() {
         )}
 
         {!loading && matches.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {matches.map((match) => (
-              <MatchHistoryItem
-                key={match.id}
-                match={match}
+          <>
+            <div className="hidden sm:block overflow-x-auto">
+              <MatchHistoryTable
+                matches={matches}
                 locale={locale}
                 winLabel={t.results.win}
                 lossLabel={t.results.loss}
                 drawLabel={t.results.draw}
-                versusLabel={t.versus}
-                gameLabel={t.games[match.kind]}
+                gameLabels={t.games}
+                columns={t.columns}
               />
-            ))}
-          </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:hidden">
+              {matches.map((match) => (
+                <MatchHistoryItem
+                  key={match.id}
+                  match={match}
+                  locale={locale}
+                  winLabel={t.results.win}
+                  lossLabel={t.results.loss}
+                  drawLabel={t.results.draw}
+                  versusLabel={t.versus}
+                  gameLabel={t.games[match.kind]}
+                />
+              ))}
+            </div>
+          </>
         )}
       </GCard>
     </GPage>

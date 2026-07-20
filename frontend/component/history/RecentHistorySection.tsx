@@ -1,20 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight, Frown, Handshake, History, Trophy } from "lucide-react";
 import { useLocale, useTranslation } from "@/hooks/useSetting";
 import { useMatchHistory } from "@/hooks/useMatchHistory";
 import { GSpinner } from "@/component/common/GSpinner";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
-import { GCard } from "@/component/common/GCard";
+import Link from "next/link";
 import { ar } from "@/app/(dashboard)/history/i18n/ar.i18n";
 import { en, type THistoryTranslation } from "@/app/(dashboard)/history/i18n/en.i18n";
 import type { TLocale } from "@/domain/type/TCommon";
 import type { RecentHistorySectionProps } from "./def/RecentHistorySection";
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import { MatchHistoryItem } from "./MatchHistoryItem";
-import { GIconTile } from "../common/GIconTile";
 
 function RecentHistorySection({ title, viewAll, emptyTitle, emptyDescription, limit = 3 }: RecentHistorySectionProps) {
   const [locale] = useLocale() as [TLocale, (l: TLocale) => void];
@@ -27,11 +25,11 @@ function RecentHistorySection({ title, viewAll, emptyTitle, emptyDescription, li
   ];
   return (
     <section>
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">{title}</h2>
-        <Link href="/history" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest">{title}</h2>
+        <Link href="/history" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover transition-colors">
           {viewAll}
-          <GIcon icon={ArrowRight} size="xs" color="primary" />
+          <GIcon icon={ArrowRight} size="xs" color="primary" className="rtl:-scale-x-100" />
         </Link>
       </div>
 
@@ -45,13 +43,13 @@ function RecentHistorySection({ title, viewAll, emptyTitle, emptyDescription, li
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-3">
             {items.map((item) => (
-              <GCard key={item.label} className="flex items-center gap-3">
-                <GIconTile gradient={`bg-${item.iconColor}`} size="md" icon={item.icon} className="text-text" />
+              <div key={item.label} className="flex items-center gap-3 p-3.5 bg-bg-card border border-border rounded-lg hover:border-border-light hover:bg-bg-card-hover transition-all duration-200">
+                <GIcon icon={item.icon} size="md" tile tileSize="md" tileGradient={`bg-${item.iconColor}`} tileColor="text" />
                 <div>
-                  <p className="text-xl font-bold ">{item.value}</p>
-                  <p className="text-xs text-text-secondary mt-1">{item.label}</p>
+                  <p className="text-xl font-extrabold leading-tight text-text">{item.value}</p>
+                  <p className="text-xs font-medium text-text-secondary mt-0.5">{item.label}</p>
                 </div>
-              </GCard>
+              </div>
             ))}
           </div>
           <div className="flex flex-col gap-3">

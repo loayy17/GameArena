@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Sidebar } from "@/component/SideBar";
 import { SocialPanel } from "@/component/SocialPanel/SocialPanel";
+import { BottomNav } from "@/component/BottomNav";
 import { ConnectionProvider } from "@/app/providers/ConnectionProvider";
 import { GameProvider } from "@/app/providers/GameProvider";
 import { DashboardNotificationsProvider } from "@/app/providers/DashboardNotificationsProvider";
@@ -25,7 +26,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen bg-bg items-center justify-center">
+      <div className="flex min-h-screen w-full bg-bg items-center justify-center">
         <GSpinner size="lg" />
       </div>
     );
@@ -33,7 +34,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="flex h-screen w-screen bg-bg items-center justify-center">
+      <div className="flex min-h-screen w-full bg-bg items-center justify-center">
         <GSpinner size="lg" />
       </div>
     );
@@ -43,12 +44,15 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     <ConnectionProvider>
       <GameProvider>
         <DashboardNotificationsProvider>
-          <div className="flex h-screen w-screen bg-bg text-text overflow-hidden font-sans antialiased">
+          <div className="flex h-screen w-full bg-bg text-text overflow-hidden font-sans antialiased">
             <Sidebar />
-            <main className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide relative">{children}</main>
+            <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden relative pb-16 lg:pb-0">
+              {children}
+            </main>
             <SocialPanel />
           </div>
           <ActiveGameBanner />
+          <BottomNav />
         </DashboardNotificationsProvider>
       </GameProvider>
     </ConnectionProvider>

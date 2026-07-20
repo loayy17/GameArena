@@ -103,6 +103,19 @@ namespace backend.Utils
                         : MatchStatus.Draw
             };
         }
+        public static NotificationResponse ToDto(Notification notification)
+        {
+            return new NotificationResponse
+            {
+                Id = notification.Id,
+                Type = notification.Type,
+                Title = notification.Title,
+                Body = notification.Body,
+                ReferenceId = notification.ReferenceId,
+                IsRead = notification.IsRead,
+                CreatedAt = notification.CreatedAt
+            };
+        }
        
     }
 }

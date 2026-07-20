@@ -9,6 +9,7 @@ interface IConnectionContext {
   isGameConnected: boolean;
   isSocialConnected: boolean;
   socialReconnectKey: number;
+  stopConnections: () => Promise<void>;
 }
 
 export type { IConnectionContext };

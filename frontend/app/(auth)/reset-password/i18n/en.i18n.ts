@@ -9,6 +9,7 @@ const en = {
   otpVerified: "OTP verified successfully",
   passwordResetSuccess: "Password reset successfully",
   passwordResetError: "Failed to reset password",
+  backToLogin: "Back to login",
   placeholder: {
     newPassword: "Enter your new password",
   },

@@ -1,23 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Filter, UserPlus } from "lucide-react";
+import { Filter, Search, UserPlus, X } from "lucide-react";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { friendService } from "@/services/def/FriendService";
 import { userService } from "@/services/def/UserService";
 import { GButton } from "../common/GButton";
-import { GInputSearch } from "../common/GInputSearch";
 import { GSelect } from "../common/GSelect";
 import { GSpinner } from "../common/GSpinner";
-import { GErrorBanner } from "../common/GErrorBanner";
 import { GCard } from "../common/GCard";
 import { GBadge } from "../common/GBadge";
+import { GAvatar } from "../common/GAvatar";
 import { GIcon } from "../common/GIcon";
 import { useTranslation } from "@/hooks/useSetting";
-import {
-  en,
-  type TFriendsTranslation,
-} from "@/app/(dashboard)/friends/i18n/en.i18n";
+import { GTextField } from "../common/GTextField";
+import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
@@ -30,15 +27,11 @@ const defaultFilter: IUserFilterRequest = {
 };
 
 const displayName = (user: IUserSummary, fallback: string) =>
-  user.fullName ??
-  ([user.firstName, user.lastName].filter(Boolean).join(" ") ||
-    user.userName ||
-    fallback);
+  user.fullName ?? ([user.firstName, user.lastName].filter(Boolean).join(" ") || user.userName || fallback);
 
 function SearchTab() {
   const t = useTranslation({ en, ar }) as TFriendsTranslation;
-  const [userFilter, setUserFilter] =
-    useState<IUserFilterRequest>(defaultFilter);
+  const [userFilter, setUserFilter] = useState<IUserFilterRequest>(defaultFilter);
   const [searchResults, setSearchResults] = useState<ISearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<TNullable<string>>(null);
@@ -47,7 +40,7 @@ function SearchTab() {
 
   useEffect(() => {
     let ignore = false;
-    
+
     const performSearch = async () => {
       if (!query) {
         if (!ignore) {
@@ -68,17 +61,9 @@ function SearchTab() {
           friendService.getFriends({ name: "", userStatus: UserStatusEnum.All }),
         ]);
 
-        const sentIds = new Set(
-          (sentRes.data ?? []).map(
-            (request: { receiverId: string }) => request.receiverId,
-          ),
-        );
+        const sentIds = new Set((sentRes.data ?? []).map((request: { receiverId: string }) => request.receiverId));
 
-        const friendIds = new Set(
-          (friendsRes.data ?? []).map(
-            (friend: IUserSummary) => friend.id,
-          ),
-        );
+        const friendIds = new Set((friendsRes.data ?? []).map((friend: IUserSummary) => friend.id));
 
         if (!ignore) {
           setSearchResults(
@@ -113,11 +98,7 @@ function SearchTab() {
   const handleSendRequest = async (receiverId: string) => {
     try {
       await friendService.sendFriendRequest(receiverId);
-      setSearchResults((prev) =>
-        prev.map((user) =>
-          user.id === receiverId ? { ...user, isSendRequest: true } : user,
-        ),
-      );
+      setSearchResults((prev) => prev.map((user) => (user.id === receiverId ? { ...user, isSendRequest: true } : user)));
     } catch {
       setSearchError(t.searchTab.sendError);
     }
@@ -132,14 +113,24 @@ function SearchTab() {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-        <GInputSearch
+        <GTextField
+          id="search"
           value={userFilter.name ?? ""}
-          onChange={(value) =>
-            setUserFilter((prev) => ({ ...prev, name: value }))
-          }
+          onChange={(e) => setUserFilter((prev) => ({ ...prev, name: e.target.value }))}
           placeholder={t.searchTab.placeholder}
-          onClear={clearSearch}
-          clearLabel={t.searchTab.clearSearch}
+          label={t.searchTab.add}
+          startIcon={<GIcon icon={Search} size="sm" color="muted" />}
+          endIcon={
+            userFilter.name && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                aria-label={t.searchTab.clearSearch || "Clear search"}
+                className="text-text-muted hover:text-text">
+                <GIcon icon={X} size="sm" color="muted" flip={false} />
+              </button>
+            )
+          }
         />
 
         <GSelect
@@ -162,7 +153,11 @@ function SearchTab() {
 
       <p className="text-xs text-text-muted">{t.searchTab.hint}</p>
 
-      {searchError && <GErrorBanner message={searchError} />}
+      {searchError && (
+        <GCard padding="md" className="text-center text-sm text-danger border-danger/30">
+          {searchError}
+        </GCard>
+      )}
 
       {searching ? (
         <div className="flex justify-center py-12">
@@ -176,20 +171,13 @@ function SearchTab() {
             </GCard>
           ) : (
             searchResults.map((user) => (
-              <GCard
-                key={user.id}
-                padding="sm"
-                className="flex items-center justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-text">
-                    {displayName(user, t.searchTab.unknownUser)}
-                  </p>
-                  <p className="truncate text-xs text-text-muted">
-                    {user.userName
-                      ? `@${user.userName}`
-                      : t.searchTab.noUsername}
-                  </p>
+              <GCard key={user.id} padding="sm" className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <GAvatar firstName={user.firstName} lastName={user.lastName} status={user.status} size="sm" shape="circle" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-text">{displayName(user, t.searchTab.unknownUser)}</p>
+                    <p className="truncate text-xs text-text-muted">{user.userName ? `@${user.userName}` : t.searchTab.noUsername}</p>
+                  </div>
                 </div>
 
                 {user.isSendRequest ? (
@@ -198,15 +186,7 @@ function SearchTab() {
                   <GButton
                     onClick={() => void handleSendRequest(user.id)}
                     size="sm"
-                    leftIcon={
-                      <GIcon
-                        icon={UserPlus}
-                        size="sm"
-                        color="inherit"
-                        className="text-on-primary"
-                      />
-                    }
-                  >
+                    leftIcon={<GIcon icon={UserPlus} size="sm" color="inherit" className="text-on-primary" />}>
                     {t.searchTab.add}
                   </GButton>
                 )}
@@ -215,11 +195,7 @@ function SearchTab() {
           )}
         </div>
       ) : (
-        <GCard
-          variant="outlined"
-          padding="lg"
-          className="text-center text-sm text-text-muted border-dashed"
-        >
+        <GCard variant="outlined" padding="lg" className="text-center text-sm text-text-muted border-dashed">
           {t.searchTab.emptyHint}
         </GCard>
       )}

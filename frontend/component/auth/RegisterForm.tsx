@@ -2,20 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { UserPlus } from "lucide-react";
 import { GTextField } from "@/component/common/GTextField";
 import { GButton } from "@/component/common/GButton";
-import { GCard } from "@/component/common/GCard";
-import { GErrorBanner } from "@/component/common/GErrorBanner";
+import { GIcon } from "@/component/common/GIcon";
 import { emailValidator, passwordValidator } from "@/utils";
-import {
-  en,
-  type TRegisterTranslation,
-} from "@/app/(auth)/register/i18n/en.i18n";
+import { en, type TRegisterTranslation } from "@/app/(auth)/register/i18n/en.i18n";
 import { ar } from "@/app/(auth)/register/i18n/ar.i18n";
-import {
-  en as EnTextField,
-  GTextFieldTranslation,
-} from "@/component/i18n/GTextField/en.i18n";
+import { en as EnTextField, GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import Link from "next/link";
@@ -50,13 +44,7 @@ function RegisterForm() {
     userName: "",
   });
 
-  const validate = (
-    emailVal: string,
-    passwordVal: string,
-    firstNameVal: string,
-    lastNameVal: string,
-    userNameVal: string,
-  ) => {
+  const validate = (emailVal: string, passwordVal: string, firstNameVal: string, lastNameVal: string, userNameVal: string) => {
     return {
       email: emailValidator(t)(emailVal) || "",
       password: passwordValidator(t)(passwordVal) || "",
@@ -83,13 +71,7 @@ function RegisterForm() {
 
   const register = async () => {
     try {
-      const nextErrors = validate(
-        email,
-        password,
-        firstName,
-        lastName,
-        userName,
-      );
+      const nextErrors = validate(email, password, firstName, lastName, userName);
       setErrors(nextErrors);
       if (Object.values(nextErrors).some((error) => error)) return;
       setLoading(true);
@@ -123,14 +105,30 @@ function RegisterForm() {
   };
 
   return (
-    <GCard variant="elevated" padding="lg" className="w-full max-w-xl">
+    <div className="w-full max-w-xl mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <GIcon icon={UserPlus} size="xl" tile tileSize="xl" tileGradient="bg-primary" tileColor="on-primary" />
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-text tracking-tight">{t.register}</h1>
+          <p className="text-sm text-text-muted mt-0.5">{t.createAccount}</p>
+        </div>
+      </div>
       <form
         className="space-y-6"
         onSubmit={(e) => {
           e.preventDefault();
           register();
-        }}
-      >
+        }}>
+        {apiError.message && (
+          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            <p>{apiError.message}</p>
+            {apiError.link && (
+              <Link href={apiError.link} className="mt-1 inline-block font-semibold text-primary hover:text-primary-hover">
+                {t.signIn}
+              </Link>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <GTextField
             label={t.firstName}
@@ -138,9 +136,7 @@ function RegisterForm() {
             value={firstName}
             error={errors.firstName}
             required
-            onChange={(e) =>
-              handleChange(FieldRegisterEnum.firstName, e.target.value)
-            }
+            onChange={(e) => handleChange(FieldRegisterEnum.firstName, e.target.value)}
           />
           <GTextField
             label={t.lastName}
@@ -148,9 +144,7 @@ function RegisterForm() {
             value={lastName}
             error={errors.lastName}
             required
-            onChange={(e) =>
-              handleChange(FieldRegisterEnum.lastName, e.target.value)
-            }
+            onChange={(e) => handleChange(FieldRegisterEnum.lastName, e.target.value)}
           />
           <div className="md:col-span-2">
             <GTextField
@@ -160,9 +154,7 @@ function RegisterForm() {
               error={errors.email}
               type="email"
               required
-              onChange={(e) =>
-                handleChange(FieldRegisterEnum.email, e.target.value)
-              }
+              onChange={(e) => handleChange(FieldRegisterEnum.email, e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
@@ -173,9 +165,7 @@ function RegisterForm() {
               error={errors.userName}
               autoComplete="username"
               required
-              onChange={(e) =>
-                handleChange(FieldRegisterEnum.userName, e.target.value)
-              }
+              onChange={(e) => handleChange(FieldRegisterEnum.userName, e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
@@ -187,9 +177,7 @@ function RegisterForm() {
               type="password"
               autoComplete="new-password"
               required
-              onChange={(e) =>
-                handleChange(FieldRegisterEnum.password, e.target.value)
-              }
+              onChange={(e) => handleChange(FieldRegisterEnum.password, e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
@@ -201,47 +189,23 @@ function RegisterForm() {
               type="password"
               autoComplete="new-password"
               required
-              onChange={(e) =>
-                handleChange(FieldRegisterEnum.confirmPassword, e.target.value)
-              }
+              onChange={(e) => handleChange(FieldRegisterEnum.confirmPassword, e.target.value)}
             />
           </div>
         </div>
-        {apiError.message && (
-          <GErrorBanner
-            message={
-              <>
-                {apiError.message}
-                {apiError.link && (
-                  <>
-                    {" "}
-                    <Link
-                      href={apiError.link}
-                      className="font-medium underline text-primary hover:text-primary-hover"
-                    >
-                      {t.goToLogin}
-                    </Link>
-                  </>
-                )}
-              </>
-            }
-          />
-        )}
+
         <GButton loading={loading} fullWidth type="submit">
           {loading ? t.createElipses : t.create}
         </GButton>
 
         <div className="text-sm text-center text-text-secondary pt-2 border-t border-border/40">
           {t.haveAccount}{" "}
-          <Link
-            href="/login"
-            className="text-primary hover:text-primary-hover font-semibold px-1"
-          >
+          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1">
             {t.signIn}
           </Link>
         </div>
       </form>
-    </GCard>
+    </div>
   );
 }
 

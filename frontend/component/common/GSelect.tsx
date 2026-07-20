@@ -6,13 +6,6 @@ import { forwardRef } from "react";
 import { GLabel } from "./GLabel";
 import type { GSelectProps } from "./def/GSelect";
 
-const rounded: Record<string, string> = {
-  sm: "rounded-[var(--radius-sm)]",
-  md: "rounded-[var(--radius-md)]",
-  lg: "rounded-[var(--radius-lg)]",
-  full: "rounded-full",
-};
-
 const inputSize: Record<string, string> = {
   xs: "px-1 py-1.5 text-xs",
   sm: "px-1 py-1 text-sm",
@@ -41,7 +34,7 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
 
         <div className="relative">
           {startIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+            <div className="absolute start-3 top-1/2 -translate-y-1/2 text-text-muted">
               {startIcon}
             </div>
           )}
@@ -49,14 +42,13 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
           <select
             ref={ref}
             className={clsx(
-              "w-full appearance-none border border-border bg-bg-card text-text outline-none",
-              rounded.md,
-              "transition-colors duration-150",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+              "w-full bg-surface border border-border rounded-[var(--radius-md)] text-text transition-all duration-150 appearance-none",
+              "hover:border-border-light focus:border-primary focus:ring-3 focus:ring-primary-muted",
+              "placeholder:text-text-muted",
               inputSize[size],
               startIcon && "ps-9",
               "pe-9",
-              error && "border-danger",
+              error && "border-error focus:ring-3 focus:ring-error-muted",
               className,
             )}
             {...props}
@@ -73,10 +65,14 @@ const GSelect = forwardRef<HTMLSelectElement, GSelectProps<string | number>>(
             ))}
           </select>
 
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+          <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && (
+          <p role="alert" className="text-xs text-error mt-1.5">
+            {error}
+          </p>
+        )}
       </div>
     );
   },

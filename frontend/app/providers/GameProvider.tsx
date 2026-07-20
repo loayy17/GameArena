@@ -15,6 +15,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const { isGameConnected } = useConnections();
   const [state, setState] = useState<TNullable<IGameState>>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const isSearchingRef = useRef(false);
+  const [searchError, setSearchError] = useState<TNullable<string>>(null);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [isInitialSyncDone, setIsInitialSyncDone] = useState(false);
   const [lastGameType, setLastGameType] = useState<GamesKindEnum | null>(null);
@@ -23,23 +25,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const syncAttempted = useRef(false);
 
-  const goToLobby = useCallback(() => {
-    setState(null);
+  const clearFlags = useCallback(() => {
+    isSearchingRef.current = false;
     setIsSearching(false);
+    setSearchError(null);
     setOpponentDisconnected(false);
     setPendingPlayAgainRequest(null);
     setRequestedPlayAgain(false);
+  }, []);
+
+  const goToLobby = useCallback(() => {
+    setState(null);
+    clearFlags();
     router.push("/games");
-  }, [router]);
+  }, [router, clearFlags]);
 
   // ── SignalR subscriptions via service ───────────────────────────────
   useEffect(() => {
     const offState = gameService.onGameState((value) => {
       setState(value);
-      setIsSearching(false);
-      setOpponentDisconnected(false);
-      setPendingPlayAgainRequest(null);
-      setRequestedPlayAgain(false);
+      clearFlags();
     });
 
     const offDisconnect = gameService.onOpponentDisconnect(() => {
@@ -59,7 +64,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => { offState(); offDisconnect(); offPlayAgainReq(); offPlayAgainRes(); };
+    return () => {
+      offState();
+      offDisconnect();
+      offPlayAgainReq();
+      offPlayAgainRes();
+    };
   }, [goToLobby]);
 
   // ── Initial state sync ──────────────────────────────────────────────
@@ -72,70 +82,79 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const maxRetries = 10;
 
     const attempt = () => {
-      gameService.requestCurrentState()
-        .then((value) => { if (value && !cancelled) setState(value); })
+      gameService
+        .requestCurrentState()
+        .then((value) => {
+          if (value && !cancelled) setState(value);
+        })
         .catch(() => {
           if (!cancelled && retries < maxRetries) {
             retries++;
             setTimeout(attempt, 150 * retries);
           }
         })
-        .finally(() => { if (!cancelled) setIsInitialSyncDone(true); });
+        .finally(() => {
+          if (!cancelled) setIsInitialSyncDone(true);
+        });
     };
 
     attempt();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isGameConnected]);
 
   // ── Actions ─────────────────────────────────────────────────────────
   const findMatch = useCallback(
     async (game: GamesKindEnum) => {
-      if (isSearching) return;
+      if (isSearchingRef.current) return;
+      isSearchingRef.current = true;
       setState(null);
-      setIsSearching(false);
-      setOpponentDisconnected(false);
-      setPendingPlayAgainRequest(null);
-      setRequestedPlayAgain(false);
+      clearFlags();
+      isSearchingRef.current = true;
       setLastGameType(game);
+      setSearchError(null);
       setIsSearching(true);
-      try { await gameService.findMatch(game); }
-      catch { setIsSearching(false); }
+      try {
+        await gameService.findMatch(game);
+      } catch (e) {
+        isSearchingRef.current = false;
+        setIsSearching(false);
+        setSearchError(e instanceof Error ? e.message : "Failed to find a match. Please try again.");
+      }
     },
-    [isSearching],
+    [clearFlags],
   );
 
-  const startGame = useCallback(
-    async (friendId: TNullable<string>, gameKind: GamesKindEnum) => {
-      setLastGameType(gameKind);
-      await gameService.startGame(friendId, gameKind);
-    },
-    [],
-  );
+  const startGame = useCallback(async (friendId: TNullable<string>, gameKind: GamesKindEnum) => {
+    setLastGameType(gameKind);
+    await gameService.startGame(friendId, gameKind);
+  }, []);
 
-  const inviteFriend = useCallback(
-    async (friendId: string, game: GamesKindEnum) => {
-      await gameService.inviteFriend(friendId, game);
-    },
-    [],
-  );
+  const inviteFriend = useCallback(async (friendId: string, game: GamesKindEnum) => {
+    await gameService.inviteFriend(friendId, game);
+  }, []);
 
-  const inviteToRoom = useCallback(
-    async (friendId: string) => {
-      await gameService.inviteToRoom(friendId);
-    },
-    [],
-  );
+  const inviteToRoom = useCallback(async (friendId: string) => {
+    await gameService.inviteToRoom(friendId);
+  }, []);
 
   const leaveGame = useCallback(async () => {
-    try { await gameService.leaveGame(); }
-    catch { /* navigate regardless */ }
+    try {
+      await gameService.leaveGame();
+    } catch {
+      /* navigate regardless */
+    }
     goToLobby();
   }, [goToLobby]);
 
   const requestPlayAgain = useCallback(async () => {
     setRequestedPlayAgain(true);
-    try { await gameService.requestPlayAgain(); }
-    catch { setRequestedPlayAgain(false); }
+    try {
+      await gameService.requestPlayAgain();
+    } catch {
+      setRequestedPlayAgain(false);
+    }
   }, []);
 
   // ── Timeout: reset requestedPlayAgain after 30s ─────────────────────
@@ -147,43 +166,53 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [requestedPlayAgain]);
 
-  const respondPlayAgain = useCallback(async (accept: boolean) => {
-    try {
-      await gameService.respondPlayAgain(accept);
-      setPendingPlayAgainRequest(null);
-      if (!accept) goToLobby();
-    } catch {
-      // keep dialog open so user can retry or use Go to Lobby
-    }
-  }, [goToLobby]);
+  const respondPlayAgain = useCallback(
+    async (accept: boolean) => {
+      try {
+        await gameService.respondPlayAgain(accept);
+        setPendingPlayAgainRequest(null);
+        if (!accept) goToLobby();
+      } catch {
+        // keep dialog open so user can retry or use Go to Lobby
+      }
+    },
+    [goToLobby],
+  );
 
   const resetGame = useCallback(async () => {
     try {
       if (isSearching) await gameService.cancelSearch();
-    } catch { /* ignore */ }
-    try { await gameService.leaveGame(); }
-    catch { /* navigate regardless */ }
+    } catch {
+      /* ignore */
+    }
+    try {
+      await gameService.leaveGame();
+    } catch {
+      /* navigate regardless */
+    }
     goToLobby();
   }, [goToLobby, isSearching]);
 
   const createLobby = useCallback(async (gameKind: GamesKindEnum) => {
-    try { await gameService.createLobby(gameKind); }
-    catch { /* ignore */ }
+    setLastGameType(gameKind);
+    try {
+      await gameService.createLobby(gameKind);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  const sendAction = useCallback(
-    async (action: object) => {
-      await gameService.sendAction(action);
-    },
-    [],
-  );
+  const sendAction = useCallback(async (action: object) => {
+    // Do NOT await SignalR invoke here; awaiting per-frame creates backpressure/latency.
+    void gameService.sendAction(action);
+  }, []);
 
   const value = useMemo<IGameContext>(
     () => ({
-      roomId: state?.roomId ?? null,
       state,
-      isSearching,
       isConnected: isGameConnected,
+      isSearching,
+      searchError,
       opponentDisconnected,
       isInitialSyncDone,
       lastGameType,
@@ -202,11 +231,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
-      isSearching,
       isGameConnected,
+      isSearching,
+      searchError,
       opponentDisconnected,
-      isInitialSyncDone,
-      lastGameType,
       pendingPlayAgainRequest,
       requestedPlayAgain,
       findMatch,

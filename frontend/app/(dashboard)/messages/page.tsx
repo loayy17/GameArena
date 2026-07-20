@@ -1,26 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCheck, Send, WifiOff, MessagesSquare, ArrowLeft } from "lucide-react";
+import { CheckCheck, Send, WifiOff, MessagesSquare, ArrowLeft, Search } from "lucide-react";
 import { useTranslation } from "@/hooks/useSetting";
 import { useMessages } from "@/hooks/useMessages";
 import { GEmpty } from "@/component/common/GEmpty";
-import { GTile } from "@/component/common/GTile";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { ar } from "./i18n/ar.i18n";
 import { en, type TMessagesTranslation } from "./i18n/en.i18n";
 import { GButton } from "@/component/common/GButton";
-import { GInputSearch } from "@/component/common/GInputSearch";
 import { GSpinner } from "@/component/common/GSpinner";
-import { GStatusDot } from "@/component/common/GStatusDot";
 import { FriendsList } from "@/component/SocialPanel/FriendsList";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
-import { GIconTile } from "@/component/common/GIconTile";
-import { GMessageBubble } from "@/component/common/GMessageBubble";
 import { GTextField } from "@/component/common/GTextField";
 import clsx from "clsx";
+import { GAvatar } from "@/component/common/GAvatar";
+import { chatService } from "@/services/def/ChatService";
 
 const formatStatus = (status: UserStatusEnum, t: TMessagesTranslation) => {
   switch (status) {
@@ -39,6 +36,17 @@ function MessagesPage() {
   const initialFriendId = searchParams.get("friend");
   const t = useTranslation({ en, ar }) as TMessagesTranslation;
   const [query, setQuery] = useState("");
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    chatService.getPerFriendUnreadCounts().then((res) => {
+      if (res.data) {
+        const map: Record<string, number> = {};
+        res.data.forEach((item) => { map[item.friendId] = item.unreadCount; });
+        setUnreadCounts(map);
+      }
+    }).catch(() => {});
+  }, []);
 
   const {
     friends,
@@ -64,7 +72,6 @@ function MessagesPage() {
     });
   }, [friends, query]);
 
-
   const handleBack = () => {
     selectFriend(null);
     router.replace("/messages");
@@ -76,17 +83,28 @@ function MessagesPage() {
     <div className="flex h-full min-h-0 overflow-hidden">
       <aside className={clsx("w-full sm:w-80 shrink-0 border-e border-border bg-bg-sidebar flex-col z-20", showList ? "flex" : "hidden sm:flex")}>
         <div className="p-4 border-b border-border space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-bold text-text">{t.title}</h1>
-              <p className="text-xs text-text-muted">{t.subtitle}</p>
+          <header className="flex items-center gap-3">
+            <GIcon icon={MessagesSquare} size="xl" tile tileSize="xl" tileGradient="bg-primary" tileColor="on-primary" />
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-extrabold text-text tracking-tight leading-tight">{t.title}</h1>
+                <div className="mb-1">
+                  <GBadge variant={isConnected ? "success" : "danger"} className="shrink-0">
+                    {!isConnected && <GIcon icon={WifiOff} size="xs" color="inherit" />}
+                    {isConnected ? t.connected : t.disconnected}
+                  </GBadge>
+                </div>
+              </div>
+              <p className="text-sm text-text-muted mt-0.5">{t.subtitle}</p>
             </div>
-            <GBadge variant={isConnected ? "success" : "danger"}>
-              {!isConnected && <GIcon icon={WifiOff} size="xs" color="inherit" />}
-              {isConnected ? t.connected : t.disconnected}
-            </GBadge>
-          </div>
-          <GInputSearch value={query} onChange={setQuery} placeholder={t.search} />
+          </header>
+          <GTextField
+            id="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.search}
+            startIcon={<GIcon icon={Search} size="sm" color="muted" />}
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
@@ -97,7 +115,7 @@ function MessagesPage() {
           ) : filteredFriends.length === 0 ? (
             <GEmpty icon={<GIcon icon={MessagesSquare} size="xl" color="muted" />} title={t.noFriendsTitle} description={t.noFriendsDescription} />
           ) : (
-            <FriendsList friends={filteredFriends} messageLabel={t.message} activeLabel={t.active} query={query} />
+            <FriendsList friends={filteredFriends} messageLabel={t.message} activeLabel={t.active} query={query} unreadCounts={unreadCounts} />
           )}
         </div>
       </aside>
@@ -110,13 +128,18 @@ function MessagesPage() {
                 <GIcon icon={ArrowLeft} size="md" color="secondary" />
               </GButton>
               <div className="relative shrink-0">
-                <GTile user={selectedFriend} size="md" />
-                <GStatusDot status={selectedFriend.status} />
+                <GAvatar
+                  firstName={selectedFriend.firstName}
+                  lastName={selectedFriend.lastName}
+                  status={selectedFriend.status}
+                  size="sm"
+                  shape="circle"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-base font-bold text-text">{selectedFriend.fullName}</h2>
-                <p className={clsx("text-xs font-medium", selectedFriend.status === UserStatusEnum.InGame ? "text-primary" : "text-text-muted")}>
-                  {formatStatus(selectedFriend.status, t)}
+                <p className={clsx("text-xs font-medium", (selectedFriend.status ?? UserStatusEnum.Offline) === UserStatusEnum.InGame ? "text-primary" : "text-text-muted")}>
+                  {formatStatus(selectedFriend.status ?? UserStatusEnum.Offline, t)}
                 </p>
               </div>
               {!isConnected && <GBadge variant="danger">{t.disconnected}</GBadge>}
@@ -145,22 +168,25 @@ function MessagesPage() {
                       <div
                         key={`${message.senderId}-${message.sentAt.toISOString()}-${index}`}
                         className={clsx("flex", outgoing ? "justify-end" : "justify-start")}>
-                        <GMessageBubble
-                          outgoing={outgoing}
-                          meta={
-                            <div
-                              className={clsx(
-                                "mt-1.5 flex items-center gap-1.5 text-2xs font-medium",
-                                outgoing ? "justify-end text-on-primary/80" : "text-text-muted",
-                              )}>
-                              <span>{time}</span>
-                              {outgoing && (
-                                <GIcon icon={CheckCheck} size="sm" color="inherit" className={message.isRead ? "opacity-100" : "opacity-50"} />
-                              )}
-                            </div>
-                          }>
+                        <div
+                          className={clsx(
+                            "max-w-[85%] sm:max-w-[70%] min-w-0 px-4 py-2.5 text-sm leading-relaxed wrap-anywhere break-words rounded-[var(--radius-lg)]",
+                            outgoing
+                              ? "ms-auto rounded-ee-sm bg-primary text-on-primary"
+                              : "rounded-es-sm border border-border bg-surface text-text",
+                          )}>
                           <p className="whitespace-pre-wrap">{message.content}</p>
-                        </GMessageBubble>
+                          <div
+                            className={clsx(
+                              "mt-1.5 flex items-center gap-1.5 text-2xs font-medium",
+                              outgoing ? "justify-end text-on-primary/80" : "text-text-muted",
+                            )}>
+                            <span>{time}</span>
+                            {outgoing && (
+                              <GIcon icon={CheckCheck} size="sm" color="inherit" className={message.isRead ? "opacity-100" : "opacity-50"} />
+                            )}
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
@@ -168,7 +194,7 @@ function MessagesPage() {
               )}
             </div>
 
-            <footer className="border-t border-border bg-surface px-4 sm:px-6 py-4 shrink-0 pb-safe">
+            <footer className="border-t border-border bg-surface px-4 sm:px-6 py-4 shrink-0 pb-safe mb-16 lg:mb-0">
               {error && (
                 <GBadge variant="danger" className="mb-3">
                   {error}
@@ -201,7 +227,7 @@ function MessagesPage() {
         ) : (
           <div className="flex flex-1 items-center justify-center p-6">
             <GEmpty
-              icon={<GIconTile gradient="subtle-brand" size="lg" icon={MessagesSquare} color="primary" />}
+              icon={<GIcon icon={MessagesSquare} size="lg" tile tileSize="lg" tileGradient="bg-primary/10" tileColor="primary" />}
               title={t.selectConversationTitle}
               description={t.selectConversationDescription}
             />

@@ -1,12 +1,12 @@
 "use client";
 
-import { Frown, UserPlus } from "lucide-react";
+import { Frown, Search, UserPlus } from "lucide-react";
 import { GButton } from "@/component/common/GButton";
 import { GSpinner } from "@/component/common/GSpinner";
-import { GInputSearch } from "@/component/common/GInputSearch";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
 import type { InviteModalProps } from "./def/InviteModal";
+import { GTextField } from "@/component/common/GTextField";
 
 function InviteModal({
   open,
@@ -31,10 +31,11 @@ function InviteModal({
           {cancelLabel}
         </GButton>
       </div>
-      <GInputSearch
+      <GTextField
         value={searchQuery}
-        onChange={onSearchChange}
+        onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
+        startIcon={<GIcon icon={Search} size="sm" color="muted" />}
       />
       <div className="mt-3 max-h-40 overflow-y-auto custom-scrollbar">
         {loading ? (
@@ -48,8 +49,7 @@ function InviteModal({
                 fullWidth
                 className="justify-start text-sm"
                 leftIcon={<GIcon icon={UserPlus} size="sm" color="inherit" />}
-                onClick={() => onSelect(friend.id)}
-              >
+                onClick={() => onSelect(friend.id)}>
                 {friend.fullName ?? friend.userName}
               </GButton>
             ))}

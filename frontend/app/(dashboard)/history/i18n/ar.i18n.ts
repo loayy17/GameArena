@@ -21,6 +21,12 @@ const ar = {
     loss: "خسارة",
     draw: "تعادل",
   },
+  columns: {
+    game: "اللعبة",
+    opponent: "الخصم",
+    result: "النتيجة",
+    date: "التاريخ",
+  },
   games: {
     [GamesKindEnum.Snake]: "الثعبان",
     [GamesKindEnum.TicTacToe]: "إكس أو",

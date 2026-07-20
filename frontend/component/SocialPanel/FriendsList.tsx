@@ -4,16 +4,15 @@ import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Gamepad2 } from "lucide-react";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { GStatusDot } from "../common/GStatusDot";
-import { GNav } from "../common/GNav";
 import { GIcon } from "../common/GIcon";
 import { GAvatar } from "../common/GAvatar";
+import { GBadge } from "../common/GBadge";
 import { GButton } from "../common/GButton";
 import { GCard } from "../common/GCard";
 import type { IFriendsListProps } from "./def/FriendsList";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 
-export function FriendsList({ friends, messageLabel, query, activeLabel, actions }: IFriendsListProps) {
+export function FriendsList({ friends, messageLabel, query, activeLabel, unreadCounts, actions }: IFriendsListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentActiveFriendId = searchParams.get("friend");
@@ -46,19 +45,11 @@ export function FriendsList({ friends, messageLabel, query, activeLabel, actions
   };
 
   return (
-    <GNav orientation="vertical">
+    <div className="flex flex-col gap-1">
       {friends.map((friend) => (
         <GCard key={friend.id} padding="sm" variant="outlined" rounded="xl" className="flex items-center gap-3">
           <div className="relative shrink-0">
-            <GAvatar
-              firstName={friend.firstName}
-              lastName={friend.lastName}
-              userName={friend.userName}
-              gradient="bg-primary"
-              size="sm"
-              shape="circle"
-            />
-            <GStatusDot status={friend.status} />
+            <GAvatar firstName={friend.firstName} lastName={friend.lastName} status={friend.status} size="sm" shape="circle" />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -75,6 +66,12 @@ export function FriendsList({ friends, messageLabel, query, activeLabel, actions
             </div>
           </div>
 
+          {unreadCounts?.[friend.id] != null && unreadCounts[friend.id] > 0 && (
+            <GBadge variant="danger" size="sm" className="shrink-0 min-w-5 justify-center">
+              {unreadCounts[friend.id]}
+            </GBadge>
+          )}
+
           {!actions && (
             <GButton
               variant={isCurrentChat(friend.id) ? "ghost" : "secondary"}
@@ -88,6 +85,6 @@ export function FriendsList({ friends, messageLabel, query, activeLabel, actions
           {actions && <div className="flex gap-2">{actions(friend)}</div>}
         </GCard>
       ))}
-    </GNav>
+    </div>
   );
 }

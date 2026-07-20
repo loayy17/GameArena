@@ -6,6 +6,7 @@ interface IFriendsListProps {
   query?: TNullable<string>;
   messageLabel?: string;
   activeLabel?: string;
+  unreadCounts?: Record<string, number>;
   actions?: (friend: IUserSummary) => React.ReactNode;
 }
 

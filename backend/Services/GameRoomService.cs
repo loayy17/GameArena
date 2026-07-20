@@ -43,12 +43,7 @@ namespace backend.Services
                     return (openRoom, false);
                 }
 
-                BaseGameRoom room = gameType switch
-                {
-                    GamesKind.TicTacToe => new TicTacToeRoom(),
-                    GamesKind.PingPong => new PingPongRoom(),
-                    _ => throw new AppException(ErrorCode.InvalidGameType)
-                };
+                BaseGameRoom room = BaseGameRoom.Create(gameType);
                 room.Player1Id = playerId;
                 room.Player1Username = username;
                 _rooms[room.RoomId] = room;
@@ -59,24 +54,11 @@ namespace backend.Services
 
         public BaseGameRoom CreatePrivateRoom(GamesKind gameType, string playerId, string username, string? invitedPlayerId)
         {
-            BaseGameRoom room = gameType switch
-            {
-                GamesKind.TicTacToe => new TicTacToeRoom
-                {
-                    Player1Id = playerId,
-                    Player1Username = username,
-                    IsPrivate = true,
-                    InvitedPlayerId = invitedPlayerId,
-                },
-                GamesKind.PingPong => new PingPongRoom
-                {
-                    Player1Id = playerId,
-                    Player1Username = username,
-                    IsPrivate = true,
-                    InvitedPlayerId = invitedPlayerId,
-                },
-                _ => throw new AppException(ErrorCode.InvalidGameType)
-            };
+            var room = BaseGameRoom.Create(gameType);
+            room.Player1Id = playerId;
+            room.Player1Username = username;
+            room.IsPrivate = true;
+            room.InvitedPlayerId = invitedPlayerId;
             _rooms[room.RoomId] = room;
             _playerToRoom[playerId] = room.RoomId;
             return room;
@@ -148,28 +130,18 @@ namespace backend.Services
 
             if (room.IsBotGame)
             {
-                room.ResetForNewRound();
-                if (room.NeedsGameLoop)
-                    StartGameLoop(roomId);
-                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
-                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+                await AcceptPlayAgainAsync(roomId, room);
                 return;
             }
 
-            // Check if the other player already requested -> auto-accept
             var otherId = playerId == room.Player1Id ? room.Player2Id : room.Player1Id;
             if (otherId == null) return;
 
             if (_playAgainRequests.TryGetValue(roomId, out var requester)
                 && requester == otherId)
             {
-                // Both want to play again -> accept immediately
                 _playAgainRequests.TryRemove(roomId, out _);
-                room.ResetForNewRound();
-                if (room.NeedsGameLoop)
-                    StartGameLoop(roomId);
-                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
-                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+                await AcceptPlayAgainAsync(roomId, room);
                 return;
             }
 
@@ -190,13 +162,7 @@ namespace backend.Services
             if (!_rooms.TryGetValue(roomId, out var room)) return;
 
             if (accept)
-            {
-                room.ResetForNewRound();
-                if (room.NeedsGameLoop)
-                    StartGameLoop(roomId);
-                await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
-                await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
-            }
+                await AcceptPlayAgainAsync(roomId, room);
             else
             {
                 room.IsFinished = true;
@@ -281,6 +247,15 @@ namespace backend.Services
                 cts.Cancel();
                 cts.Dispose();
             }
+        }
+
+        private async Task AcceptPlayAgainAsync(string roomId, BaseGameRoom room)
+        {
+            room.ResetForNewRound();
+            if (room.NeedsGameLoop)
+                StartGameLoop(roomId);
+            await _hubContext.Clients.Group(roomId).SendAsync("playAgainResponse", new { accepted = true });
+            await _hubContext.Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
         }
     }
 }

@@ -69,14 +69,14 @@ export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
 
       <GModal open={pendingAccept !== null} onClose={handleCancelAccept} role="alertdialog" ariaLabel="Accept invite confirmation">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-text mb-2">Leave current game?</h2>
-          <p className="text-sm text-text-secondary mb-6">You have an active game. Leave it to accept the invite?</p>
+          <h2 className="text-xl font-bold text-text mb-2">{t.leaveTitle}</h2>
+          <p className="text-sm text-text-secondary mb-6">{t.leaveDesc}</p>
           <div className="flex gap-3">
             <GButton onClick={handleCancelAccept} variant="secondary" fullWidth>
-              Cancel
+              {t.cancel}
             </GButton>
             <GButton onClick={handleConfirmAccept} variant="danger" fullWidth>
-              Leave & Accept
+              {t.leaveAccept}
             </GButton>
           </div>
         </div>

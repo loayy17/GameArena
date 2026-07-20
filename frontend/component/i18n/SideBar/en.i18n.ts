@@ -4,7 +4,7 @@ const en = {
   messages: "Messages",
   games: "Games",
   history: "Match History",
-  profile: "Profile",
+  notifications: "Notifications",
   settings: "Settings",
   logout: "Logout",
   user: "User",

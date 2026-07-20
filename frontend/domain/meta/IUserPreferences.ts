@@ -3,10 +3,8 @@ interface IUserPreferences {
   theme: "light" | "dark";
   soundEnabled: boolean;
   showOnlineStatus: boolean;
-  allowFriendRequests: boolean;
   showGameActivity: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
+  showNotifications: boolean;
 }
 
 const DEFAULT_USER_PREFERENCES: IUserPreferences = {
@@ -14,10 +12,8 @@ const DEFAULT_USER_PREFERENCES: IUserPreferences = {
   theme: "dark",
   soundEnabled: true,
   showOnlineStatus: true,
-  allowFriendRequests: true,
   showGameActivity: true,
-  emailNotifications: true,
-  pushNotifications: true,
+  showNotifications: true,
 };
 
 export type { IUserPreferences };

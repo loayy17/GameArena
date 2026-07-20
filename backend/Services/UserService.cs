@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class UserService(AppDbContext _context) : IUserService
+    public class UserService(AppDbContext _context, IUserPresenceService _presence) : IUserService
     {
         public async Task<UserResponse> GetUserByIdAsync(Guid userId)
         {
@@ -29,10 +29,16 @@ namespace backend.Services
                     u.UserName != null && u.UserName.ToLower().Contains(name)
                 );
 
-            if (filter.UserStatus != UserStatus.All) query = query.Where(u => u.Status == filter.UserStatus);
-
             var users = await query.ToListAsync();
-            return [.. users.Select(MapperHelper.ToDtoSummary)];
+            var results = users.Select(user =>
+            {
+                var dto = MapperHelper.ToDtoSummary(user);
+                dto.Status = _presence.GetStatus(user.Id.ToString());
+                return dto;
+            });
+            if (filter.UserStatus != UserStatus.All)
+                results = results.Where(dto => dto.Status == filter.UserStatus);
+            return [.. results];
         }
 
         public async Task<UserResponse> UpdateUserAsync(UserResponse request)

@@ -47,5 +47,13 @@ namespace backend.Controllers
             var count = await _chatService.GetUnreadMessagesCountAsync(userId);
             return Ok(new ApiResponse<int> { Data = count });
         }
+
+        [HttpGet("unread/per-friend")]
+        public async Task<ActionResult<ApiResponse<List<PerFriendUnreadCountResponse>>>> GetUnreadPerFriend()
+        {
+            var userId = _currentUser.UserId;
+            var counts = await _chatService.GetUnreadCountsPerFriendAsync(userId);
+            return Ok(new ApiResponse<List<PerFriendUnreadCountResponse>> { Data = counts });
+        }
     }
 }

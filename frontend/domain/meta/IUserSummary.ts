@@ -6,7 +6,7 @@ interface IUserSummary {
   userName: TNullable<string>;
   firstName: TNullable<string>;
   lastName: TNullable<string>;
-  status: UserStatusEnum;
+  status?: UserStatusEnum;
   fullName?: TNullable<string>;
 }
 export type { IUserSummary };

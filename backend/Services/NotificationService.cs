@@ -1,9 +1,11 @@
 ﻿using System.Data;
 using backend.Data;
+using backend.Domain;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Hubs;
 using backend.Services.Interface;
+using backend.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -99,5 +101,90 @@ namespace backend.Services
             SendFriendRequestsAsync(userId),
             SendBlockedAsync(userId)
         );
+
+        public async Task<List<NotificationResponse>> GetNotificationsAsync(Guid userId, int limit = 50)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var notifications = await context.Notifications
+                .Where(n => n.UserId == userId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(limit)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return notifications.Select(MapperHelper.ToDto).ToList();
+        }
+
+        public async Task<int> GetUnreadNotificationCountAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            return await context.Notifications
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
+        }
+
+        public async Task<NotificationResponse> CreateNotificationAsync(Guid userId, string type, string title, string body, string? referenceId = null)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            if (!Enum.TryParse<NotificationType>(type, true, out var notificationType))
+                notificationType = NotificationType.FriendRequest;
+
+            var notification = new Notification
+            {
+                UserId = userId,
+                Type = notificationType,
+                Title = title,
+                Body = body,
+                ReferenceId = referenceId,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            context.Notifications.Add(notification);
+            await context.SaveChangesAsync();
+
+            var response = MapperHelper.ToDto(notification);
+
+            try
+            {
+                await hub.Clients
+                    .Group($"user:{userId}")
+                    .SendAsync("notification:new", response);
+            }
+            catch
+            {
+                // fire-and-forget; SignalR push is best-effort
+            }
+
+            return response;
+        }
+
+        public async Task MarkNotificationAsReadAsync(Guid userId, Guid notificationId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var notification = await context.Notifications
+                .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
+            if (notification != null)
+            {
+                notification.IsRead = true;
+                await context.SaveChangesAsync();
+            }
+        }
+
+        public async Task MarkAllNotificationsAsReadAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            await context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+        }
+
+        public async Task DeleteNotificationAsync(Guid userId, Guid notificationId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            await context.Notifications
+                .Where(n => n.Id == notificationId && n.UserId == userId)
+                .ExecuteDeleteAsync();
+        }
     }
 }

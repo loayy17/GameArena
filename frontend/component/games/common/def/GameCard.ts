@@ -5,10 +5,11 @@ interface GameCardProps {
   desc: string;
   icon?: LucideIcon;
   iconColor?: string;
-  gradient?: string;
+  gradientClass?: string;
   animation?: string;
   onClick: () => void;
   playLabel: string;
+  page?: boolean;
 }
 
 export type { GameCardProps };

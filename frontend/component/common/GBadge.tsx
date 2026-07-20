@@ -2,36 +2,24 @@ import clsx from "clsx";
 import type { GBadgeProps } from "./def/GBadge";
 
 const variants = {
-  primary: "bg-primary/10 text-primary border-primary/20",
-  secondary: "bg-surface text-text-secondary border-border",
-  success: "bg-success-bg text-success border-success/20",
-  warning: "bg-warning-bg text-warning border-warning/20",
-  danger: "bg-danger-bg text-danger border-danger/20",
-  muted: "bg-text-muted/10 text-text-muted border-border",
+  primary: "bg-primary-muted text-primary",
+  secondary: "bg-secondary-muted text-secondary",
+  success: "bg-success-bg text-success",
+  warning: "bg-warning-bg text-warning",
+  danger: "bg-error-muted text-error",
+  muted: "bg-surface text-text-secondary border border-border",
 };
 
 const sizes = {
-  sm: "px-2 py-0.5 text-2xs",
-  md: "px-2.5 py-1 text-xs",
+  sm: "text-2xs",
+  md: "",
 };
 
-function GBadge({
-  variant = "primary",
-  size = "md",
-  className,
-  children,
-  ...props
-}: GBadgeProps) {
+const badgeBase = "inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-0.5 whitespace-nowrap";
+
+function GBadge({ variant = "primary", size = "md", className, children, ...props }: GBadgeProps) {
   return (
-    <span
-      className={clsx(
-        "inline-flex items-center gap-1.5 font-semibold border rounded-full",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      {...props}
-    >
+    <span className={clsx(badgeBase, variants[variant], sizes[size], className)} {...props}>
       {children}
     </span>
   );

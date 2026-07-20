@@ -116,7 +116,7 @@ function OtpForm({ email, onSuccess }: OtpFormProps) {
 
       {/* Semantic Error Output Box */}
       {error && (
-        <p className="text-error text-xs font-medium text-center">
+        <p role="alert" className="text-error text-xs font-medium text-center">
           {error}
         </p>
       )}
