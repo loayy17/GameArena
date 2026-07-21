@@ -95,12 +95,38 @@ namespace backend.Services
         }
 
 
-        public Task SendSocialDataAsync(Guid userId) => Task.WhenAll(
-            SendCountersAsync(userId),
-            SendFriendsAsync(userId),
-            SendFriendRequestsAsync(userId),
-            SendBlockedAsync(userId)
-        );
+        public async Task SendSocialDataAsync(Guid userId)
+        {
+            // Fetch all social data in parallel and send as a single batched event
+            // This prevents UI flicker from multiple sequential SignalR pushes
+            var friendsTask = socialReadService.GetFriendsAsync(userId, null);
+            var receivedTask = socialReadService.GetReceivedRequestsAsync(userId);
+            var sentTask = socialReadService.GetSentRequestsAsync(userId);
+            var blockedTask = socialReadService.GetBlockedUsersAsync(userId);
+            var countersTask = GetCountersAsync(userId);
+
+            await Task.WhenAll(friendsTask, receivedTask, sentTask, blockedTask, countersTask);
+
+            var batch = new SocialDataBatchResponse
+            {
+                Friends = friendsTask.Result,
+                ReceivedRequests = receivedTask.Result,
+                SentRequests = sentTask.Result,
+                BlockedUsers = blockedTask.Result,
+                Counters = countersTask.Result
+            };
+
+            try
+            {
+                await hub.Clients
+                    .Group($"user:{userId}")
+                    .SendAsync("social:all", batch);
+            }
+            catch
+            {
+                // fire-and-forget; SignalR push is best-effort
+            }
+        }
 
         public async Task<List<NotificationResponse>> GetNotificationsAsync(Guid userId, int limit = 50)
         {
