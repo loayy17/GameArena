@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 
 interface IGDropdownItemProps {
-  icon: LucideIcon;
   label: string;
+  icon?: LucideIcon;
   onClick: () => void;
   className?: string;
+  disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 export type { IGDropdownItemProps };

@@ -10,6 +10,7 @@ import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useAside } from "@/hooks/useAside";
 import { en, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
+import { fr } from "@/component/i18n/SocialPanel/fr.i18n";
 import { GIcon } from "@/component/common/GIcon";
 import { GTextField } from "@/component/common/GTextField";
 import { GModal } from "@/component/common/GModal";
@@ -22,9 +23,19 @@ import type { ISocialPanelProps } from "./def/SocialPanel";
 
 function SocialPanel({ aside: asideProp }: ISocialPanelProps) {
   const router = useRouter();
-  const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
-  const { friendRequestCount, unreadMessageCount, unreadNotificationCount, gameInvites, notifications, friends, requests, loading, acceptRequest, declineRequest } =
-    useDashboardData();
+  const t = useTranslation({ en, ar, fr }) as TSocialPanelTranslation;
+  const {
+    friendRequestCount,
+    unreadMessageCount,
+    unreadNotificationCount,
+    gameInvites,
+    notifications,
+    friends,
+    requests,
+    loading,
+    acceptRequest,
+    declineRequest,
+  } = useDashboardData();
   const asideDefault = useAside(false);
   const aside = asideProp ?? asideDefault;
 

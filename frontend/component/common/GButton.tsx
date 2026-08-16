@@ -40,8 +40,7 @@ const GButton = forwardRef<HTMLButtonElement, IGButtonProps>(
   ) => {
     const isDisabled = disabled || loading;
 
-    const alignClass =
-      align === "start" ? "justify-start" : align === "end" ? "justify-end" : "justify-center";
+    const alignClass = align === "start" ? "justify-start" : align === "end" ? "justify-end" : "justify-center";
 
     return (
       <button
@@ -69,7 +68,7 @@ const GButton = forwardRef<HTMLButtonElement, IGButtonProps>(
           <>
             {startIcon && <span className="shrink-0">{startIcon}</span>}
             {children}
-            {endIcon && <span className="shrink-0">{endIcon}</span>}
+            {endIcon && <span className="mr-auto">{endIcon}</span>}
           </>
         )}
       </button>

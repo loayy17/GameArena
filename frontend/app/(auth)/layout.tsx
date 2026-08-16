@@ -12,6 +12,7 @@ import { BrandText } from "@/component/common/BrandText";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TAuthLayoutTranslation } from "./i18n/en.i18n";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
@@ -20,7 +21,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const redirectedRef = useRef(false);
-  const t = useTranslation({ en, ar }) as TAuthLayoutTranslation;
+  const t = useTranslation({ en, ar, fr }) as TAuthLayoutTranslation;
 
   useEffect(() => {
     if (!loading && user && !redirectedRef.current) {
@@ -51,18 +52,10 @@ function AuthLayout({ children }: { children: ReactNode }) {
           </h1>
           <p className="text-lg text-text-secondary mb-8 max-w-sm mx-auto">{t.heroSubtitle}</p>
           <div className="flex flex-wrap justify-center gap-2 mb-10">
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">
-              {t.features.instantPlay}
-            </span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">
-              {t.features.playWithFriends}
-            </span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">
-              {t.features.rankedMatches}
-            </span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">
-              {t.features.seasonalEvents}
-            </span>
+            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.instantPlay}</span>
+            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.playWithFriends}</span>
+            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.rankedMatches}</span>
+            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.seasonalEvents}</span>
           </div>
         </div>
       </div>

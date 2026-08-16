@@ -6,6 +6,7 @@ import { Gamepad2, Search, Send, ShieldBan, UserCheck, Users } from "lucide-reac
 
 import { useTranslation } from "@/hooks/useSetting";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type TFriendsTranslation } from "./i18n/en.i18n";
 
 import { GTabs } from "@/component/common/GTabs";
@@ -28,7 +29,7 @@ import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 function FriendsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslation({ en, ar }) as TFriendsTranslation;
+  const t = useTranslation({ en, ar, fr }) as TFriendsTranslation;
   const activeTab = (searchParams.get("tab") as FriendsTabEnum) ?? FriendsTabEnum.Friends;
 
   const {

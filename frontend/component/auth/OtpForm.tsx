@@ -5,6 +5,7 @@ import { GButton } from "@/component/common/GButton";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { en, type TOtpTranslation } from "../i18n/Otp/en.i18n";
 import { ar } from "../i18n/Otp/ar.i18n";
+import { fr } from "../i18n/Otp/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IOtpFormProps } from "./def/OtpForm";
@@ -15,7 +16,7 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
   const [loading, setLoading] = useState({ verify: false, resend: false });
   const [error, setError] = useState("");
-  const t = useTranslation({ en, ar }) as TOtpTranslation;
+  const t = useTranslation({ en, ar, fr }) as TOtpTranslation;
   const resolveError = useErrorMessage();
   const inputsRef = useRef<TNullable<HTMLInputElement>[]>([]);
 

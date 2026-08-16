@@ -9,8 +9,8 @@ import { useState } from "react";
 import { useTranslation } from "@/hooks/useSetting";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type TGamesTranslation } from "./i18n/en.i18n";
-
 import { GameRow } from "@/component/games/common/GameRow";
 import { GButton } from "@/component/common/GButton";
 import { GModal } from "@/component/common/GModal";
@@ -27,7 +27,7 @@ import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 function GamesPage() {
   const router = useRouter();
   const { state, leaveGame } = useGame();
-  const t = useTranslation({ en, ar }) as TGamesTranslation;
+  const t = useTranslation({ en, ar, fr }) as TGamesTranslation;
   const gt = useGameTranslation();
   const [pendingPath, setPendingPath] = useState<TNullable<string>>(null);
 
@@ -59,20 +59,9 @@ function GamesPage() {
         }
       />
       <GList items={[...GamesList]} keyExtractor={(game) => game.id} emptyMessage="" emptyDescription="" listClassName="grid-cols-1 gap-3">
-        {(game) => (
-          <GameRow
-            game={game}
-            gt={gt}
-            onClick={() => handleGameSelect(game.path)}
-            playLabel={t.play}
-          />
-        )}
+        {(game) => <GameRow game={game} gt={gt} onClick={() => handleGameSelect(game.path)} playLabel={t.play} />}
       </GList>
-      <GModal
-        open={Boolean(state) && pendingPath !== null}
-        onClose={() => setPendingPath(null)}
-        role="alertdialog"
-        ariaLabel={t.leaveConfirmation}>
+      <GModal open={Boolean(state) && pendingPath !== null} onClose={() => setPendingPath(null)} role="alertdialog" ariaLabel={t.leaveConfirmation}>
         <div className="text-center">
           <GIcon icon={ArrowRightFromLine} size={SizeEnum.lg} color={AccentColorEnum.Warning} className="mx-auto mb-4" />
           <h2 className="text-xl font-bold text-text mb-2">{t.leaveTitle}</h2>
@@ -92,4 +81,3 @@ function GamesPage() {
 }
 
 export default GamesPage;
-

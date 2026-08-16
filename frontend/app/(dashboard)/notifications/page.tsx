@@ -15,6 +15,7 @@ import { GButton } from "@/component/common/GButton";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GAsync } from "@/component/common/GAsync";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type TNotificationsTranslation } from "./i18n/en.i18n";
 import type { IGTabItem } from "@/component/common/def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -42,7 +43,7 @@ const icons: Record<NotificationTypeEnum, typeof Users> = {
 };
 
 export default function NotificationsPage() {
-  const t = useTranslation({ en, ar }) as TNotificationsTranslation;
+  const t = useTranslation({ en, ar, fr }) as TNotificationsTranslation;
   const {
     notifications,
     gameInvites,

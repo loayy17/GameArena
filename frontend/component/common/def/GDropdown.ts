@@ -5,7 +5,7 @@ interface IGDropdownProps {
   onClose: () => void;
   trigger: ReactNode;
   children: ReactNode;
-  align?: "start" | "end";
+  align?: "top" | "left" | "right" | "end";
   className?: string;
 }
 

@@ -7,6 +7,7 @@ const en = {
   dark: "Dark",
   english: "English",
   arabic: "العربية",
+  french: "Français",
   userMenu: "User menu",
   settings: "Settings",
 };

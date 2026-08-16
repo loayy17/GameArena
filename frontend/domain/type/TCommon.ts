@@ -2,7 +2,7 @@ import type { AxiosRequestConfig } from "axios";
 import type { HttpVerbEnum } from "../enum/HttpVerbEnum";
 import type { IApiResponse } from "../meta/IApiResponse";
 type THashMap<T = unknown, K extends string | number | symbol = string | number | symbol> = Record<K, T>;
-type TTranslate = { en: THashMap; ar: THashMap };
+type TTranslate = { en: THashMap; ar: THashMap; fr: THashMap };
 type TNullable<T> = T | null;
 type TOptional<T> = T | undefined;
 type TEndpointsMap = THashMap<TEndpoint>;

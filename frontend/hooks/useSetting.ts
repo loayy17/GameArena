@@ -111,5 +111,5 @@ function createProxy(langs: TTranslate, locale: LocaleEnum, path: string[] = [])
 export function useTranslation<T>(langs: TTranslate): T {
   const [locale] = useLocale();
 
-  return useMemo(() => createProxy({ en: langs.en, ar: langs.ar }, locale) as T, [locale, langs.en, langs.ar]);
+  return useMemo(() => createProxy({ en: langs.en, ar: langs.ar, fr: langs.fr }, locale) as T, [locale, langs.en, langs.ar, langs.fr]);
 }

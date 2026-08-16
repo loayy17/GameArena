@@ -16,6 +16,7 @@ import { MatchHistoryItem } from "@/component/history/MatchHistoryItem";
 import { MatchHistoryTable } from "@/component/history/MatchHistoryTable";
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type THistoryTranslation } from "./i18n/en.i18n";
 import type { IGTabItem } from "@/component/common/def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -23,7 +24,7 @@ import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 
 export default function MatchHistoryPage() {
   const [locale] = useLocale();
-  const t = useTranslation({ en, ar }) as THistoryTranslation;
+  const t = useTranslation({ en, ar, fr }) as THistoryTranslation;
   const [filter, setFilter] = useState(MatchStatusEnum.All);
   const { matches, loading, error } = useMatchHistory(filter);
   const tabs = useMemo<IGTabItem<MatchStatusEnum>[]>(
@@ -51,13 +52,7 @@ export default function MatchHistoryPage() {
       />
       <GTabs tabs={tabs} value={filter} onChange={setFilter} fullWidth className="mb-4" />
 
-      <GAsync
-        loading={loading}
-        error={error}
-        spinnerSize={SizeEnum.lg}
-        errorTitle={t.error.title}
-        errorIcon={AlertTriangle}
-        className="py-16">
+      <GAsync loading={loading} error={error} spinnerSize={SizeEnum.lg} errorTitle={t.error.title} errorIcon={AlertTriangle} className="py-16">
         {matches.length === 0 ? (
           <GEmpty
             icon={<GIcon icon={History} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
@@ -66,31 +61,31 @@ export default function MatchHistoryPage() {
           />
         ) : (
           <>
-          <div className="hidden sm:block overflow-x-auto">
-            <MatchHistoryTable
-              matches={matches}
-              locale={locale}
-              winLabel={t.results.win}
-              lossLabel={t.results.loss}
-              drawLabel={t.results.draw}
-              gameLabels={t.games}
-            />
-          </div>
-          <div className="sm:hidden">
-            <GList items={matches} keyExtractor={(match) => match.id} pageSize={10} listClassName="gap-3">
-              {(match) => (
-                <MatchHistoryItem
-                  match={match}
-                  locale={locale}
-                  winLabel={t.results.win}
-                  lossLabel={t.results.loss}
-                  drawLabel={t.results.draw}
-                  versusLabel={t.versus}
-                  gameLabel={t.games[match.kind]}
-                />
-              )}
-            </GList>
-          </div>
+            <div className="hidden sm:block overflow-x-auto">
+              <MatchHistoryTable
+                matches={matches}
+                locale={locale}
+                winLabel={t.results.win}
+                lossLabel={t.results.loss}
+                drawLabel={t.results.draw}
+                gameLabels={t.games}
+              />
+            </div>
+            <div className="sm:hidden">
+              <GList items={matches} keyExtractor={(match) => match.id} pageSize={10} listClassName="gap-3">
+                {(match) => (
+                  <MatchHistoryItem
+                    match={match}
+                    locale={locale}
+                    winLabel={t.results.win}
+                    lossLabel={t.results.loss}
+                    drawLabel={t.results.draw}
+                    versusLabel={t.versus}
+                    gameLabel={t.games[match.kind]}
+                  />
+                )}
+              </GList>
+            </div>
           </>
         )}
       </GAsync>

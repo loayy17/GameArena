@@ -8,7 +8,7 @@ import type { IGAvatarProps } from "./def/GAvatar";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 
-function GAvatar({ firstName, lastName, size = SizeEnum.xs, status = UserStatusEnum.All, className }: IGAvatarProps) {
+function GAvatar({ firstName, lastName, size = SizeEnum.xs, avatarUrl, status = UserStatusEnum.All, className }: IGAvatarProps) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
 
   const avatarClassName = clsx(

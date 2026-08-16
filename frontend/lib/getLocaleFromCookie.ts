@@ -12,7 +12,7 @@ export async function getSettingFromCookie(): Promise<{
   const theme = cookieStore.get("theme")?.value;
 
   return {
-    locale: locale === LocaleEnum.Ar ? LocaleEnum.Ar : LocaleEnum.En,
+    locale: locale === LocaleEnum.Ar ? LocaleEnum.Ar : locale === LocaleEnum.Fr ? LocaleEnum.Fr : LocaleEnum.En,
     theme: theme === ThemeEnum.Dark ? ThemeEnum.Dark : ThemeEnum.Light,
   };
 }

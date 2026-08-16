@@ -6,7 +6,7 @@ import { SizeEnum } from "@/domain/enum/SizeEnum";
 
 import type { ISocialListItemProps } from "./def/SocialListItem";
 
-function SocialListItem({ firstName, lastName, userName, status, badge, action, onClick, className }: ISocialListItemProps) {
+function SocialListItem({ firstName, lastName, userName, avatarUrl, status, badge, action, onClick, className }: ISocialListItemProps) {
   return (
     <button
       type="button"
@@ -19,7 +19,13 @@ function SocialListItem({ firstName, lastName, userName, status, badge, action, 
         className,
       )}>
       <div className="relative shrink-0">
-        <GAvatar firstName={firstName} lastName={lastName} status={status as Parameters<typeof GAvatar>[0]["status"]} size={SizeEnum.sm} />
+        <GAvatar
+          firstName={firstName}
+          lastName={lastName}
+          avatarUrl={avatarUrl}
+          status={status as Parameters<typeof GAvatar>[0]["status"]}
+          size={SizeEnum.sm}
+        />
       </div>
 
       <div className="min-w-0 flex-1">

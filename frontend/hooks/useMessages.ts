@@ -11,6 +11,7 @@ import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { TNullable } from "@/domain/type/TCommon";
 import { useTranslation } from "./useSetting";
 import { ar as messagesAr } from "@/app/(dashboard)/messages/i18n/ar.i18n";
+import { fr as messagesFr } from "@/app/(dashboard)/messages/i18n/fr.i18n";
 import { en as messagesEn, type TMessagesTranslation } from "@/app/(dashboard)/messages/i18n/en.i18n";
 
 const normalizeHistoryMessage = (message: IMessage): IMessage => ({
@@ -27,7 +28,7 @@ const areSameMessage = (left: IMessage, right: IMessage): boolean =>
 export function useMessages(initialFriendId?: TNullable<string>) {
   const { isSocialConnected: isConnected } = useConnections();
   const { user } = useAuth();
-  const t = useTranslation({ en: messagesEn, ar: messagesAr }) as TMessagesTranslation;
+  const t = useTranslation({ en: messagesEn, ar: messagesAr, fr: messagesFr }) as TMessagesTranslation;
   const { friends, loading: friendsLoading } = useDashboardData();
   const [selectedFriendId, setSelectedFriendId] = useState<TNullable<string>>(initialFriendId ?? null);
   const prevInitialRef = useRef(initialFriendId);

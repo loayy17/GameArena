@@ -8,6 +8,7 @@ import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { ArrowRight, Gamepad2, MessageSquare, Users, Trophy, Zap, Sparkles, Hexagon } from "lucide-react";
 import { GIcon } from "@/component/common/GIcon";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type THomeTranslation } from "./i18n/en.i18n";
 import { GamesList, translateGameInfo } from "@/domain/constant/games";
 import { RecentHistorySection } from "@/component/history/RecentHistorySection";
@@ -24,7 +25,7 @@ const LottiePlayer = dynamic(() => import("@lottiefiles/react-lottie-player").th
 
 function Home() {
   const { user } = useAuth();
-  const t = useTranslation({ en, ar }) as THomeTranslation;
+  const t = useTranslation({ en, ar, fr }) as THomeTranslation;
   const gt = useGameTranslation();
   const { friendRequestCount, unreadMessageCount } = useDashboardData();
   const router = useRouter();

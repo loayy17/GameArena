@@ -15,15 +15,17 @@ import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 
 import { ar as sideAr } from "@/component/i18n/SideBar/ar.i18n";
+import { fr as sideFr } from "@/component/i18n/SideBar/fr.i18n";
 import { en as sideEn, type TSidebarTranslation } from "@/component/i18n/SideBar/en.i18n";
 import { ar as socialAr } from "@/component/i18n/SocialPanel/ar.i18n";
+import { fr as socialFr } from "@/component/i18n/SocialPanel/fr.i18n";
 import { en as socialEn, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
 import { useRouter } from "next/navigation";
 import type { IHeaderProps } from "./def/Header";
 
 function Header({ sidebar, social }: IHeaderProps) {
-  const t = useTranslation({ en: sideEn, ar: sideAr }) as TSidebarTranslation;
-  const st = useTranslation({ en: socialEn, ar: socialAr }) as TSocialPanelTranslation;
+  const t = useTranslation({ en: sideEn, ar: sideAr, fr: sideFr }) as TSidebarTranslation;
+  const st = useTranslation({ en: socialEn, ar: socialAr, fr: socialFr }) as TSocialPanelTranslation;
   const { friendRequestCount, unreadMessageCount, unreadNotificationCount, gameInvites } = useDashboardData();
   const router = useRouter();
   const socialBadge = friendRequestCount + unreadMessageCount + unreadNotificationCount + gameInvites.length;

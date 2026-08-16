@@ -1,0 +1,25 @@
+const fr = {
+  register: "S'inscrire",
+  createAccount: "Créez votre compte et commencez",
+  firstName: "Prénom",
+  lastName: "Nom",
+  userName: "Nom d'utilisateur",
+  email: "E-mail",
+  password: "Mot de passe",
+  confirmPassword: "Confirmer le mot de passe",
+  createElipses: "Création du compte...",
+  create: "Créer un compte",
+  haveAccount: "Vous avez déjà un compte ?",
+  signIn: "Se connecter",
+  unknownError: "Une erreur inconnue s'est produite",
+  dynamicFieldRequired: (field: string) => `${field} est requis`,
+  placeholder: {
+    firstName: "Entrez votre prénom",
+    lastName: "Entrez votre nom",
+    userName: "Entrez votre nom d'utilisateur",
+    email: "Entrez votre e-mail",
+    password: "Créez un mot de passe",
+    confirmPassword: "Ressaisissez votre mot de passe",
+  },
+};
+export { fr };

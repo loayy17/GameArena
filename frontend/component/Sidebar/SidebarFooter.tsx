@@ -13,17 +13,18 @@ import { LangTheme } from "@/component/LangTheme/LangTheme";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { ar } from "@/component/i18n/SideBar/ar.i18n";
+import { fr } from "@/component/i18n/SideBar/fr.i18n";
 import { en, type TSidebarTranslation } from "@/component/i18n/SideBar/en.i18n";
 import type { ISidebarFooterProps } from "./def/SidebarFooter";
 
 function SidebarFooter({ collapsed, closeMobile }: ISidebarFooterProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const t = useTranslation({ en, ar }) as TSidebarTranslation;
+  const t = useTranslation({ en, ar, fr }) as TSidebarTranslation;
 
   return (
     <div className={clsx("flex flex-col gap-1.5 p-2 pb-safe", collapsed && "items-center")}>
-      <LangTheme collapsed={collapsed} />
+      <LangTheme collapsed={collapsed} align="top" />
 
       {collapsed ? (
         <>
@@ -37,12 +38,7 @@ function SidebarFooter({ collapsed, closeMobile }: ISidebarFooterProps) {
                 router.push("/settings");
                 closeMobile();
               }}>
-              <GAvatar
-                firstName={user.firstName}
-                lastName={user.lastName}
-                status={user.status}
-                size={SizeEnum.xs}
-              />
+              <GAvatar firstName={user.firstName} lastName={user.lastName} avatarUrl={user.avatarUrl} status={user.status} size={SizeEnum.xs} />
             </GButton>
           )}
         </>
@@ -53,6 +49,7 @@ function SidebarFooter({ collapsed, closeMobile }: ISidebarFooterProps) {
               firstName={user.firstName}
               lastName={user.lastName}
               userName={user.userName}
+              avatarUrl={user.avatarUrl}
               status={user.status}
               avatarSize={SizeEnum.xs}
               className="flex-1"

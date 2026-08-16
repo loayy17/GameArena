@@ -7,6 +7,7 @@ const ar = {
   dark: "داكن",
   english: "English",
   arabic: "العربية",
+  french: "Français",
   userMenu: "قائمة المستخدم",
   settings: "الإعدادات",
 };

@@ -1,0 +1,42 @@
+const fr = {
+  title: "Paramètres",
+  settings: {
+    profile: {
+      title: "Profil",
+      subtitle: "Gérez vos informations personnelles et les paramètres de votre compte",
+      firstName: "Prénom",
+      lastName: "Nom",
+      username: "Nom d'utilisateur",
+      email: "E-mail",
+      save: "Enregistrer les modifications",
+      saved: "Profil mis à jour avec succès",
+      saveFailed: "Échec de l'enregistrement du profil",
+    },
+    password: {
+      title: "Changer le mot de passe",
+      subtitle: "Mettez à jour votre mot de passe pour sécuriser votre compte",
+      oldPassword: "Ancien mot de passe",
+      newPassword: "Nouveau mot de passe",
+      confirmPassword: "Confirmer le nouveau mot de passe",
+      save: "Mettre à jour le mot de passe",
+      saved: "Mot de passe modifié avec succès",
+      saveFailed: "Échec du changement de mot de passe",
+      invalidCurrentPassword: "Mot de passe actuel invalide",
+    },
+    preferences: {
+      title: "Préférences",
+      subtitle: "Personnalisez votre expérience Arena 404",
+      save: "Enregistrer les préférences",
+      saved: "Préférences enregistrées",
+      saveFailed: "Échec de l'enregistrement des préférences",
+      darkMode: "Mode sombre",
+      language: "Langue",
+      sound: "Effets sonores",
+      showOnline: "Afficher le statut en ligne",
+      showGameActivity: "Afficher l'activité de jeu",
+      showNotifications: "Afficher les notifications",
+      recordsPerPage: "Enregistrements par page",
+    },
+  },
+};
+export { fr };

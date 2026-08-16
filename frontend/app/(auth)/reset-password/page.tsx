@@ -12,8 +12,10 @@ import { OtpForm } from "@/component/auth/OtpForm";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TResetPasswordTranslation } from "./i18n/en.i18n";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { passwordValidator } from "@/lib/utils";
 import { authService } from "@/services/def/AuthService";
 import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
@@ -26,6 +28,7 @@ function ResetPasswordPage() {
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
+    fr: { ...fr, ...FrTextField },
   }) as TResetPasswordTranslation & GTextFieldTranslation;
 
   const resolveError = useErrorMessage();
@@ -88,7 +91,12 @@ function ResetPasswordPage() {
       )}
 
       {step === ResetPasswordStepEnum.Reset && (
-        <form onSubmit={(e) => { e.preventDefault(); void reset(); }} className="w-full space-y-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void reset();
+          }}
+          className="w-full space-y-5">
           {apiError && (
             <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
               {apiError}

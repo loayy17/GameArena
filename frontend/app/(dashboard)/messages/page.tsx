@@ -9,6 +9,7 @@ import { GEmpty } from "@/component/common/GEmpty";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { statusColorText } from "@/domain/constant/status-color";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type TMessagesTranslation } from "./i18n/en.i18n";
 import { GButton } from "@/component/common/GButton";
 import { GAsync } from "@/component/common/GAsync";
@@ -37,7 +38,7 @@ function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialFriendId = searchParams.get("friend");
-  const t = useTranslation({ en, ar }) as TMessagesTranslation;
+  const t = useTranslation({ en, ar, fr }) as TMessagesTranslation;
   const [query, setQuery] = useState("");
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
@@ -116,51 +117,50 @@ function MessagesPage() {
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           <GAsync loading={friendsLoading} spinnerSize={SizeEnum.lg} className="py-10">
-          {filteredFriends.length === 0 ? (
-            <GEmpty
-              icon={<GIcon icon={MessagesSquare} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
-              title={t.noFriendsTitle}
-              description={t.noFriendsDescription}
-            />
-          ) : (
-            <div className="space-y-1">
-              {filteredFriends.map((friend) => {
-                const isActive = friend.id === selectedFriendId;
-                return (
-                  <div
-                    key={friend.id}
-                    className={clsx(
-                      "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
-                      isActive ? "bg-primary-muted" : "hover:bg-bg-card-hover",
-                    )}
-                    onClick={() => {
-                      if (!isActive) router.push(`/messages?friend=${friend.id}`);
-                    }}
-                    role={!isActive ? "button" : undefined}
-                    tabIndex={!isActive ? 0 : undefined}
-                    onKeyDown={(e) => {
-                      if (!isActive && (e.key === "Enter" || e.key === " ")) {
-                        e.preventDefault();
-                        router.push(`/messages?friend=${friend.id}`);
-                      }
-                    }}
-                    aria-label={friend.fullName ?? friend.userName ?? friend.id}
-                  >
-                    <GAvatar firstName={friend.firstName} lastName={friend.lastName} status={friend.status} size={SizeEnum.sm} />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-semibold text-text">{friend.fullName}</h3>
-                      <p className="truncate text-xs text-text-secondary">@{friend.userName}</p>
+            {filteredFriends.length === 0 ? (
+              <GEmpty
+                icon={<GIcon icon={MessagesSquare} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
+                title={t.noFriendsTitle}
+                description={t.noFriendsDescription}
+              />
+            ) : (
+              <div className="space-y-1">
+                {filteredFriends.map((friend) => {
+                  const isActive = friend.id === selectedFriendId;
+                  return (
+                    <div
+                      key={friend.id}
+                      className={clsx(
+                        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
+                        isActive ? "bg-primary-muted" : "hover:bg-bg-card-hover",
+                      )}
+                      onClick={() => {
+                        if (!isActive) router.push(`/messages?friend=${friend.id}`);
+                      }}
+                      role={!isActive ? "button" : undefined}
+                      tabIndex={!isActive ? 0 : undefined}
+                      onKeyDown={(e) => {
+                        if (!isActive && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          router.push(`/messages?friend=${friend.id}`);
+                        }
+                      }}
+                      aria-label={friend.fullName ?? friend.userName ?? friend.id}>
+                      <GAvatar firstName={friend.firstName} lastName={friend.lastName} status={friend.status} size={SizeEnum.sm} />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-semibold text-text">{friend.fullName}</h3>
+                        <p className="truncate text-xs text-text-secondary">@{friend.userName}</p>
+                      </div>
+                      {unreadCounts[friend.id] != null && unreadCounts[friend.id] > 0 && (
+                        <GBadge variant={AccentColorEnum.Danger} size={SizeEnum.sm} className="shrink-0 min-w-5 justify-center">
+                          {unreadCounts[friend.id]}
+                        </GBadge>
+                      )}
                     </div>
-                    {unreadCounts[friend.id] != null && unreadCounts[friend.id] > 0 && (
-                      <GBadge variant={AccentColorEnum.Danger} size={SizeEnum.sm} className="shrink-0 min-w-5 justify-center">
-                        {unreadCounts[friend.id]}
-                      </GBadge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
           </GAsync>
         </div>
       </aside>
@@ -191,47 +191,46 @@ function MessagesPage() {
 
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 custom-scrollbar">
               <GAsync loading={loadingMessages} error={error} spinnerSize={SizeEnum.lg} errorTitle={t.error.title} className="h-full">
-              {messages.length === 0 ? (
-                <div className="flex h-full items-center justify-center">
-                  <GEmpty
-                    icon={<GIcon icon={MessagesSquare} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
-                    title={t.noMessagesTitle}
-                    description={t.noMessagesDescription}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {messages.map((message, index) => {
-                    const outgoing = message.senderId !== selectedFriendId;
-                    const time = new Date(message.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <GEmpty
+                      icon={<GIcon icon={MessagesSquare} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
+                      title={t.noMessagesTitle}
+                      description={t.noMessagesDescription}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((message, index) => {
+                      const outgoing = message.senderId !== selectedFriendId;
+                      const time = new Date(message.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-                    return (
-                      <div
-                        key={`${message.senderId}-${message.sentAt.toISOString()}-${index}`}
-                        className={clsx("flex", outgoing ? "justify-end" : "justify-start")}
-                      >
+                      return (
                         <div
-                          className={clsx(
-                            "max-w-message-mobile sm:max-w-message-tablet min-w-0 px-4 py-2.5 text-sm leading-relaxed wrap-anywhere rounded-lg",
-                            outgoing ? "ms-auto rounded-ee-sm bg-primary text-on-primary" : "rounded-es-sm border border-border bg-surface text-text",
-                          )}
-                        >
-                          <p className="whitespace-pre-wrap">{message.content}</p>
+                          key={`${message.senderId}-${message.sentAt.toISOString()}-${index}`}
+                          className={clsx("flex", outgoing ? "justify-end" : "justify-start")}>
                           <div
                             className={clsx(
-                              "mt-1.5 flex items-center gap-1.5 text-2xs font-medium",
-                              outgoing ? "justify-end text-on-primary/80" : "text-text-muted",
-                            )}
-                          >
-                            <span>{time}</span>
-                            {outgoing && <GIcon icon={CheckCheck} size={SizeEnum.sm} className={message.isRead ? "opacity-100" : "opacity-50"} />}
+                              "max-w-message-mobile sm:max-w-message-tablet min-w-0 px-4 py-2.5 text-sm leading-relaxed wrap-anywhere rounded-lg",
+                              outgoing
+                                ? "ms-auto rounded-ee-sm bg-primary text-on-primary"
+                                : "rounded-es-sm border border-border bg-surface text-text",
+                            )}>
+                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <div
+                              className={clsx(
+                                "mt-1.5 flex items-center gap-1.5 text-2xs font-medium",
+                                outgoing ? "justify-end text-on-primary/80" : "text-text-muted",
+                              )}>
+                              <span>{time}</span>
+                              {outgoing && <GIcon icon={CheckCheck} size={SizeEnum.sm} className={message.isRead ? "opacity-100" : "opacity-50"} />}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
               </GAsync>
             </div>
 
@@ -276,15 +275,7 @@ function MessagesPage() {
         ) : (
           <div className="flex flex-1 items-center justify-center p-6">
             <GEmpty
-              icon={
-                <GIcon
-                  icon={MessagesSquare}
-                  size={SizeEnum.lg}
-                  tile
-                  tileGradient="bg-primary/10"
-                  tileColor={AccentColorEnum.Primary}
-                />
-              }
+              icon={<GIcon icon={MessagesSquare} size={SizeEnum.lg} tile tileGradient="bg-primary/10" tileColor={AccentColorEnum.Primary} />}
               title={t.selectConversationTitle}
               description={t.selectConversationDescription}
             />

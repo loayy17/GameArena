@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Filter, Search, UserPlus, X } from "lucide-react";
-
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
+import { fr } from "@/app/(dashboard)/friends/i18n/fr.i18n";
 import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import { GAvatar } from "@/component/common/GAvatar";
 import { GBadge } from "@/component/common/GBadge";
@@ -39,7 +39,7 @@ const displayName = (user: IUserSummary, fallback: string) =>
   user.fullName ?? ([user.firstName, user.lastName].filter(Boolean).join(" ") || user.userName || fallback);
 
 function SearchTab() {
-  const t = useTranslation({ en, ar }) as TFriendsTranslation;
+  const t = useTranslation({ en, ar, fr }) as TFriendsTranslation;
   const resolveError = useErrorMessage();
   const [userFilter, setUserFilter] = useState<IUserFilterRequest>(defaultFilter);
   const [searchResults, setSearchResults] = useState<ISearchResult[]>([]);

@@ -9,8 +9,10 @@ import { GIcon } from "@/component/common/GIcon";
 import { emailValidator, passwordValidator } from "@/lib/utils";
 import { en, type TRegisterTranslation } from "@/app/(auth)/register/i18n/en.i18n";
 import { ar } from "@/app/(auth)/register/i18n/ar.i18n";
+import { fr } from "@/app/(auth)/register/i18n/fr.i18n";
 import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import Link from "next/link";
 import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
@@ -25,6 +27,7 @@ function RegisterForm() {
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
+    fr: { ...fr, ...FrTextField },
   }) as TRegisterTranslation & GTextFieldTranslation;
   const [loading, setLoading] = useState(false);
   const resolveError = useErrorMessage();

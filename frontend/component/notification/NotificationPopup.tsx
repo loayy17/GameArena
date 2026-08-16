@@ -16,11 +16,12 @@ import { useTranslation } from "@/hooks/useSetting";
 import { GCard } from "@/component/common/GCard";
 
 import { ar } from "@/app/(dashboard)/notifications/i18n/ar.i18n";
+import { fr } from "@/app/(dashboard)/notifications/i18n/fr.i18n";
 import { en, type TNotificationsTranslation } from "@/app/(dashboard)/notifications/i18n/en.i18n";
 
 function NotificationPopup() {
   const router = useRouter();
-  const t = useTranslation({ en, ar }) as TNotificationsTranslation;
+  const t = useTranslation({ en, ar, fr }) as TNotificationsTranslation;
   const { notifications } = useDashboardData();
   const [visible, setVisible] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
@@ -80,11 +81,7 @@ function NotificationPopup() {
             <p className="text-xs text-text-secondary truncate">{latest.body}</p>
           </div>
         </button>
-        <GButton
-          variant={ButtonVariantEnum.Subtle}
-          size={SizeEnum.icon}
-          onClick={handleDismiss}
-          aria-label={t.actions.dismiss}>
+        <GButton variant={ButtonVariantEnum.Subtle} size={SizeEnum.icon} onClick={handleDismiss} aria-label={t.actions.dismiss}>
           <GIcon icon={X} size={SizeEnum.sm} color={AccentColorEnum.Muted} />
         </GButton>
       </GCard>

@@ -9,9 +9,11 @@ import { useState, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import { en, type TLoginTranslation } from "@/app/(auth)/login/i18n/en.i18n";
 import { ar } from "@/app/(auth)/login/i18n/ar.i18n";
+import { fr } from "@/app/(auth)/login/i18n/fr.i18n";
 import { emailValidator, passwordValidator } from "@/lib/utils";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { authService } from "@/services/def/AuthService";
@@ -27,6 +29,7 @@ function LoginForm() {
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
+    fr: { ...fr, ...FrTextField },
   }) as TLoginTranslation & GTextFieldTranslation;
 
   const { refreshUser } = useAuth();

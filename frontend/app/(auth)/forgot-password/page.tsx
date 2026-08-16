@@ -10,8 +10,10 @@ import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
 import { en, type TForgotPasswordTranslation } from "./i18n/en.i18n";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import { emailValidator } from "@/lib/utils";
 import { authService } from "@/services/def/AuthService";
@@ -25,6 +27,7 @@ function ForgotPasswordPage() {
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
+    fr: { ...fr, ...FrTextField },
   }) as TForgotPasswordTranslation & GTextFieldTranslation;
   const resolveError = useErrorMessage();
 

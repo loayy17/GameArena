@@ -3,85 +3,121 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
+
 import { GBackdrop } from "./GBackdrop";
 import type { IGDropdownProps } from "./def/GDropdown";
 
 const MENU_WIDTH = 208;
+const VIEWPORT_GAP = 4;
+const MENU_GAP = 6;
+
+type TPosition = {
+  x: number;
+  y: number;
+};
 
 function GDropdown({ open, onClose, trigger, children, align = "end", className }: IGDropdownProps) {
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const hasOpenedRef = useRef(false);
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
-
-  const getMenuItems = useCallback(() => Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []), []);
-
+  const [position, setPosition] = useState<TPosition | null>(null);
+  const getMenuItems = useCallback(() => Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])') ?? []), []);
   const updatePosition = useCallback(() => {
-    const el = triggerRef.current;
-    if (!el) return;
+    const trigger = triggerRef.current;
+    const menu = menuRef.current;
+    if (!trigger || !menu) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const rtl = document.documentElement.dir === "rtl";
+    const menuWidth = menuRect.width || MENU_WIDTH;
+    const menuHeight = menuRect.height;
+    let x: number;
+    let y: number;
+    switch (align) {
+      case "left":
+        x = rtl ? triggerRect.right + MENU_GAP : triggerRect.left - menuWidth - MENU_GAP;
+        y = triggerRect.top;
+        break;
+      case "right":
+        x = rtl ? triggerRect.left - menuWidth - MENU_GAP : triggerRect.right + MENU_GAP;
+        y = triggerRect.top;
+        break;
+      case "top":
+        x = rtl ? triggerRect.right - menuWidth : triggerRect.left;
+        y = triggerRect.top - menuHeight - MENU_GAP;
+        break;
+      case "end":
+      default:
+        x = rtl ? triggerRect.left : triggerRect.right - menuWidth;
+        y = triggerRect.bottom + MENU_GAP;
+        break;
+    }
+    const maxX = viewportWidth - menuWidth - VIEWPORT_GAP;
+    const maxY = viewportHeight - menuHeight - VIEWPORT_GAP;
+    x = Math.max(VIEWPORT_GAP, Math.min(x, maxX));
+    y = Math.max(VIEWPORT_GAP, Math.min(y, maxY));
 
-    const rect = el.getBoundingClientRect();
-    const rtl = typeof document !== "undefined" && document.documentElement.dir === "rtl";
-
-    const endX = rtl ? rect.left : rect.right - MENU_WIDTH;
-    const startX = rtl ? rect.right - MENU_WIDTH : rect.left;
-    const x = Math.max(4, Math.min(align === "end" ? endX : startX, window.innerWidth - MENU_WIDTH - 4));
-
-    setPosition({ x, y: rect.bottom + 6 });
+    setPosition({ x, y });
   }, [align]);
 
   useEffect(() => {
     if (!open) return;
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    const resizeObserver = menuRef.current ? new ResizeObserver(updatePosition) : null;
+    if (resizeObserver && menuRef.current) resizeObserver.observe(menuRef.current);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      resizeObserver?.disconnect();
+    };
+  }, [open, updatePosition]);
 
-    hasOpenedRef.current = true;
-    updatePosition();
-
-    const raf = requestAnimationFrame(() => {
-      getMenuItems()[0]?.focus();
-    });
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => getMenuItems()[0]?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
         onClose();
         return;
       }
-      if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") return;
-
-      e.preventDefault();
+      const navigationKeys = ["ArrowDown", "ArrowUp", "Home", "End"];
+      if (!navigationKeys.includes(event.key)) return;
+      event.preventDefault();
       const items = getMenuItems();
-      if (items.length === 0) return;
-
+      if (!items.length) return;
       const currentIndex = items.indexOf(document.activeElement as HTMLElement);
       let nextIndex: number;
-      if (e.key === "Home") nextIndex = 0;
-      else if (e.key === "End") nextIndex = items.length - 1;
-      else if (e.key === "ArrowDown") nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
-      else nextIndex = currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
-
-      items[nextIndex].focus();
+      switch (event.key) {
+        case "Home":
+          nextIndex = 0;
+          break;
+        case "End":
+          nextIndex = items.length - 1;
+          break;
+        case "ArrowDown":
+          nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
+          break;
+        case "ArrowUp":
+          nextIndex = currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+          break;
+        default:
+          return;
+      }
+      items[nextIndex]?.focus();
     };
-    document.addEventListener("keydown", onKeyDown);
-
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener("keydown", onKeyDown);
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose, updatePosition, getMenuItems]);
-
-  useEffect(() => {
-    if (open) return;
-    if (!hasOpenedRef.current) return;
-    triggerRef.current?.querySelector<HTMLElement>("button")?.focus();
-  }, [open]);
-
+  }, [open, onClose, getMenuItems]);
   return (
     <>
-      <div ref={triggerRef} className="inline-flex">
-        {trigger}
-      </div>
-
+      <div ref={triggerRef}>{trigger}</div>
       {open &&
-        position &&
         createPortal(
           <>
             <GBackdrop onClick={onClose} />
@@ -90,7 +126,16 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className 
               role="menu"
               aria-orientation="vertical"
               className={clsx("fixed z-popover w-52 overflow-hidden rounded-xl border border-border bg-bg-card shadow-lg", className)}
-              style={{ left: position.x, top: position.y }}>
+              style={
+                position
+                  ? {
+                      left: position.x,
+                      top: position.y,
+                    }
+                  : {
+                      visibility: "hidden",
+                    }
+              }>
               {children}
             </div>
           </>,

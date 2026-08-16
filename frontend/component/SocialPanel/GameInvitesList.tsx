@@ -12,6 +12,7 @@ import { useTranslation } from "@/hooks/useSetting";
 import { GamesList } from "@/domain/constant/games";
 import { en, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
 import { ar } from "@/component/i18n/SocialPanel/ar.i18n";
+import { fr } from "@/component/i18n/SocialPanel/fr.i18n";
 import { GEmpty } from "../common/GEmpty";
 import { Bell } from "lucide-react";
 import { GIcon } from "../common/GIcon";
@@ -25,7 +26,7 @@ const gamePath = (gameType: number) => GamesList.find((g) => g.type === gameType
 
 export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
   const router = useRouter();
-  const t = useTranslation({ en, ar }) as TSocialPanelTranslation;
+  const t = useTranslation({ en, ar, fr }) as TSocialPanelTranslation;
   const { gameInvites, acceptGameInvite, dismissGameInvite } = useDashboardData();
   const { state, leaveGame } = useGame();
   const [pendingAccept, setPendingAccept] = useState<TNullable<{ roomId: string; path: TOptional<string> }>>(null);
@@ -55,13 +56,19 @@ export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
   const handleCancelAccept = () => setPendingAccept(null);
 
   if (!gameInvites.length)
-    return <GEmpty icon={<GIcon icon={Bell} size={SizeEnum.xl} color={AccentColorEnum.Muted} />} title={t.noInvitesTitle} description={t.noInvitesDescription} />;
+    return (
+      <GEmpty
+        icon={<GIcon icon={Bell} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}
+        title={t.noInvitesTitle}
+        description={t.noInvitesDescription}
+      />
+    );
 
   return (
     <div className="space-y-2">
       <GList items={gameInvites} keyExtractor={(invite) => invite.roomId} pageSize={10} listClassName="gap-3">
         {(invite) => (
-           <GCard key={invite.roomId} padding={SizeEnum.sm} className="bg-primary-muted border-primary/20">
+          <GCard key={invite.roomId} padding={SizeEnum.sm} className="bg-primary-muted border-primary/20">
             <p className="text-sm font-medium text-text">{t.invites.wantsToPlay.replace("{{name}}", invite.inviterName ?? "")}</p>
             <div className="flex gap-2 mt-2">
               <GButton size={SizeEnum.md} onClick={() => handleAccept(invite.roomId, gamePath(invite.gameType))}>

@@ -9,6 +9,7 @@ import { GIcon } from "./GIcon";
 import { GButton } from "./GButton";
 import type { IGListPaginationProps, IGListProps } from "./def/GList";
 import { ar } from "@/component/i18n/GList/ar.i18n";
+import { fr } from "@/component/i18n/GList/fr.i18n";
 import { en, type GListTranslation } from "@/component/i18n/GList/en.i18n";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
@@ -28,10 +29,8 @@ function GList<T>({
   defaultPage = 0,
 }: IGListProps<T> & IGListPaginationProps) {
   const [page, setPage] = useState(defaultPage);
-  const t = useTranslation({ en, ar }) as GListTranslation;
-
+  const t = useTranslation({ en, ar, fr }) as GListTranslation;
   const paginated = pageSize !== undefined && items.length > pageSize;
-
   const currentPage = paginated ? Math.min(page, Math.ceil(items.length / pageSize) - 1) : 0;
   const startIndex = paginated ? currentPage * pageSize : 0;
   const visibleItems = paginated ? items.slice(startIndex, startIndex + pageSize) : items;

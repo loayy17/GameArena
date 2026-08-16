@@ -14,9 +14,11 @@ import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
 import { emailValidator } from "@/lib/utils";
 import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { ar as arEmailVerify } from "./i18n/ar.i18n";
+import { fr as frEmailVerify } from "./i18n/fr.i18n";
 import { en as enEmailVerify, type TEmailVerifyTranslation } from "./i18n/en.i18n";
 
 function EmailVerifyPage() {
@@ -27,6 +29,7 @@ function EmailVerifyPage() {
   const t = useTranslation({
     en: { ...enEmailVerify, ...EnTextField },
     ar: { ...arEmailVerify, ...ArTextField },
+    fr: { ...frEmailVerify, ...FrTextField },
   }) as TEmailVerifyTranslation & GTextFieldTranslation;
   const resolveError = useErrorMessage();
 
