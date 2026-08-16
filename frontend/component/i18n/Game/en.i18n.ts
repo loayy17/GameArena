@@ -1,28 +1,33 @@
 const en = {
-  tictactoe: {
+tictactoe: {
     name: "Tic Tac Toe",
-    description: "Deploy strategic marks in a classic 3x3 duel"
+    description: "Deploy strategic marks in a classic 3x3 duel",
+    instruction: "Take turns placing X or O. Get three in a row to win."
   },
   snake: {
     name: "Snake",
     description: "Grow your snake and dominate the arena",
-    arrowKeysHint: "Use arrow keys to control"
+    arrowKeysHint: "Use arrow keys to control",
+    instruction: "Steer with arrow keys or swipe to eat food and grow. Don't hit walls or your opponent."
   },
   pingpong: {
     name: "Ping Pong",
     description: "Classic paddle showdown in real-time",
-    controlHint: "Use W/S or ↑/↓ to move your paddle"
+    controlHint: "Use W/S or ↑/↓ to move your paddle",
+    instruction: "Move your paddle with W/S or ↑/↓ (drag on touch). First to 5 points wins."
   },
   rockpaperscissors: {
     name: "Rock Paper Scissors",
     description: "Classic hand game - choose rock, paper, or scissors",
+    instruction: "Pick Rock, Paper, or Scissors each round. Rock beats scissors, scissors beats paper, paper beats rock.",
     rock: "Rock",
     paper: "Paper",
     scissors: "Scissors"
   },
   connectfour: {
     name: "Connect Four",
-    description: "Drop discs and connect four in a row to win"
+    description: "Drop discs and connect four in a row to win",
+    instruction: "Drop discs into a column on your turn. Connect four in a row to win."
   },
   lobby: {
     searchingTitle: "Searching for opponent...",

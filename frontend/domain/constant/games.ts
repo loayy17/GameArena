@@ -18,6 +18,7 @@ export interface IGameConfig {
   needsInput: boolean;
   nameKey: string;
   descriptionKey: string;
+  instructionKey: string;
 }
 
 const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
@@ -35,6 +36,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     needsInput: false,
     nameKey: "tictactoe.name",
     descriptionKey: "tictactoe.description",
+    instructionKey: "tictactoe.instruction",
   },
   [GamesKindEnum.PingPong]: {
     id: "pingpong",
@@ -50,6 +52,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     needsInput: true,
     nameKey: "pingpong.name",
     descriptionKey: "pingpong.description",
+    instructionKey: "pingpong.instruction",
   },
   [GamesKindEnum.Snake]: {
     id: "snake",
@@ -65,6 +68,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     needsInput: true,
     nameKey: "snake.name",
     descriptionKey: "snake.description",
+    instructionKey: "snake.instruction",
   },
   [GamesKindEnum.RockPaperScissors]: {
     id: "rockpaperscissors",
@@ -80,6 +84,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     needsInput: false,
     nameKey: "rockpaperscissors.name",
     descriptionKey: "rockpaperscissors.description",
+    instructionKey: "rockpaperscissors.instruction",
   },
   [GamesKindEnum.ConnectFour]: {
     id: "connectfour",
@@ -95,6 +100,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     needsInput: false,
     nameKey: "connectfour.name",
     descriptionKey: "connectfour.description",
+    instructionKey: "connectfour.instruction",
   },
 };
 
@@ -108,8 +114,8 @@ export function getGameConfig(gameType: GamesKindEnum): IGameConfig {
   return config;
 }
 
-export function translateGameInfo(t: GameTranslations, gameType: GamesKindEnum): { name: string; description: string } {
+export function translateGameInfo(t: GameTranslations, gameType: GamesKindEnum): { name: string; description: string; instruction: string } {
   const config = getGameConfig(gameType);
   const lookup = (key: string): string => (t as unknown as Record<string, unknown>)[key] as string;
-  return { name: lookup(config.nameKey), description: lookup(config.descriptionKey) };
+  return { name: lookup(config.nameKey), description: lookup(config.descriptionKey), instruction: lookup(config.instructionKey) };
 }
