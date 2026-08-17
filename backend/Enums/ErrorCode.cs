@@ -47,6 +47,7 @@
 
 
         InvalidRequest = 6001,
+        InvalidAvatar = 6002,
 
 
         ValidationError = 9001,

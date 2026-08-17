@@ -8,5 +8,5 @@ namespace backend.DTOs.Requests
         [Required] string LastName,
         [Required] string UserName,
         [Required, EmailAddress] string Email,
-        string? Password);
+        [Required, MinLength(8), MaxLength(100)] string Password);
 }

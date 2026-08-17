@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Save, User, Lock, Settings, Moon, Volume2, Activity, Gamepad2, Languages, Bell, List } from "lucide-react";
 import { useTranslation, useTheme, useLocale } from "@/hooks/useSetting";
 import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
 import { en, type TSettingsTranslation } from "./i18n/en.i18n";
 import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
+import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { GButton } from "@/component/common/GButton";
 import { GPage } from "@/component/common/GPage";
 import { GTextField } from "@/component/common/GTextField";
@@ -32,6 +34,7 @@ function SettingsPage() {
   const t = useTranslation({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
+    fr: { ...fr, ...FrTextField },
   }) as TSettingsTranslation & GTextFieldTranslation;
   const resolveError = useErrorMessage();
   const [activeTab, setActiveTab] = useState<SettingsTabEnum>(SettingsTabEnum.Profile);
@@ -70,7 +73,7 @@ function SettingsPage() {
     try {
       const parsed = JSON.parse(user.preferences ?? "{}") as IUserPreferences;
       if (parsed.theme === ThemeEnum.Light || parsed.theme === ThemeEnum.Dark) setTheme(parsed.theme);
-      if (parsed.locale === LocaleEnum.En || parsed.locale === LocaleEnum.Ar) setLocale(parsed.locale);
+      if (parsed.locale === LocaleEnum.En || parsed.locale === LocaleEnum.Ar || parsed.locale === LocaleEnum.Fr) setLocale(parsed.locale);
     } catch {}
   }, [user, setLocale, setTheme]);
 
@@ -291,6 +294,7 @@ function SettingsPage() {
               options={[
                 { value: LocaleEnum.En, label: "English" },
                 { value: LocaleEnum.Ar, label: "العربية" },
+                { value: LocaleEnum.Fr, label: "Français" },
               ]}
               onChange={(e) => setLocale(e.target.value as LocaleEnum)}
             />

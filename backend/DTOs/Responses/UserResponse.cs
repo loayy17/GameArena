@@ -14,5 +14,6 @@ namespace backend.DTOs.Responses
         public DateTime CreatedAt { get; init; }
         public bool IsVerified { get; init; }
         public string? Preferences { get; init; }
+        public string? AvatarUrl { get; init; }
     }
 }

@@ -8,5 +8,6 @@ interface IUserSummary {
   lastName: TNullable<string>;
   status?: UserStatusEnum;
   fullName?: TNullable<string>;
+  avatarUrl?: TNullable<string>;
 }
 export type { IUserSummary };

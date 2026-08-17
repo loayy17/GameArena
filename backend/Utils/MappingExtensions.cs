@@ -17,11 +17,12 @@ public static class MappingExtensions
         Status = user.Status,
         CreatedAt = user.CreatedAt,
         IsVerified = user.IsVerified,
-        Preferences = user.Preferences
+        Preferences = user.Preferences,
+        AvatarUrl = user.AvatarUrl
     };
 
     public static UserSummaryResponse ToSummaryResponse(this User user)
-        => new(user.Id, user.UserName, user.FirstName, user.LastName, user.Status);
+        => new(user.Id, user.UserName, user.FirstName, user.LastName, user.Status, user.AvatarUrl);
 
     public static FriendRequestReceivedResponse ToReceivedRequestResponse(this FriendRequest friendship) => new()
     {

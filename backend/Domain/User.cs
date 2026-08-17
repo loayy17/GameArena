@@ -44,5 +44,6 @@ namespace backend.Domain
         public ICollection<MatchHistory> MatchesAsPlayer1 { get; set; } = [];
         public ICollection<MatchHistory> MatchesAsPlayer2 { get; set; } = [];
         public string? Preferences { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }
