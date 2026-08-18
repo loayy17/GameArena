@@ -11,7 +11,7 @@ import type { AuthContextType } from "./def/IAuthContext";
 
 const AuthContext = createContext<TNullable<AuthContextType>>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ requireAuth, children }: { requireAuth: boolean; children: React.ReactNode }) {
   const [user, setUser] = useState<TNullable<IUser>>(null);
 
   const [loading, setLoading] = useState(true);
@@ -81,11 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       loading,
+      requireAuth,
       refreshUser,
       updatePreferences,
       setUser,
     }),
-    [user, loading, refreshUser, updatePreferences],
+    [user, loading, requireAuth, refreshUser, updatePreferences],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

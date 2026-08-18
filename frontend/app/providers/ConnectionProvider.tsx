@@ -7,6 +7,7 @@ import { friendService } from "@/services/def/FriendService";
 import { notificationService } from "@/services/def/NotificationService";
 import { chatService } from "@/services/def/ChatService";
 import { gameService } from "@/services/def/GameService";
+import { useAuth } from "./AuthProvider";
 import type { HubConnection } from "@microsoft/signalr";
 import type { IConnectionContext } from "@/domain/meta/IConnectionContext";
 import type { TNullable, TOptional } from "@/domain/type/TCommon";
@@ -26,6 +27,7 @@ function createConnection(name: string): HubConnection {
 }
 
 export function ConnectionProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [gameConnection, setGameConnection] = useState<TNullable<HubConnection>>(null);
   const [socialConnection, setSocialConnection] = useState<TNullable<HubConnection>>(null);
   const [socialReconnectKey, setSocialReconnectKey] = useState(0);
@@ -40,12 +42,14 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
   const socialKeyRef = useRef(0);
   const cancelledRef = useRef(false);
   const hubGenRef = useRef<Record<keyof HubConnectionStates, number>>({ game: 0, social: 0 });
+  const userId = user?.id;
 
   useEffect(() => {
     socialKeyRef.current = socialReconnectKey;
   }, [socialReconnectKey]);
 
   useEffect(() => {
+    if (!userId) return;
     cancelledRef.current = false;
 
     const updateState = (hub: keyof HubConnectionStates, state: ConnectionState) => {
@@ -156,7 +160,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
         social: ConnectionState.Disconnected,
       });
     };
-  }, []);
+  }, [userId]);
 
   const stopConnections = useCallback(async () => {
     cancelledRef.current = true;

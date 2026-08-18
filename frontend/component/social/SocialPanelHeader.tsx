@@ -8,13 +8,7 @@ import { SizeEnum } from "@/domain/enum/SizeEnum";
 
 import type { ISocialPanelHeaderProps } from "./def/SocialPanelHeader";
 
-function SocialPanelHeader({
-  title,
-  onlineCount,
-  onlineLabel,
-  onClose,
-  showClose = false,
-}: ISocialPanelHeaderProps) {
+function SocialPanelHeader({ title, onlineCount, onlineLabel, onClose, showClose = false }: ISocialPanelHeaderProps) {
   return (
     <div className="flex items-center gap-3 px-4 pt-4 pb-2">
       <div className="flex-1 min-w-0">
@@ -29,12 +23,7 @@ function SocialPanelHeader({
         )}
       </div>
       {showClose && onClose && (
-        <GButton
-          variant={ButtonVariantEnum.Subtle}
-          size={SizeEnum.icon}
-          onClick={onClose}
-          aria-label="Close"
-          className="w-8 h-8">
+        <GButton variant={ButtonVariantEnum.Subtle} size={SizeEnum.icon} onClick={onClose} aria-label="Close" className="w-8 h-8">
           <GIcon icon={X} size={SizeEnum.sm} />
         </GButton>
       )}
@@ -43,4 +32,3 @@ function SocialPanelHeader({
 }
 
 export { SocialPanelHeader };
-

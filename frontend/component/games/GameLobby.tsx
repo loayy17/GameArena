@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Play, UserPlus } from "lucide-react";
+import { Play, UserPlus, X } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
@@ -74,7 +74,11 @@ function GameLobby({ gameType }: IGameLobbyProps) {
                 </GButton>
               </>
             )}
-            <GButton onClick={() => resetGame()} variant={ButtonVariantEnum.Secondary} size={SizeEnum.sm}>
+            <GButton
+              onClick={() => resetGame()}
+              variant={ButtonVariantEnum.Secondary}
+              size={SizeEnum.sm}
+              startIcon={<GIcon icon={X} size={SizeEnum.md} />}>
               {t.waiting.cancelMatch}
             </GButton>
           </div>

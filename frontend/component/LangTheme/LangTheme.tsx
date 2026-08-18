@@ -18,7 +18,7 @@ import { GDropdown } from "../common/GDropdown";
 import { useState } from "react";
 import { GDropdownItem } from "../common/GDropdownItem";
 
-function LangTheme({ collapsed, className = "", align = "end" }: ILangThemeProps) {
+function LangTheme({ collapsed = false, className = "", align = "end" }: ILangThemeProps) {
   const [locale, setLocale] = useLocale();
   const [theme, setTheme] = useTheme();
   const t = useTranslation({ en, ar, fr }) as TLangThemeTranslation;
@@ -37,7 +37,7 @@ function LangTheme({ collapsed, className = "", align = "end" }: ILangThemeProps
     </GDropdownItem>
   );
   return (
-    <div className={clsx("flex items-center justify-center gap-1 flex-1", collapsed ? "flex-col" : "w-full", className)}>
+    <div className={clsx("grid gap-2 w-full", collapsed ? "grid-cols-1" : "grid-cols-2", className)}>
       <GDropdown
         open={open}
         onClose={() => setOpen(false)}
@@ -46,7 +46,7 @@ function LangTheme({ collapsed, className = "", align = "end" }: ILangThemeProps
           <GButton
             variant={ButtonVariantEnum.Secondary}
             rounded={SizeEnum.sm}
-            className={!collapsed ? "flex-1" : ""}
+            className={!collapsed ? "w-full" : ""}
             title={t.languages}
             onClick={() => setOpen((prev) => !prev)}>
             <GIcon icon={Globe} size={SizeEnum.md} />

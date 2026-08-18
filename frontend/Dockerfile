@@ -8,6 +8,8 @@ RUN cd /app && npm ci
 FROM node:22-alpine AS build
 COPY --from=deps /app/node_modules /app/node_modules
 COPY . /app
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN cd /app && npm run build
 
 # Runtime stage

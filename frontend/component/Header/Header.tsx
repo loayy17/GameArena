@@ -1,6 +1,6 @@
 "use client";
 
-import { Hexagon, Menu, Users } from "lucide-react";
+import { ArrowBigLeftDash, ArrowBigRightDashIcon, ChevronDown, ChevronUp, Hexagon, Menu, UsersRound } from "lucide-react";
 
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useTranslation } from "@/hooks/useSetting";
@@ -32,7 +32,7 @@ function Header({ sidebar, social }: IHeaderProps) {
 
   return (
     <header className="fixed inset-x-0 top-0 z-sticky flex h-14 items-center gap-2 border-b border-border bg-bg-sidebar px-3">
-      <div className="hidden md:flex shrink-0">
+      <div className="hidden md:flex shrink-0 px-2 ">
         <GButton
           variant={ButtonVariantEnum.Subtle}
           size={SizeEnum.icon}
@@ -63,13 +63,21 @@ function Header({ sidebar, social }: IHeaderProps) {
           rounded={SizeEnum.full}
           aria-label={st.friendsAndInvites}
           title={st.friendsAndInvites}
-          className="shrink-0"
           onClick={() => {
             social?.toggleCollapsed();
             social?.toggleMobile();
           }}>
           <span className="relative inline-flex">
-            <GIcon icon={Users} size={SizeEnum.md} />
+            <span className="inline-flex md:hidden">
+              <GIcon icon={social?.open ? ChevronDown : ChevronUp} size={SizeEnum.sm} />
+            </span>
+            <span className="hidden md:inline-flex xl:hidden">
+              <GIcon icon={social?.open ? ArrowBigRightDashIcon : ArrowBigLeftDash} size={SizeEnum.sm} />
+            </span>
+            <span className="hidden xl:inline-flex">
+              <GIcon icon={social?.collapsed ? ArrowBigLeftDash : ArrowBigRightDashIcon} size={SizeEnum.sm} />
+            </span>
+            <GIcon icon={UsersRound} size={SizeEnum.md} />
             {socialBadge > 0 && (
               <span className="absolute -top-1 -inset-e-1">
                 <GBadge variant={AccentColorEnum.Danger} size={SizeEnum.xs} className="min-w-4 justify-center px-1">

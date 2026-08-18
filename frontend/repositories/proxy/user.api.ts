@@ -2,7 +2,7 @@ import { baseURL, clientFactory } from "@/app/network";
 import { HttpVerbEnum } from "@/domain/enum/HttpVerbEnum";
 
 const userApi = clientFactory(
-  `${baseURL}user`,
+  `${baseURL}/user`,
   {
     profile: {
       verb: HttpVerbEnum.Get,

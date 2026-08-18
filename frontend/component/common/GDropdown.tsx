@@ -116,7 +116,9 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className 
   }, [open, onClose, getMenuItems]);
   return (
     <>
-      <div ref={triggerRef}>{trigger}</div>
+      <div ref={triggerRef} className="flex-1">
+        {trigger}
+      </div>
       {open &&
         createPortal(
           <>

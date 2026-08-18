@@ -62,9 +62,9 @@ function AuthLayout({ children }: { children: ReactNode }) {
 
       <div className="flex-1 flex flex-col min-h-screen p-4 lg:p-8">
         <div className="flex justify-end">
-          <LangTheme collapsed={false} className="flex gap-2" />
+          <LangTheme />
         </div>
-        <main className="flex flex-1 items-center justify-center">
+        <main className="flex flex-1 items-center justify-center my-2">
           <GCard variant={CardVariantEnum.Elevated} padding={SizeEnum.xl} className="w-full max-w-xl">
             {children}
           </GCard>

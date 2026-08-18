@@ -198,7 +198,7 @@ function RegisterForm() {
         </GButton>
 
         <div className="text-sm text-center text-text-secondary pt-2 border-t border-border/40">
-          {t.haveAccount}{" "}
+          {t.haveAccount}
           <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1">
             {t.signIn}
           </Link>

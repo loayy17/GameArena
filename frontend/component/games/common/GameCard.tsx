@@ -26,7 +26,7 @@ function GameCard({ name, desc, onClick, playLabel, animation }: IGameCardProps)
   }, []);
 
   return (
-    <GCard padding={SizeEnum.lg}>
+    <GCard padding={SizeEnum.lg} className="flex flex-col items-center gap-4">
       <LottiePlayer
         autoplay={!reducedMotion}
         loop={!reducedMotion}

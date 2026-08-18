@@ -1,5 +1,5 @@
 interface ILangThemeProps {
-  collapsed: boolean;
+  collapsed?: boolean;
   className?: string;
   align?: "top" | "left" | "right" | "end";
 }

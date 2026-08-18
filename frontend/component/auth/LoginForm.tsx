@@ -150,7 +150,7 @@ function LoginForm() {
           </Link>
 
           <div className="text-text-secondary">
-            {t.dontHaveAccount}{" "}
+            {t.dontHaveAccount}
             <Link href="/register" className="text-primary hover:text-primary-hover font-semibold px-1">
               {t.register}
             </Link>
