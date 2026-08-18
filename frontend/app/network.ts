@@ -1,8 +1,8 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import type { TEndpoint, TEndpointsMap, THashMap, TPromise, TProxy } from "@/domain/type/TCommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+// Todo remove the https://gamearena-ppnc.onrender.com it is for the cloudflare issue
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
 const apiBase = API_BASE;
 const baseURL = `${API_BASE}/api`;
 let isRefreshing = false;
