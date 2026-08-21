@@ -11,30 +11,12 @@ namespace backend.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("UPDATE \"Users\" SET \"Rank\" = NULL;");
-
-            migrationBuilder.AlterColumn<double>(
-                name: "Rank",
-                table: "Users",
-                type: "double precision",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(20)",
-                oldMaxLength: 20,
-                oldNullable: true);
+            migrationBuilder.Sql("ALTER TABLE \"Users\" ALTER COLUMN \"Rank\" TYPE double precision USING \"Rank\"::double precision;");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "Rank",
-                table: "Users",
-                type: "character varying(20)",
-                maxLength: 20,
-                nullable: true,
-                oldClrType: typeof(double),
-                oldType: "double precision",
-                oldNullable: true);
+            migrationBuilder.Sql("ALTER TABLE \"Users\" ALTER COLUMN \"Rank\" TYPE character varying(20) USING \"Rank\"::text;");
         }
     }
 }

@@ -39,7 +39,7 @@ namespace backend.Migrations
 
                     b.HasIndex("BlockerId", "BlockedId");
 
-                    b.ToTable("Blocks");
+                    b.ToTable("Blocks", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.EmailVerification", b =>
@@ -69,7 +69,7 @@ namespace backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EmailVerifications");
+                    b.ToTable("EmailVerifications", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.FriendRequest", b =>
@@ -92,7 +92,7 @@ namespace backend.Migrations
 
                     b.HasIndex("SenderId", "Status");
 
-                    b.ToTable("FriendRequests");
+                    b.ToTable("FriendRequests", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.MatchHistory", b =>
@@ -129,7 +129,7 @@ namespace backend.Migrations
 
                     b.HasIndex("Player2Id");
 
-                    b.ToTable("MatchHistories");
+                    b.ToTable("MatchHistories", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Message", b =>
@@ -160,7 +160,7 @@ namespace backend.Migrations
 
                     b.HasIndex("SenderId", "ReceiverId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Notification", b =>
@@ -198,7 +198,7 @@ namespace backend.Migrations
 
                     b.HasIndex("UserId", "IsRead");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.RefreshToken", b =>
@@ -227,7 +227,7 @@ namespace backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.User", b =>
@@ -240,7 +240,8 @@ namespace backend.Migrations
                         .HasColumnType("bytea");
 
                     b.Property<string>("AvatarContentType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -291,7 +292,7 @@ namespace backend.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.UserFriends", b =>
@@ -309,7 +310,7 @@ namespace backend.Migrations
 
                     b.HasIndex("FriendId");
 
-                    b.ToTable("UserFriends");
+                    b.ToTable("UserFriends", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Block", b =>
