@@ -26,6 +26,10 @@ namespace backend.Domain
         [Required]
         [MaxLength(100)]
         public string LastName { get; set; } = string.Empty;
+        public string? Preferences { get; set; }
+        public byte[]? Avatar { get; set; }
+        public double? Rank { get; set; }
+        public string? AvatarContentType { get; set; }
 
         public UserRole Role { get; set; } = UserRole.User;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -43,7 +47,5 @@ namespace backend.Domain
 
         public ICollection<MatchHistory> MatchesAsPlayer1 { get; set; } = [];
         public ICollection<MatchHistory> MatchesAsPlayer2 { get; set; } = [];
-        public string? Preferences { get; set; }
-        public string? AvatarUrl { get; set; }
     }
 }

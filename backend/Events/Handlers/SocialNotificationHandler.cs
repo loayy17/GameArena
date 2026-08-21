@@ -9,7 +9,8 @@ public class SocialNotificationHandler(
     IHubContext<SocialHub> _hub,
     IUserPresenceService _presence,
     INotificationService _notificationService,
-    ISocialReadService _socialReadService
+    ISocialReadService _socialReadService,
+    IUserService _userService
 ) : IEventHandler<FriendRequestSentEvent>,
     IEventHandler<FriendRequestAcceptedEvent>,
     IEventHandler<FriendRequestDeclinedEvent>,
@@ -19,6 +20,7 @@ public class SocialNotificationHandler(
     IEventHandler<GameFinishedEvent>,
     IEventHandler<GameLeftEvent>,
     IEventHandler<UserBlockedEvent>,
+    IEventHandler<UserUnblockedEvent>,
     IEventHandler<FriendRequestCancelledEvent>,
     IEventHandler<GameInviteSentEvent>
 {
@@ -149,6 +151,8 @@ public class SocialNotificationHandler(
             await SetPresenceAndBroadcastAsync(p1, UserStatus.Online, "friend:online");
         if (Guid.TryParse(eventHappen.Player2Id, out var p2))
             await SetPresenceAndBroadcastAsync(p2, UserStatus.Online, "friend:online");
+        if (Guid.TryParse(eventHappen.Player1Id, out var r1) && Guid.TryParse(eventHappen.Player2Id, out var r2))
+            await _userService.UpdateRanksAsync(r1, r2, eventHappen.Player1Score, eventHappen.Player2Score);
     }
 
     public async Task HandleAsync(GameLeftEvent eventHappen)
@@ -162,6 +166,14 @@ public class SocialNotificationHandler(
         await Task.WhenAll(
             _hub.Clients.Group($"user:{eventHappen.BlockedUserId}")
                 .SendAsync("friend:blocked", new { userId = eventHappen.BlockerId }),
+            _notificationService.SendSocialDataAsync(eventHappen.BlockedUserId),
+            _notificationService.SendSocialDataAsync(eventHappen.BlockerId)
+        );
+    }
+
+    public async Task HandleAsync(UserUnblockedEvent eventHappen)
+    {
+        await Task.WhenAll(
             _notificationService.SendSocialDataAsync(eventHappen.BlockedUserId),
             _notificationService.SendSocialDataAsync(eventHappen.BlockerId)
         );

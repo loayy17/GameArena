@@ -28,7 +28,9 @@ namespace backend.Services
                     OpponentUserName = m.Player1Id == userId ? m.Player2.UserName : m.Player1.UserName,
                     OpponentFirstName = m.Player1Id == userId ? m.Player2.FirstName : m.Player1.FirstName,
                     OpponentLastName = m.Player1Id == userId ? m.Player2.LastName : m.Player1.LastName,
-                    OpponentAvatarUrl = m.Player1Id == userId ? m.Player2.AvatarUrl : m.Player1.AvatarUrl
+                    OpponentAvatarUrl = m.Player1Id == userId
+                        ? MappingExtensions.AvatarUrl(m.Player2.Id, m.Player2.Avatar)
+                        : MappingExtensions.AvatarUrl(m.Player1.Id, m.Player1.Avatar)
                 })
                 .ToListAsync();
 

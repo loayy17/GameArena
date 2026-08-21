@@ -25,17 +25,5 @@ namespace backend.Utils
                     (uf.UserId == firstUserId && uf.FriendId == secondUserId) ||
                     (uf.UserId == secondUserId && uf.FriendId == firstUserId))
                 .ToListAsync();
-
-        public static Task<bool> AreEitherBlockedAsync(AppDbContext context, Guid userId, Guid otherUserId)
-            => context.Blocks.AnyAsync(b =>
-                (b.BlockerId == userId && b.BlockedId == otherUserId) ||
-                (b.BlockerId == otherUserId && b.BlockedId == userId));
-
-        public static Task<List<Guid>> GetAllBlockedIdsAsync(AppDbContext context, Guid userId)
-            => context.Blocks
-                .AsNoTracking()
-                .Where(b => b.BlockerId == userId || b.BlockedId == userId)
-                .Select(b => b.BlockerId == userId ? b.BlockedId : b.BlockerId)
-                .ToListAsync();
     }
 }

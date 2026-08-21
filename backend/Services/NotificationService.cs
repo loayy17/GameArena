@@ -27,10 +27,10 @@ namespace backend.Services
 
             return new NotificationCountersResponse
             {
-                ReceivedFriendRequests = receivedTask.Result,
-                SentFriendRequests = sentTask.Result,
-                Friends = friendsTask.Result,
-                UnreadMessages = unreadTask.Result
+                ReceivedFriendRequests = await receivedTask,
+                SentFriendRequests = await sentTask,
+                Friends = await friendsTask,
+                UnreadMessages = await unreadTask
             };
         }
 
@@ -54,7 +54,7 @@ namespace backend.Services
             return await context.UserFriends
                 .CountAsync(uf => uf.UserId == userId && !context.Blocks.Any(b =>
                     (b.BlockerId == userId && b.BlockedId == uf.FriendId) ||
-                    (b.BlockerId == uf.FriendId && b.BlockedId == userId)));
+                    (b.BlockedId == userId && b.BlockerId == uf.FriendId)));
         }
 
         private async Task<int> CountUnreadMessagesAsync(Guid userId)
@@ -110,11 +110,11 @@ namespace backend.Services
 
             var batch = new SocialDataBatchResponse
             {
-                Friends = friendsTask.Result,
-                ReceivedRequests = receivedTask.Result,
-                SentRequests = sentTask.Result,
-                BlockedUsers = blockedTask.Result,
-                Counters = countersTask.Result
+                Friends = await friendsTask,
+                ReceivedRequests = await receivedTask,
+                SentRequests = await sentTask,
+                BlockedUsers = await blockedTask,
+                Counters = await countersTask
             };
 
             try
@@ -182,13 +182,9 @@ namespace backend.Services
         public async Task MarkNotificationAsReadAsync(Guid userId, Guid notificationId)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-            var notification = await context.Notifications
-                .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
-            if (notification != null)
-            {
-                notification.IsRead = true;
-                await context.SaveChangesAsync();
-            }
+            await context.Notifications
+                .Where(n => n.Id == notificationId && n.UserId == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
         }
 
         public async Task MarkAllNotificationsAsReadAsync(Guid userId)

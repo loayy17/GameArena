@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventHandler<GameFinishedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
         services.AddScoped<IEventHandler<GameLeftEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
         services.AddScoped<IEventHandler<UserBlockedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
+        services.AddScoped<IEventHandler<UserUnblockedEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
         services.AddScoped<IEventHandler<GameInviteSentEvent>>(sp => sp.GetRequiredService<SocialNotificationHandler>());
         return services;
     }

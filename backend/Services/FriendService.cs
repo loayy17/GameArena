@@ -199,6 +199,7 @@ namespace backend.Services
 
             _context.Blocks.Remove(block);
             await _context.SaveChangesAsync();
+            await _eventBus.PublishAsync(new UserUnblockedEvent(blockerId, blockedId));
         }
     }
 }

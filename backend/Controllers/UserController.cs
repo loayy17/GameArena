@@ -13,6 +13,13 @@ namespace backend.Controllers
         IUserService _userService,
         ICurrentUserService _currentUser) : ControllerBase
     {
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResponse<UserPublicProfileResponse>>> GetUser(Guid id)
+        {
+            var profile = await _userService.GetUserProfileAsync(id, _currentUser.UserId);
+            return Ok(new ApiResponse<UserPublicProfileResponse> { Data = profile });
+        }
+
         [HttpGet("profile")]
         public async Task<ActionResult<ApiResponse<UserResponse>>> Profile()
         {
@@ -53,6 +60,21 @@ namespace backend.Controllers
         {
             await _userService.UpdatePreferencesAsync(_currentUser.UserId, request.Preferences);
             return Ok(new ApiResponse<object>());
+        }
+
+        [HttpPost("avatar")]
+        [RequestSizeLimit(2 * 1024 * 1024)]
+        public async Task<ActionResult<ApiResponse<UserResponse>>> UploadAvatar(IFormFile file)
+        {
+            var user = await _userService.UpdateAvatarAsync(_currentUser.UserId, file);
+            return Ok(new ApiResponse<UserResponse> { Data = user });
+        }
+
+        [HttpDelete("avatar")]
+        public async Task<ActionResult<ApiResponse<UserResponse>>> RemoveAvatar()
+        {
+            var user = await _userService.RemoveAvatarAsync(_currentUser.UserId);
+            return Ok(new ApiResponse<UserResponse> { Data = user });
         }
     }
 }

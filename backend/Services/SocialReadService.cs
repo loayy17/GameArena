@@ -24,13 +24,15 @@ namespace backend.Services
 
             if (filter != null && !string.IsNullOrWhiteSpace(filter.Name))
             {
-                var searchTerm = filter.Name.ToLower();
+                var searchTerm = filter.Name.Trim();
                 query = query.Where(u =>
-                    u.UserName != null && u.UserName.ToLower().Contains(searchTerm));
+                    EF.Functions.ILike(u.UserName, $"%{searchTerm}%") ||
+                    EF.Functions.ILike(u.FirstName, $"%{searchTerm}%") ||
+                    EF.Functions.ILike(u.LastName, $"%{searchTerm}%"));
             }
 
             var users = await query
-                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.Status))
+                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
                 .ToListAsync();
 
             var result = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
@@ -53,6 +55,7 @@ namespace backend.Services
                     SenderFirstName = fr.Sender.FirstName,
                     SenderLastName = fr.Sender.LastName,
                     SenderUserName = fr.Sender.UserName,
+                    SenderAvatarUrl = MappingExtensions.AvatarUrl(fr.Sender.Id, fr.Sender.Avatar),
                     SentAt = fr.CreatedAt
                 })
                 .ToListAsync();
@@ -71,6 +74,7 @@ namespace backend.Services
                     ReceiverFirstName = fr.Receiver.FirstName,
                     ReceiverLastName = fr.Receiver.LastName,
                     ReceiverUserName = fr.Receiver.UserName,
+                    ReceiverAvatarUrl = MappingExtensions.AvatarUrl(fr.Receiver.Id, fr.Receiver.Avatar),
                     SentAt = fr.CreatedAt
                 })
                 .ToListAsync();
@@ -83,7 +87,7 @@ namespace backend.Services
             var blocked = await context.Blocks
                 .AsNoTracking()
                 .Where(b => b.BlockerId == userId)
-                .Select(b => new UserSummaryResponse(b.Blocked.Id, b.Blocked.UserName, b.Blocked.FirstName, b.Blocked.LastName, b.Blocked.Status))
+                .Select(b => new UserSummaryResponse(b.Blocked.Id, b.Blocked.UserName, b.Blocked.FirstName, b.Blocked.LastName, b.Blocked.Status, MappingExtensions.AvatarUrl(b.Blocked.Id, b.Blocked.Avatar)))
                 .ToListAsync();
 
             return blocked.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();

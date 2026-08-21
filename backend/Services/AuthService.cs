@@ -75,16 +75,19 @@ namespace backend.Services
         public async Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken)
         {
             var tokenHash = AuthHelper.Hash(rawRefreshToken);
-            var storedToken = await _context.RefreshTokens.Include(t => t.User).FirstOrDefaultAsync(t => t.TokenHash == tokenHash) ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
+            var storedToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash) ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
 
             if (storedToken.ExpiresAt <= DateTime.UtcNow) throw new AppException(ErrorCode.TokenExpired);
-            if (storedToken.User == null) throw new AppException(ErrorCode.UserNotFound);
 
-            if (!storedToken.User.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == storedToken.UserId)
+                ?? throw new AppException(ErrorCode.UserNotFound);
+
+            if (!user.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
             _context.RefreshTokens.Remove(storedToken);
-            var newAccessToken = AuthHelper.CreateToken(storedToken.User, _configuration);
+            var newAccessToken = AuthHelper.CreateToken(user, _configuration);
             var newRefreshToken = AuthHelper.GenerateRefreshTokenString();
-            await SaveNewRefreshToken(storedToken.User.Id, newRefreshToken);
+            await SaveNewRefreshToken(user.Id, newRefreshToken);
             return new AuthResponse
             {
                 AccessToken = newAccessToken,
@@ -96,7 +99,6 @@ namespace backend.Services
         {
             var tokenHash = AuthHelper.Hash(rawToken);
             var storedToken = await _context.RefreshTokens
-                .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TokenHash == tokenHash) ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
 
             _context.RefreshTokens.Remove(storedToken);
@@ -106,8 +108,9 @@ namespace backend.Services
         {
             if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new AppException(ErrorCode.EmailNotFound);
+            if (!await _context.Users.AnyAsync(u => u.Email == email))
+                throw new AppException(ErrorCode.EmailNotFound);
+
             await _emailVerificationService.GenerateAndSendOtpAsync(email, OtpPurpose.PasswordReset);
         }
 
@@ -128,10 +131,9 @@ namespace backend.Services
 
         private async Task RevokeAllRefreshTokensAsync(Guid userId)
         {
-            var tokens = await _context.RefreshTokens
+            await _context.RefreshTokens
                 .Where(t => t.UserId == userId)
-                .ToListAsync();
-            _context.RefreshTokens.RemoveRange(tokens);
+                .ExecuteDeleteAsync();
         }
         private async Task SaveNewRefreshToken(Guid userId, string rawRefreshToken)
         {

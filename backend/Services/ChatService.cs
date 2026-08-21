@@ -17,18 +17,26 @@ namespace backend.Services
                 .Where(m => m.ReceiverId == userId && m.SenderId == friendId && !m.IsRead)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.IsRead, true));
 
+            if (unreadCount > 0)
+                await _notificationService.SendCountersAsync(userId);
+
             var messages = await _context.Messages
                 .AsNoTracking()
                 .Where(m =>
                     (m.SenderId == userId && m.ReceiverId == friendId) ||
                     (m.SenderId == friendId && m.ReceiverId == userId))
                 .OrderBy(m => m.SentAt)
+                .Select(m => new MessageResponse
+                {
+                    SenderId = m.SenderId,
+                    ReceiverId = m.ReceiverId,
+                    Content = m.Content,
+                    SentAt = m.SentAt,
+                    IsRead = m.IsRead
+                })
                 .ToListAsync();
 
-            if (unreadCount > 0)
-                await _notificationService.SendCountersAsync(userId);
-
-            return messages.Select(m => m.ToResponse()).ToList();
+            return messages;
         }
 
         public async Task<MessageResponse> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message)

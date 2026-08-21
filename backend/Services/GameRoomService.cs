@@ -304,7 +304,7 @@ namespace backend.Services
                 await matchHistory.SaveMatchHistoryAsync(room);
 
                 var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
-                await eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!));
+                await eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!, room.Score?[0] ?? 0, room.Score?[1] ?? 0));
             }
             catch (Exception ex)
             {

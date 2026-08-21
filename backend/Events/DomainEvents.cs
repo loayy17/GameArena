@@ -34,6 +34,11 @@ public sealed record FriendRequestCancelledEvent(
     Guid ReceiverId
 ) : DomainEvent;
 
+public sealed record UserUnblockedEvent(
+    Guid BlockerId,
+    Guid BlockedUserId
+) : DomainEvent;
+
 public sealed record ChatMessageSentEvent(
     Guid SenderId,
     Guid ReceiverId,
@@ -48,7 +53,9 @@ public sealed record GameStartedEvent(
 
 public sealed record GameFinishedEvent(
     string Player1Id,
-    string Player2Id
+    string Player2Id,
+    int Player1Score,
+    int Player2Score
 ) : DomainEvent;
 
 public sealed record GameLeftEvent(
