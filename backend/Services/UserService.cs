@@ -61,12 +61,8 @@ namespace backend.Services
             if (!data.CanViewStats)
                 return result;
 
-            var statsTask = GetMatchStatsAsync(userId);
-            var matchesTask = GetMatchProjectionsAsync(userId, 10);
-            await Task.WhenAll(statsTask, matchesTask);
-
-            var stats = statsTask.Result;
-            var matches = matchesTask.Result;
+            var stats = await GetMatchStatsAsync(userId);
+            var matches = await GetMatchProjectionsAsync(userId, 10);
 
             return result with
             {
