@@ -45,9 +45,11 @@ function GIcon({
   }
 
   const activeColor = tileColor || AccentColorEnum.OnPrimary;
+  const isGradient = tileGradient.includes("from-");
   const wrapperClasses = clsx(
     "inline-flex items-center justify-center shrink-0 p-2",
     radiusSize[tileRounded],
+    isGradient && "bg-gradient-to-br",
     tileGradient,
     hover && accentHoverBg[activeColor],
     onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
