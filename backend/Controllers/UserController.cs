@@ -62,6 +62,15 @@ namespace backend.Controllers
             return Ok(new ApiResponse<object>());
         }
 
+        [HttpGet("{id}/avatar")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvatar(Guid id)
+        {
+            var avatar = await _userService.GetAvatarAsync(id);
+            if (avatar is null) return NotFound();
+            return File(avatar.Value.Bytes, avatar.Value.ContentType);
+        }
+
         [HttpPost("avatar")]
         [RequestSizeLimit(2 * 1024 * 1024)]
         public async Task<ActionResult<ApiResponse<UserResponse>>> UploadAvatar(IFormFile file)
