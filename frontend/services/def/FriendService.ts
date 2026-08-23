@@ -70,8 +70,8 @@ class FriendService extends SignalRServiceBase {
     this.addHandler("friend:requestCancelled", (data: unknown) => this.subs.dispatch("friend:requestCancelled", data));
   }
 
-  sendFriendRequest(friendId: string): TPromise<void> {
-    return this.api.sendFriendRequest<void>({ friendId });
+  sendFriendRequest(receiverId: string): TPromise<void> {
+    return this.api.sendFriendRequest<void>({ receiverId });
   }
 
   getReceivedFriendRequests(): TPromise<IFriendRequestReceived[]> {
@@ -110,6 +110,10 @@ class FriendService extends SignalRServiceBase {
 
   unblockUser(blockedId: string): TPromise<void> {
     return this.api.unblockUser<void>({ blockedId });
+  }
+
+  getBlockedUsers(): TPromise<IUserSummary[]> {
+    return this.api.getBlockedUsers<IUserSummary[]>();
   }
 
   onFriendListUpdate(handler: (friends: IUserSummary[]) => void): () => void {

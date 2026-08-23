@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using backend.Utils;
 
 namespace backend.DTOs.Requests
 {
     public record ResetPasswordRequest(
-        [Required, EmailAddress] string Email,
+        [Required, RegularExpression(ValidationRules.EmailPattern)] string Email,
         [Required] string Otp,
-        [Required, MinLength(8), MaxLength(100)] string NewPassword);
-
+        [Required, RegularExpression(ValidationRules.PasswordPattern)] string NewPassword);
 }

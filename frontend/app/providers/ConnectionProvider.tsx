@@ -11,14 +11,13 @@ import { useAuth } from "./AuthProvider";
 import type { HubConnection } from "@microsoft/signalr";
 import type { IConnectionContext } from "@/domain/meta/IConnectionContext";
 import type { TNullable, TOptional } from "@/domain/type/TCommon";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
+import { apiBase } from "@/app/network";
 
 const ConnectionContext = createContext<TOptional<IConnectionContext>>(undefined);
 
 function createConnection(name: string): HubConnection {
   return new HubConnectionBuilder()
-    .withUrl(`${BASE_URL}/${name}`, { withCredentials: true })
+    .withUrl(`${apiBase}/${name}`, { withCredentials: true })
     .withAutomaticReconnect({ nextRetryDelayInMilliseconds: (retryContext) => Math.min(retryContext.elapsedMilliseconds * 1.5, 30000) })
     .withKeepAliveInterval(15_000)
     .withServerTimeout(60_000)

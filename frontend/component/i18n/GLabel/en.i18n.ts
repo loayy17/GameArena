@@ -1,5 +1,5 @@
 const en = {
-  required: "required",
+  required: "This field is required",
 };
 
 type GLabelTranslation = typeof en;

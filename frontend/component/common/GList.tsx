@@ -56,7 +56,7 @@ function GList<T>({
         <div className="flex items-center justify-center gap-1 border-t border-border pt-3 mt-3">
           <GButton
             variant={ButtonVariantEnum.Subtle}
-            size={SizeEnum.icon}
+            size={SizeEnum.iconSm}
             disabled={currentPage === 0}
             aria-label={t.previousPage}
             title={t.previousPage}
@@ -69,7 +69,7 @@ function GList<T>({
               key={index}
               variant={currentPage === index ? ButtonVariantEnum.Primary : ButtonVariantEnum.Subtle}
               disabled={currentPage === index}
-              size={SizeEnum.icon}
+              size={SizeEnum.iconSm}
               aria-current={currentPage === index ? "page" : undefined}
               onClick={() => setPage(index)}>
               {index + 1}
@@ -78,7 +78,7 @@ function GList<T>({
 
           <GButton
             variant={ButtonVariantEnum.Subtle}
-            size={SizeEnum.icon}
+            size={SizeEnum.iconSm}
             disabled={currentPage === Math.ceil(items.length / pageSize) - 1}
             aria-label={t.nextPage}
             title={t.nextPage}

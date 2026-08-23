@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-
+using backend.Utils;
 
 namespace backend.DTOs.Requests
 {
     public record ChangePasswordRequest(
     [Required] string OldPassword,
-    [Required, MinLength(8), MaxLength(100)] string NewPassword);
+    [Required, RegularExpression(ValidationRules.PasswordPattern)] string NewPassword);
 }

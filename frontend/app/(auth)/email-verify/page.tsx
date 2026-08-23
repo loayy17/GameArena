@@ -4,10 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { AuthLayout } from "@/app/(auth)/layout";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { OtpForm } from "@/component/auth/OtpForm";
 import { GTextField } from "@/component/common/GTextField";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { emailVerificationService } from "@/services/def/EmailVerificationService";
 import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
@@ -24,6 +24,7 @@ import { en as enEmailVerify, type TEmailVerifyTranslation } from "./i18n/en.i18
 function EmailVerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshUser } = useAuth();
   const emailParam = searchParams.get("email");
 
   const t = useTranslation({
@@ -56,8 +57,9 @@ function EmailVerifyPage() {
     }
   };
 
-  const handleOtpSuccess = () => {
-    router.replace("/login?email=" + encodeURIComponent(email));
+  const handleOtpSuccess = async () => {
+    await refreshUser();
+    router.replace("/home");
   };
 
   const backToLogin = (
@@ -71,49 +73,45 @@ function EmailVerifyPage() {
 
   if (step === "otp") {
     return (
-      <AuthLayout>
-        <div className="w-full space-y-4">
-          <p className="text-sm text-text-secondary text-center">{t.enterCode}</p>
-          {error && (
-            <p role="alert" className="text-danger text-xs text-center">
-              {error}
-            </p>
-          )}
-          <OtpForm email={email} onSuccess={handleOtpSuccess} />
-          {backToLogin}
-        </div>
-      </AuthLayout>
+      <div className="w-full space-y-4">
+        <p className="text-sm text-text-secondary text-center">{t.enterCode}</p>
+        {error && (
+          <p role="alert" className="text-danger text-xs text-center">
+            {error}
+          </p>
+        )}
+        <OtpForm email={email} onSuccess={handleOtpSuccess} />
+        {backToLogin}
+      </div>
     );
   }
 
   return (
-    <AuthLayout>
-      <div className="w-full space-y-5">
-        <p className="text-sm text-text-secondary">{t.description}</p>
-        <GTextField
-          label={t.enterEmail}
-          placeholder={t.enterEmail}
-          value={email}
-          type="email"
-          required
-          error={emailError}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setEmailError("");
-          }}
-          className="w-full"
-        />
-        {error && (
-          <p role="alert" className="text-danger text-xs">
-            {error}
-          </p>
-        )}
-        <GButton loading={loading} loadingText={t.sending} onClick={sendCode} fullWidth>
-          {t.sendCode}
-        </GButton>
-        {backToLogin}
-      </div>
-    </AuthLayout>
+    <div className="w-full space-y-5">
+      <p className="text-sm text-text-secondary">{t.description}</p>
+      <GTextField
+        label={t.enterEmail}
+        placeholder={t.enterEmail}
+        value={email}
+        type="email"
+        required
+        error={emailError}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setEmailError("");
+        }}
+        className="w-full"
+      />
+      {error && (
+        <p role="alert" className="text-danger text-xs">
+          {error}
+        </p>
+      )}
+      <GButtonAsync busy={loading} loadingText={t.sending} onClick={sendCode} fullWidth>
+        {t.sendCode}
+      </GButtonAsync>
+      {backToLogin}
+    </div>
   );
 }
 

@@ -10,6 +10,11 @@ const ar = {
   french: "Français",
   userMenu: "قائمة المستخدم",
   settings: "الإعدادات",
+  help: "المساعدة",
+  reportBug: "الإبلاغ عن خطأ",
+  healthServices: "الخدمات الصحية",
+  privacyPolicy: "سياسة الخصوصية",
+  termsOfService: "شروط الخدمة",
 };
 
 export { ar };

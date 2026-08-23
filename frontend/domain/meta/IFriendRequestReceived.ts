@@ -5,6 +5,7 @@ interface IFriendRequestReceived {
   senderFirstName: TNullable<string>;
   senderLastName: TNullable<string>;
   senderUserName: TNullable<string>;
+  senderAvatarUrl?: TNullable<string>;
   sentAt: Date;
 }
 

@@ -137,4 +137,4 @@ export function clientFactory<T extends TEndpointsMap>(
   return { api: proxy };
 }
 
-export { request, buildUrl, api, apiBase, baseURL };
+export { api, apiBase, baseURL };

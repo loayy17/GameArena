@@ -1,6 +1,7 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
+import { GTooltip } from "./GTooltip";
 import type { IGIconProps } from "./def/GIcon";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
@@ -27,26 +28,27 @@ function GIcon({
 
   if (!tile) {
     if (onClick) {
-      return (
-         <button
-           type="button"
-           onClick={onClick}
-           aria-label={ariaLabel}
-           className={clsx(
-             "inline-flex items-center justify-center bg-transparent border-0 p-0 cursor-pointer",
-             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-             className,
-           )}>
-          <Icon className={clsx("shrink-0", sizeClass, color, isRtl)} aria-hidden="true" />
+      const btn = (
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={ariaLabel}
+          className={cn(
+            "inline-flex items-center justify-center bg-transparent border-0 p-0 cursor-pointer",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            className,
+          )}>
+          <Icon className={cn("shrink-0", sizeClass, color, isRtl)} aria-hidden="true" />
         </button>
       );
+      return ariaLabel ? <GTooltip content={ariaLabel}>{btn}</GTooltip> : btn;
     }
-    return <Icon className={clsx("shrink-0", sizeClass, color, isRtl, className)} aria-hidden="true" />;
+    return <Icon className={cn("shrink-0", sizeClass, color, isRtl, className)} aria-hidden="true" />;
   }
 
   const activeColor = tileColor || AccentColorEnum.OnPrimary;
   const isGradient = tileGradient.includes("from-");
-  const wrapperClasses = clsx(
+  const wrapperClasses = cn(
     "inline-flex items-center justify-center shrink-0 p-2",
     radiusSize[tileRounded],
     isGradient && "bg-gradient-to-br",
@@ -56,14 +58,15 @@ function GIcon({
     tileClassName,
   );
 
-  const iconEl = <Icon className={clsx(sizeClass, activeColor, hover && accentHoverText[activeColor], isRtl)} aria-hidden="true" />;
+  const iconEl = <Icon className={cn(sizeClass, activeColor, hover && accentHoverText[activeColor], isRtl)} aria-hidden="true" />;
 
   if (onClick) {
-    return (
+    const btn = (
       <button type="button" onClick={onClick} aria-label={ariaLabel} className={wrapperClasses}>
         {iconEl}
       </button>
     );
+    return ariaLabel ? <GTooltip content={ariaLabel}>{btn}</GTooltip> : btn;
   }
 
   return <div className={wrapperClasses}>{iconEl}</div>;

@@ -2,7 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Circle, CircleCheck, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
+import {
+  Activity,
+  Bug,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  CircleCheck,
+  CircleHelp,
+  FileText,
+  Globe,
+  LogOut,
+  Moon,
+  Scale,
+  Settings,
+  Sun,
+  User,
+} from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useLogout } from "@/hooks/useLogout";
@@ -43,15 +59,18 @@ function UserMenu() {
 
   const [open, setOpen] = useState(false);
   const [nestedOpen, setNestedOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const closeMenu = () => {
     setNestedOpen(false);
+    setHelpOpen(false);
     setOpen(false);
   };
 
   const toggleMenu = () => {
     setOpen((current) => !current);
     setNestedOpen(false);
+    setHelpOpen(false);
   };
 
   const handleTheme = () => {
@@ -67,6 +86,21 @@ function UserMenu() {
   const handleSettings = () => {
     closeMenu();
     router.push("/settings");
+  };
+
+  const handleProfile = () => {
+    closeMenu();
+    if (user?.id) router.push(`/profile/${user.id}`);
+  };
+
+  const handlePage = (path: string) => {
+    closeMenu();
+    router.push(path);
+  };
+
+  const handleReportBug = () => {
+    closeMenu();
+    window.location.href = "mailto:hindiloay01@gmail.com?subject=GameArena%20Bug%20Report";
   };
 
   const handleLogout = () => {
@@ -96,11 +130,9 @@ function UserMenu() {
           onClick={toggleMenu}>
           <div className="flex items-center gap-2">
             <GAvatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatarUrl} status={user?.status} size={SizeEnum.xs} />
-
             <span className="hidden max-w-32 truncate text-sm font-medium text-text sm:inline-block">
               {user?.firstName} {user?.lastName}
             </span>
-
             <GIcon icon={ChevronDown} size={SizeEnum.xs} className="shrink-0 text-text-muted" />
           </div>
         </GButton>
@@ -116,7 +148,7 @@ function UserMenu() {
         />
       </div>
 
-      <GDropdownItem icon={User} label={t.profile} onClick={handleSettings} />
+      <GDropdownItem icon={User} label={t.profile} onClick={handleProfile} />
       <GDropdownItem icon={theme === ThemeEnum.Dark ? Sun : Moon} label={theme === ThemeEnum.Dark ? t.light : t.dark} onClick={handleTheme} />
       <GDropdown
         open={nestedOpen && open}
@@ -127,17 +159,41 @@ function UserMenu() {
             icon={Globe}
             className="w-full"
             label={`${t.language}: ${localeName(locale, t)}`}
-            onClick={() => setNestedOpen((current) => !current)}
-          />
+            onClick={() => {
+              setNestedOpen((current) => !current);
+              setHelpOpen(false);
+            }}>
+            <GIcon icon={ChevronRight} size={SizeEnum.xs} />
+          </GDropdownItem>
         }>
         {renderLocaleItem(LocaleEnum.En, t.english)}
         {renderLocaleItem(LocaleEnum.Ar, t.arabic)}
         {renderLocaleItem(LocaleEnum.Fr, t.french)}
       </GDropdown>
 
+      <GDropdown
+        open={helpOpen && open}
+        onClose={() => setHelpOpen(false)}
+        align="left"
+        trigger={
+          <GDropdownItem
+            icon={CircleHelp}
+            className="w-full"
+            label={t.help}
+            onClick={() => {
+              setHelpOpen((current) => !current);
+              setNestedOpen(false);
+            }}>
+            <GIcon icon={ChevronRight} size={SizeEnum.xs} />
+          </GDropdownItem>
+        }>
+        <GDropdownItem icon={Bug} label={t.reportBug} onClick={handleReportBug} />
+        <GDropdownItem icon={Activity} label={t.healthServices} onClick={() => handlePage("/health")} />
+        <GDropdownItem icon={FileText} label={t.privacyPolicy} onClick={() => handlePage("/privacy")} />
+        <GDropdownItem icon={Scale} label={t.termsOfService} onClick={() => handlePage("/terms")} />
+      </GDropdown>
       <GDropdownItem icon={Settings} label={t.settings} onClick={handleSettings} />
-
-      <GDropdownItem icon={LogOut} label={t.logout} className="text-danger!" onClick={handleLogout} />
+      <GDropdownItem icon={LogOut} label={t.logout} className="text-danger" onClick={handleLogout} />
     </GDropdown>
   );
 }

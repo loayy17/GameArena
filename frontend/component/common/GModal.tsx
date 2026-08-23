@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import { useCallback, useEffect, useRef } from "react";
 import { GBackdrop } from "./GBackdrop";
 import { GCard } from "./GCard";
@@ -14,9 +14,9 @@ const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 const sheetSideStyles: Record<Exclude<GModalSide, "center">, string> = {
-  start: "inset-y-0 start-0 w-72 sheet-max-width border-e border-border",
-  end: "inset-y-0 end-0 w-80 sheet-max-width border-s border-border",
-  bottom: "inset-x-0 bottom-0 sheet-max-height border-t border-border rounded-t-3xl",
+  start: "inset-y-0 start-0 w-64 sheet-max-width border-e border-border animate-slide-in-start",
+  end: "inset-y-0 end-0 w-80 sheet-max-width border-s border-border animate-slide-in-end",
+  bottom: "inset-x-0 bottom-0 sheet-max-height border-t border-border rounded-t-3xl pb-safe-only animate-slide-in-bottom",
 };
 
 function GModal({
@@ -82,17 +82,10 @@ function GModal({
 
     document.addEventListener("keydown", handleKeyDown);
 
-    if (isSheet) {
-      const previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = previousOverflow;
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     previousFocusRef.current = document.activeElement as HTMLElement;
-
     const timer = requestAnimationFrame(() => {
       if (modalRef.current) {
         const focusable = modalRef.current.querySelector<HTMLElement>(FOCUSABLE);
@@ -102,11 +95,12 @@ function GModal({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
       cancelAnimationFrame(timer);
       previousFocusRef.current?.focus();
       previousFocusRef.current = null;
     };
-  }, [open, isSheet, handleKeyDown]);
+  }, [open, handleKeyDown]);
 
   if (isSheet) {
     return (
@@ -115,10 +109,11 @@ function GModal({
           <>
             <GBackdrop onClick={handleBackdropClick} />
             <aside
+              ref={modalRef}
               role={role}
               aria-modal="true"
               aria-label={ariaLabel}
-              className={clsx("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], panelClassName)}>
+              className={cn("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], panelClassName)}>
               {children}
             </aside>
           </>
@@ -132,7 +127,7 @@ function GModal({
   return (
     <div
       ref={modalRef}
-      className={clsx("fixed inset-0 z-modal flex items-center justify-center p-4", className)}
+      className={cn("fixed inset-0 z-modal flex items-center justify-center p-4", className)}
       role={role}
       aria-modal="true"
       aria-label={ariaLabel}
@@ -141,7 +136,7 @@ function GModal({
       <GBackdrop onClick={handleBackdropClick} />
       <GCard
         padding={cardPadding}
-        className={clsx("relative z-modal mx-auto w-full max-h-full overflow-y-auto custom-scrollbar", modalSize[size])}
+        className={cn("relative z-modal mx-auto w-full max-h-full overflow-y-auto custom-scrollbar animate-scale-in", "shadow-xl", modalSize[size])}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         {ariaDescription && (
           <p id="modal-description" className="sr-only">

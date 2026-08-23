@@ -1,0 +1,34 @@
+const fr = {
+  title: "Profil",
+  memberSince: "Membre depuis",
+  level: "Niv.",
+  shareFailed: "Impossible de copier le lien.",
+  actions: {
+    editProfile: "Modifier le profil",
+    addFriend: "Ajouter un ami",
+    unsend: "Annuler la demande",
+    accept: "Accepter",
+    decline: "Refuser",
+    unblock: "Débloquer",
+    message: "Message",
+    share: "Partager",
+    linkCopied: "Lien copié",
+    loading: "Chargement...",
+  },
+  stats: {
+    total: "Matchs",
+    wins: "Victoires",
+    losses: "Défaites",
+    draws: "Nuls",
+    winRate: "Taux de victoire",
+  },
+  recentMatches: "Matchs récents",
+  noMatches: "Aucun match joué pour le moment",
+  versus: "contre",
+  back: "Retour",
+  errorTitle: "Impossible de charger le profil",
+  errorDescription: "Ce profil n'existe peut-être pas ou est temporairement indisponible.",
+  retry: "Réessayer",
+};
+
+export { fr };

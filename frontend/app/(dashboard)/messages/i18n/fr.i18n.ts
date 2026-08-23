@@ -14,6 +14,7 @@ const fr = {
   disconnected: "Déconnecté",
   noFriendsTitle: "Aucun ami trouvé",
   noFriendsDescription: "Ajoutez d'abord des amis, puis commencez une conversation ici.",
+  findFriends: "Trouver des amis",
   noMessagesTitle: "Aucun message pour l'instant",
   noMessagesDescription: "Dites bonjour pour démarrer la conversation.",
   selectConversationTitle: "Choisissez une conversation",

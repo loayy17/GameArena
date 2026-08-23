@@ -1,4 +1,5 @@
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
+import type { TNullable } from "@/domain/type/TCommon";
 
 interface IInviteModalProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface IInviteModalProps {
   cancelLabel: string;
   searchPlaceholder: string;
   noFriendsText: string;
+  pendingId?: TNullable<string>;
 }
 
 export type { IInviteModalProps };

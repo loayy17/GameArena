@@ -47,7 +47,18 @@ const en = {
   actions: {
     block: "Block user",
     removeFriend: "Remove friend"
-  }
+  },
+  confirm: {
+    blockTitle: "Block user?",
+    blockDesc: "The user will be removed from your friends and blocked. You can unblock them later from the Blocked tab.",
+    removeTitle: "Remove friend?",
+    removeDesc: "This friend will be removed from your list. You can send a new request later.",
+    cancelTitle: "Cancel request?",
+    cancelDesc: "This friend request will be cancelled.",
+    confirm: "Confirm",
+    cancel: "Cancel"
+  },
+  offlineWarning: "You are offline — data may be outdated. Reconnecting..."
 }
 ;
 

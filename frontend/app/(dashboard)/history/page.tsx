@@ -43,6 +43,7 @@ export default function MatchHistoryPage() {
         icon={History}
         title={t.title}
         subtitle={t.subtitle}
+        className="md:d-block hidden"
         badge={
           <GBadge>
             <GIcon icon={History} size={SizeEnum.xs} color={AccentColorEnum.Primary} />

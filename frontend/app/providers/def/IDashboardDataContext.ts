@@ -22,6 +22,10 @@ interface IDashboardDataContext {
   unreadNotificationCount: number;
   gameInvites: IGameInvite[];
   notifications: INotificationItem[];
+  liveNotifications: INotificationItem[];
+  markNotificationRead: (notificationId: string) => void;
+  markAllNotificationsRead: () => void;
+  deleteNotification: (notificationId: string) => void;
   sendRequest: (friendId: string) => Promise<void>;
   acceptRequest: (senderId: string) => Promise<void>;
   declineRequest: (senderId: string) => Promise<void>;

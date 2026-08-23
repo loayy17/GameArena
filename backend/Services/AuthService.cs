@@ -26,14 +26,18 @@ namespace backend.Services
             var validPassword = AuthHelper.VerifyPassword(user, user.PasswordHash, request.Password);
             if (!validPassword) throw new AppException(ErrorCode.InvalidCredentials);
 
-            var accessToken = AuthHelper.CreateToken(user, _configuration);
-            var refreshToken = AuthHelper.GenerateRefreshTokenString();
-            await SaveNewRefreshToken(user.Id, refreshToken);
-            return new AuthResponse
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            };
+            return await IssueAuthResponseAsync(user);
+        }
+
+        public async Task<AuthResponse> LoginByVerifiedEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new AppException(ErrorCode.ValidationError);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email)
+                ?? throw new AppException(ErrorCode.InvalidCredentials);
+            if (!user.IsVerified)
+                throw new AppException(ErrorCode.EmailNotVerified);
+            return await IssueAuthResponseAsync(user);
         }
 
         public async Task RegisterAsync(RegisterRequest request)
@@ -85,14 +89,7 @@ namespace backend.Services
 
             if (!user.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
             _context.RefreshTokens.Remove(storedToken);
-            var newAccessToken = AuthHelper.CreateToken(user, _configuration);
-            var newRefreshToken = AuthHelper.GenerateRefreshTokenString();
-            await SaveNewRefreshToken(user.Id, newRefreshToken);
-            return new AuthResponse
-            {
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken
-            };
+            return await IssueAuthResponseAsync(user);
         }
 
         public async Task RevokeRefreshTokenAsync(string rawToken)
@@ -127,6 +124,18 @@ namespace backend.Services
             user.PasswordHash = AuthHelper.HashPassword(user, newPassword);
             await RevokeAllRefreshTokensAsync(user.Id);
             await _context.SaveChangesAsync();
+        }
+
+        private async Task<AuthResponse> IssueAuthResponseAsync(User user)
+        {
+            var accessToken = AuthHelper.CreateToken(user, _configuration);
+            var refreshToken = AuthHelper.GenerateRefreshTokenString();
+            await SaveNewRefreshToken(user.Id, refreshToken);
+            return new AuthResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            };
         }
 
         private async Task RevokeAllRefreshTokensAsync(Guid userId)

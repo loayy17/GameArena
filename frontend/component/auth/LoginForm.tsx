@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { GTextField } from "@/component/common/GTextField";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { useState, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -99,7 +99,9 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <GIcon icon={LogIn} size={SizeEnum.xl} tile tileColor={AccentColorEnum.OnPrimary} />
+        <div className="flex items-center justify-center size-12 rounded-xl bg-primary/15">
+          <GIcon icon={LogIn} size={SizeEnum.xl} color={AccentColorEnum.Primary} />
+        </div>
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-text tracking-tight">{t.login}</h1>
           <p className="text-sm text-text-muted mt-0.5">{t.loginDescription}</p>
@@ -107,10 +109,12 @@ function LoginForm() {
       </div>
       <form onSubmit={submit} className="space-y-5">
         {apiError.message && (
-          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-            <p>{apiError.message}</p>
+          <div role="alert" className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            <p className="font-medium">{apiError.message}</p>
             {apiError.link && (
-              <Link href={apiError.link} className="mt-1 inline-block font-semibold text-primary hover:text-primary-hover">
+              <Link
+                href={apiError.link}
+                className="mt-1 inline-block font-semibold text-primary hover:text-primary-hover underline underline-offset-2">
                 {t.verifyEmail}
               </Link>
             )}
@@ -127,7 +131,6 @@ function LoginForm() {
             required
             onChange={(e) => handleChange(LoginFieldEnum.Email, e.target.value)}
           />
-
           <GTextField
             label={t.password}
             placeholder={t.placeholder.password}
@@ -138,20 +141,17 @@ function LoginForm() {
             required
             onChange={(e) => handleChange(LoginFieldEnum.Password, e.target.value)}
           />
-
-          <GButton type="submit" loading={loading} loadingText={t.loggingIn} fullWidth>
+          <GButtonAsync type="submit" busy={loading} loadingText={t.loggingIn} fullWidth>
             {t.login}
-          </GButton>
+          </GButtonAsync>
         </div>
-
         <div className="flex flex-wrap justify-between items-center gap-2 text-xs sm:text-sm pt-4 border-t border-border/40">
-          <Link href="/forgot-password" className="text-primary hover:text-primary-hover font-medium">
+          <Link href="/forgot-password" className="text-primary hover:text-primary-hover font-medium transition-colors">
             {t.forgotPassword}
           </Link>
-
           <div className="text-text-secondary">
             {t.dontHaveAccount}
-            <Link href="/register" className="text-primary hover:text-primary-hover font-semibold px-1">
+            <Link href="/register" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
               {t.register}
             </Link>
           </div>

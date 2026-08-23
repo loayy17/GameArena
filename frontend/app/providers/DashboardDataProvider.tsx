@@ -8,6 +8,7 @@ import { notificationService } from "@/services/def/NotificationService";
 import { gameService } from "@/services/def/GameService";
 import { friendService } from "@/services/def/FriendService";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import { NotificationTypeEnum } from "@/domain/enum/NotificationTypeEnum";
 import type { IDashboardDataContext } from "./def/IDashboardDataContext";
 import type { IGameInvite, INotificationItem } from "@/domain/meta/INotification";
 import type { IUserPreferences } from "@/domain/meta/IUserPreferences";
@@ -17,6 +18,19 @@ import type { IFriendRequestSent } from "@/domain/meta/IFriendRequestSent";
 import type { TNullable, TOptional } from "@/domain/type/TCommon";
 
 const DashboardDataContext = createContext<TOptional<IDashboardDataContext>>(undefined);
+
+const NOTIFICATION_TYPES = [
+  NotificationTypeEnum.FriendRequest,
+  NotificationTypeEnum.FriendRequestAccepted,
+  NotificationTypeEnum.GameInvite,
+  NotificationTypeEnum.NewMessage,
+];
+
+const normalizeNotification = (n: INotificationItem): INotificationItem => {
+  if (typeof n.type === "string") return n;
+  const type = NOTIFICATION_TYPES[Number(n.type)];
+  return type ? { ...n, type } : n;
+};
 
 export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
   const { isSocialConnected, isSocialConnecting, socialReconnectKey } = useConnections();
@@ -35,11 +49,17 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [gameInvites, setGameInvites] = useState<IGameInvite[]>([]);
   const [notifications, setNotifications] = useState<INotificationItem[]>([]);
+  const [liveNotifications, setLiveNotifications] = useState<INotificationItem[]>([]);
 
   const pathnameRef = useRef(pathname);
   const searchParamsRef = useRef(searchParams);
   const audioRef = useRef<TNullable<HTMLAudioElement>>(null);
   const soundEnabledRef = useRef(true);
+  const notificationsRef = useRef<INotificationItem[]>(notifications);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   useEffect(() => {
     pathnameRef.current = pathname;
@@ -103,11 +123,22 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       if (pathnameRef.current !== "/messages" || selected !== p.senderId) setUnreadMessageCount((n) => n + 1);
       playNotificationSound();
     });
-    const off3 = notificationService.onNewNotification((n) => {
-      setNotifications((prev) => [n, ...prev]);
+    const off3 = notificationService.onNewNotification((incoming) => {
+      const n = normalizeNotification(incoming);
+      setNotifications((prev) => {
+        if (prev.some((x) => x.id === n.id)) {
+          return prev.map((x) => (x.id === n.id ? n : x));
+        }
+        return [n, ...prev];
+      });
+      setLiveNotifications((prev) => {
+        if (prev.some((x) => x.id === n.id)) return prev;
+        return [n, ...prev].slice(0, 20);
+      });
       playNotificationSound();
     });
-    const off4 = notificationService.onNotificationList((list) => {
+    const off4 = notificationService.onNotificationList((incoming) => {
+      const list = incoming.map(normalizeNotification);
       setNotifications((prev) => {
         const incomingIds = new Set(list.map((n) => n.id));
         const localOnly = prev.filter((n) => !incomingIds.has(n.id));
@@ -139,56 +170,86 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     notificationService.requestNotificationList().catch(() => {});
   }, [isSocialConnected, socialReconnectKey]);
 
+  const markNotificationRead = useCallback((notificationId: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)));
+    notificationService.markNotificationRead(notificationId).catch(() => {});
+  }, []);
+
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    notificationService.markAllNotificationsRead().catch(() => {});
+  }, []);
+
+  const deleteNotification = useCallback((notificationId: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    notificationService.deleteNotification(notificationId).catch(() => {});
+  }, []);
+
+  const resolveNotificationsByReference = useCallback((type: NotificationTypeEnum, referenceId: string) => {
+    const matches = notificationsRef.current.filter((n) => n.type === type && n.referenceId === referenceId);
+    if (matches.length === 0) return;
+    setNotifications((prev) => prev.filter((n) => !(n.type === type && n.referenceId === referenceId)));
+    matches.forEach((n) => notificationService.deleteNotification(n.id).catch(() => {}));
+  }, []);
+
   const sendRequest = useCallback(async (friendId: string) => {
-    try {
-      await friendService.sendFriendRequest(friendId);
-    } catch {}
+    await friendService.sendFriendRequest(friendId);
   }, []);
 
-  const acceptRequest = useCallback(async (senderId: string) => {
-    try {
+  const acceptRequest = useCallback(
+    async (senderId: string) => {
       await friendService.acceptFriendRequest(senderId);
-    } catch {}
-  }, []);
+      resolveNotificationsByReference(NotificationTypeEnum.FriendRequest, senderId);
+    },
+    [resolveNotificationsByReference],
+  );
 
-  const declineRequest = useCallback(async (senderId: string) => {
-    try {
+  const declineRequest = useCallback(
+    async (senderId: string) => {
       await friendService.rejectFriendRequest(senderId);
-    } catch {}
-  }, []);
+      resolveNotificationsByReference(NotificationTypeEnum.FriendRequest, senderId);
+    },
+    [resolveNotificationsByReference],
+  );
 
   const cancelRequest = useCallback(async (receiverId: string) => {
-    try {
-      await friendService.cancelFriendRequest(receiverId);
-    } catch {}
+    await friendService.cancelFriendRequest(receiverId);
+    setSentRequests((prev) => prev.filter((r) => r.receiverId !== receiverId));
   }, []);
 
   const removeFriend = useCallback(async (friendId: string) => {
-    try {
-      await friendService.removeFriend(friendId);
-    } catch {}
+    await friendService.removeFriend(friendId);
+    setFriends((prev) => prev.filter((f) => f.id !== friendId));
   }, []);
 
   const blockUser = useCallback(async (blockedId: string) => {
-    try {
-      await friendService.blockUser(blockedId);
-    } catch {}
+    await friendService.blockUser(blockedId);
+    setFriends((prev) => prev.filter((f) => f.id !== blockedId));
+    setRequests((prev) => prev.filter((r) => r.senderId !== blockedId));
+    setSentRequests((prev) => prev.filter((r) => r.receiverId !== blockedId));
   }, []);
 
   const unblockUser = useCallback(async (blockedId: string) => {
-    try {
-      await friendService.unblockUser(blockedId);
-    } catch {}
+    await friendService.unblockUser(blockedId);
+    setBlockedUsers((prev) => prev.filter((b) => b.id !== blockedId));
   }, []);
 
-  const dismissGameInvite = useCallback((roomId: string) => {
-    setGameInvites((prev) => prev.filter((i) => i.roomId !== roomId));
-  }, []);
+  const dismissGameInvite = useCallback(
+    (roomId: string) => {
+      setGameInvites((prev) => prev.filter((i) => i.roomId !== roomId));
+      resolveNotificationsByReference(NotificationTypeEnum.GameInvite, roomId);
+    },
+    [resolveNotificationsByReference],
+  );
 
-  const acceptGameInvite = useCallback(async (roomId: string) => {
-    await gameService.acceptInvite(roomId);
-    setGameInvites((prev) => prev.filter((i) => i.roomId !== roomId));
-  }, []);
+  const acceptGameInvite = useCallback(
+    async (roomId: string) => {
+      await gameService.acceptInvite(roomId);
+      setGameInvites((prev) => prev.filter((i) => i.roomId !== roomId));
+      resolveNotificationsByReference(NotificationTypeEnum.GameInvite, roomId);
+    },
+    [resolveNotificationsByReference],
+  );
 
   const reload = useCallback(() => {
     friendService.invokeFriends().catch(() => {});
@@ -226,6 +287,10 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       unreadNotificationCount,
       gameInvites,
       notifications,
+      liveNotifications,
+      markNotificationRead,
+      markAllNotificationsRead,
+      deleteNotification,
       sendRequest,
       acceptRequest,
       declineRequest,
@@ -253,6 +318,10 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       unreadNotificationCount,
       gameInvites,
       notifications,
+      liveNotifications,
+      markNotificationRead,
+      markAllNotificationsRead,
+      deleteNotification,
       sendRequest,
       acceptRequest,
       declineRequest,

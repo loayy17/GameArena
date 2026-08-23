@@ -1,95 +1,122 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 
-import { useAuth } from "@/app/providers/AuthProvider";
 import type { IConnectFourGameState } from "@/app/providers/def/IGameState";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButton } from "@/component/common/GButton";
 import { GCard } from "@/component/common/GCard";
-import { GList } from "@/component/common/GList";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
+import { ScoreBoard } from "@/component/games/common/ScoreBoard";
 import { GameActionTypes } from "@/domain/constant/game-actions";
-import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { CellEnum } from "@/domain/enum/CellEnum";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { useGameStateView } from "@/hooks/useGameStateView";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 
+const DIRECTIONS = [
+  [1, 0],
+  [0, 1],
+  [1, 1],
+  [1, -1],
+];
+
+function findWinningCells(board: number[][]): Set<string> {
+  const cols = board.length;
+  const rows = board[0]?.length ?? 0;
+
+  for (let col = 0; col < cols; col++) {
+    for (let row = 0; row < rows; row++) {
+      const piece = board[col]?.[row];
+      if (!piece) continue;
+
+      for (const [dCol, dRow] of DIRECTIONS) {
+        const cells: Array<[number, number]> = [[col, row]];
+        for (let step = 1; step < 4; step++) {
+          const nextCol = col + dCol * step;
+          const nextRow = row + dRow * step;
+          if (nextCol < 0 || nextCol >= cols || nextRow < 0 || nextRow >= rows || board[nextCol]?.[nextRow] !== piece) break;
+          cells.push([nextCol, nextRow]);
+        }
+        if (cells.length === 4) return new Set(cells.map(([c, r]) => `${c}-${r}`));
+      }
+    }
+  }
+
+  return new Set();
+}
+
+function dropRow(column: number[]): number {
+  for (let row = column.length - 1; row >= 0; row--) {
+    if (column[row] === CellEnum.None) return row;
+  }
+  return -1;
+}
+
 function ConnectFourPage() {
-  const { user } = useAuth();
   const { state, sendAction } = useGame();
   const t = useGameTranslation();
+  const { isPlayer1, isMyTurn, isOver } = useGameStateView(state);
 
   if (!state || !("board" in state)) {
     return <GameLayoutWrapper gameType={GamesKindEnum.ConnectFour}>{null}</GameLayoutWrapper>;
   }
 
-  const cfState = state as IConnectFourGameState;
-  const { board, player1Score, player2Score, winScore, currentTurnPlayerId, winnerPlayerId, boardWidth, boardHeight } = cfState;
-  const myPlayerId = user?.id;
-  const isMyTurn = currentTurnPlayerId === myPlayerId;
-  const isOver = winnerPlayerId != null || cfState.isFinished === true;
-  const cols = boardWidth;
-  const rows = boardHeight;
+  const cfState = state as unknown as IConnectFourGameState;
+  const { board, player1Score, player2Score, winScore } = cfState;
+  const rows = board[0]?.length ?? 0;
 
-  const cells: Array<{ row: number; col: number; value: number }> = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      cells.push({ row, col, value: board[col]?.[row] ?? CellEnum.None });
-    }
-  }
+  const winningCells = findWinningCells(board);
+  const previewClass = isPlayer1 ? "group-hover:bg-accent/40" : "group-hover:bg-warning/40";
 
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.ConnectFour}>
       <GCard padding={SizeEnum.md}>
-        <div className="flex justify-center gap-8 mb-4">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-accent">{player1Score}</div>
-            <div className="text-xs text-text-muted">{t.game.player1}</div>
-          </div>
-          <div className="text-center text-text-muted font-bold flex flex-col justify-center">
-            <span>{t.game.vs}</span>
-            <span className="text-xs">{t.game.firstTo.replace("{score}", String(winScore))}</span>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-warning">{player2Score}</div>
-            <div className="text-xs text-text-muted">{t.game.player2}</div>
+        <ScoreBoard
+          className="mb-5"
+          winScore={winScore}
+          left={{ score: player1Score, label: cfState.player1Username || t.game.player1, colorClass: "text-accent" }}
+          right={{ score: player2Score, label: cfState.player2Username || t.game.player2, colorClass: "text-warning" }}
+        />
+
+        <div className="mx-auto w-full max-w-lg rounded-2xl border border-game-board-border bg-game-board p-2.5 shadow-inner">
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            {board.map((column, col) => {
+              const targetRow = dropRow(column);
+              const playable = isMyTurn && !isOver && targetRow >= 0;
+              return (
+                <button
+                  key={col}
+                  type="button"
+                  disabled={!playable}
+                  onClick={() => sendAction({ type: GameActionTypes.PLACE, col })}
+                  aria-label={`Drop in column ${col + 1}`}
+                  className={cn(
+                    "group flex flex-col gap-1.5 rounded-xl p-0.5 transition-colors sm:gap-2",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    playable ? "cursor-pointer hover:bg-primary/10" : "cursor-default",
+                  )}>
+                  {Array.from({ length: rows }, (_, row) => {
+                    const value = column[row];
+                    const isPreview = playable && row === targetRow;
+                    return (
+                      <span
+                        key={row}
+                        className={cn(
+                          "block aspect-square rounded-full transition-colors",
+                          value === CellEnum.None && (isPreview ? `bg-bg-card ${previewClass}` : "bg-bg-card"),
+                          value === CellEnum.PlayerOne && "animate-scale-in bg-accent",
+                          value === CellEnum.PlayerTwo && "animate-scale-in bg-warning",
+                          winningCells.has(`${col}-${row}`) && "ring-2 ring-inset ring-success",
+                        )}
+                      />
+                    );
+                  })}
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        <GList items={[1, 2, 3, 4, 5, 6, 7]} keyExtractor={(item) => `${item}`} listClassName="grid grid-cols-7 gap-1 text-center p-4">
-          {(item) => {
-            const isColFull = board[item - 1][0] !== CellEnum.None;
-            return (
-              <GButton
-                onClick={() => sendAction({ type: GameActionTypes.PLACE, col: item - 1 })}
-                disabled={!isMyTurn || isOver || isColFull}
-                size={SizeEnum.sm}
-                rounded={SizeEnum.full}
-                variant={ButtonVariantEnum.Secondary}>
-                <span>{item}</span>
-              </GButton>
-            );
-          }}
-        </GList>
-
-        <GList
-          items={cells}
-          keyExtractor={(item) => `${item.row}-${item.col}`}
-          listClassName="grid grid-cols-7 gap-2"
-          className="bg-surface rounded-xl p-3">
-          {({ value }) => (
-            <div
-              className={clsx(
-                "aspect-square rounded-full border-2 border-border/50",
-                value === CellEnum.None && "bg-bg-elevated",
-                value === CellEnum.PlayerOne && "bg-accent border-accent",
-                value === CellEnum.PlayerTwo && "bg-warning border-warning",
-              )}
-            />
-          )}
-        </GList>
       </GCard>
     </GameLayoutWrapper>
   );

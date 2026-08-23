@@ -7,6 +7,7 @@ const fr = {
   history: "Historique des matchs",
   notifications: "Notifications",
   settings: "Paramètres",
+  profile: "Profil",
   logout: "Déconnexion",
   user: "Utilisateur",
   mainNavigation: "Navigation principale",

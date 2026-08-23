@@ -1,12 +1,13 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import { Bot, User, Zap } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
+import { GSpinner } from "@/component/common/GSpinner";
 import { getGameConfig } from "@/domain/constant/games";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -16,8 +17,8 @@ import { useGameTranslation } from "@/hooks/useGameTranslation";
 import type { IGamePlayersHeaderProps, IGameTurnIndicatorProps, IPlayerCardProps, TPlayerResult } from "./def/GameUI";
 
 const RESULT_STYLES: Record<TPlayerResult, { badge: string }> = {
-  win: { badge: "bg-success/10 text-success border border-success/40" },
-  loss: { badge: "bg-danger/10 text-danger border border-danger/40" },
+  win: { badge: "bg-success/10 text-success border border-success/30 shadow-sm shadow-success/10" },
+  loss: { badge: "bg-danger/10 text-danger border border-danger/30 shadow-sm shadow-danger/10" },
   draw: { badge: "bg-surface text-text-secondary border border-border" },
 };
 
@@ -33,10 +34,10 @@ function PlayerCard({ playerId, playerUsername, symbol, isBot, fallbackName, isT
   return (
     <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
       <div
-        className={clsx(
-          "relative w-16 h-16 rounded-xl flex items-center justify-center border-2",
+        className={cn(
+          "relative size-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 transition-all duration-200",
           result === "win"
-            ? "border-success bg-success-bg ring-2 ring-success/30"
+            ? "border-success bg-success/10 ring-2 ring-success/20 shadow-lg shadow-success/15"
             : isTurn && symbolColors
               ? symbolColors.box
               : "border-border-light bg-surface",
@@ -48,8 +49,8 @@ function PlayerCard({ playerId, playerUsername, symbol, isBot, fallbackName, isT
         )}
         {symbol && symbolColors && (
           <span
-            className={clsx(
-              "absolute -top-2 -inset-e-2 w-6 h-6 rounded-full text-on-primary text-xs font-bold flex items-center justify-center",
+            className={cn(
+              "absolute -top-2 -end-2 size-6 rounded-full text-on-primary text-xs font-bold flex items-center justify-center shadow-sm",
               symbolColors.badge,
             )}>
             {symbol}
@@ -57,10 +58,10 @@ function PlayerCard({ playerId, playerUsername, symbol, isBot, fallbackName, isT
         )}
       </div>
       <span className="text-sm font-semibold text-text mt-3 truncate max-w-28">{name}</span>
-      {isTurn && symbolColors && <span className={clsx("text-xs font-medium mt-1", symbolColors.turn)}>{t.game.turn}</span>}
+      {isTurn && symbolColors && <span className={cn("text-xs font-medium mt-1", symbolColors.turn)}>{t.game.turn}</span>}
       {score !== undefined && <span className="text-xs font-medium mt-1 text-text-muted">{score}</span>}
       {result && (
-        <span className={clsx("mt-1 text-2xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border", RESULT_STYLES[result].badge)}>
+        <span className={cn("mt-1.5 text-2xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border", RESULT_STYLES[result].badge)}>
           {resultLabel}
         </span>
       )}
@@ -68,14 +69,18 @@ function PlayerCard({ playerId, playerUsername, symbol, isBot, fallbackName, isT
   );
 }
 
-function GameTurnIndicator({ isMyTurn, currentTurnText, waitingText }: IGameTurnIndicatorProps) {
+function GameTurnIndicator({ isMyTurn, currentTurnText, waitingText, thinking }: IGameTurnIndicatorProps) {
   return (
     <div
-      className={clsx(
-        "w-full py-3 px-4 rounded-xl border text-center font-bold text-sm flex items-center justify-center gap-2",
-        isMyTurn ? "bg-primary-muted border-primary/30 text-text" : "bg-surface border-border text-text-secondary",
+      className={cn(
+        "w-full py-3 px-4 rounded-xl border text-center font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200",
+        isMyTurn ? "bg-primary/10 border-primary/30 text-text shadow-sm shadow-primary/10" : "bg-surface border-border text-text-secondary",
       )}>
-      <GIcon icon={Zap} size={SizeEnum.sm} className={isMyTurn ? "text-primary" : "text-text-muted"} />
+      {thinking && !isMyTurn ? (
+        <GSpinner size={SizeEnum.sm} />
+      ) : (
+        <GIcon icon={Zap} size={SizeEnum.sm} className={isMyTurn ? "text-primary" : "text-text-muted"} />
+      )}
       {isMyTurn ? currentTurnText : waitingText}
     </div>
   );
@@ -124,12 +129,10 @@ function GamePlayersHeader({ gameType }: IGamePlayersHeaderProps) {
         score={state.score ? state.score[0] : undefined}
         result={p1Result}
       />
-
       <div className="col-span-1 flex flex-col items-center justify-center">
         <span className="text-xs font-bold text-text-muted">{t.game.vs}</span>
         <div className="w-px h-10 bg-border/40 mt-1" />
       </div>
-
       <PlayerCard
         playerId={player2Id ?? null}
         playerUsername={player2Username ?? null}

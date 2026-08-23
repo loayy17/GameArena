@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import type { IGBadgeProps } from "./def/GBadge";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
@@ -9,10 +9,9 @@ const badgeBase = "inline-flex items-center gap-1 text-xs font-semibold rounded-
 function GBadge({ variant = AccentColorEnum.Primary, size = SizeEnum.md, className, children, ...props }: IGBadgeProps) {
   return (
     <span
-      className={clsx(
+      className={cn(
         badgeBase,
         accentBg[variant],
-        variant,
         (size === SizeEnum.xs || size === SizeEnum.sm) && "text-2xs",
         variant === AccentColorEnum.Secondary && "border border-border",
         className,

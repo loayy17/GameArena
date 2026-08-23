@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef } from "react";
 import { useGame } from "@/app/providers/GameProvider";
 import { PADDLE_KEYS, DIRECTIONS, type TGameAction } from "@/domain/constant/game-actions";
 import { SWIPE_THRESHOLD_PX } from "@/domain/constant/game-constants";
@@ -14,7 +14,7 @@ const OPPOSITE: Record<Direction, Direction> = {
   RIGHT: "LEFT",
 };
 
-export interface IDragPosition {
+interface IDragPosition {
   y: number;
   height: number;
 }
@@ -25,7 +25,7 @@ interface GameInputConfig<T extends HTMLElement = HTMLElement> {
   resolveDirection: (keys: Set<string>) => Direction | null;
   createAction: (direction: Direction) => TGameAction;
   throttleMs: number;
-  boardRef?: RefObject<T | null>;
+  boardElement?: T | null;
   pointerMode?: "swipe" | "drag";
 
   getCurrentPosition?: () => IDragPosition | null;
@@ -99,8 +99,8 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
   }, [config.isActive, sendAction]);
 
   useEffect(() => {
-    if (!config.isActive || !config.pointerMode || !config.boardRef?.current) return;
-    const board = config.boardRef.current;
+    const board = config.boardElement;
+    if (!config.isActive || !config.pointerMode || !board) return;
 
     let activePointerId: number | null = null;
     let startPointerX = 0;
@@ -108,6 +108,7 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
     let startPaddleY = 0;
     let paddleHeight = 0;
     let boardHeightPx = 0;
+    let swipeFired = false;
 
     const releasePointer = (pointerId: number) => {
       if (pointerId !== activePointerId) return;
@@ -126,6 +127,7 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
       activePointerId = e.pointerId;
       startPointerX = e.clientX;
       startPointerY = e.clientY;
+      swipeFired = false;
 
       if (config.pointerMode === "drag") {
         const pos = configRef.current.getCurrentPosition?.() ?? null;
@@ -155,6 +157,23 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
       if (e.pointerId !== activePointerId) return;
 
       const cfg = configRef.current;
+
+      if (cfg.pointerMode === "swipe" && !swipeFired) {
+        const dx = e.clientX - startPointerX;
+        const dy = e.clientY - startPointerY;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) >= SWIPE_THRESHOLD_PX) {
+          const direction = swipeDirection(dx, dy);
+          const last = lastActionRef.current;
+          if (!(last && direction === OPPOSITE[last])) {
+            swipeFired = true;
+            lastActionRef.current = direction;
+            lastSendTimeRef.current = Date.now();
+            sendAction(cfg.createAction(direction));
+          }
+        }
+        return;
+      }
+
       if (cfg.pointerMode !== "drag" || !cfg.createPositionAction || e.clientY === startPointerY) return;
 
       const deltaY = e.clientY - startPointerY;
@@ -170,7 +189,7 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
       if (e.pointerId !== activePointerId) return;
 
       const cfg = configRef.current;
-      if (cfg.pointerMode === "swipe") {
+      if (cfg.pointerMode === "swipe" && !swipeFired) {
         const dx = e.clientX - startPointerX;
         const dy = e.clientY - startPointerY;
         if (Math.max(Math.abs(dx), Math.abs(dy)) >= SWIPE_THRESHOLD_PX) {
@@ -202,7 +221,7 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
       board.removeEventListener("pointercancel", handlePointerCancel);
       activePointerId = null;
     };
-  }, [config.isActive, config.pointerMode, config.boardRef, sendAction]);
+  }, [config.isActive, config.pointerMode, config.boardElement, sendAction]);
 }
 
 function swipeDirection(dx: number, dy: number): Direction {

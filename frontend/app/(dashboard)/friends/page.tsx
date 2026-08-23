@@ -30,7 +30,9 @@ function FriendsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslation({ en, ar, fr }) as TFriendsTranslation;
-  const activeTab = (searchParams.get("tab") as FriendsTabEnum) ?? FriendsTabEnum.Friends;
+  const rawTab = searchParams.get("tab") as FriendsTabEnum | null;
+  const allowedTabs = Object.values(FriendsTabEnum) as string[];
+  const activeTab = rawTab && allowedTabs.includes(rawTab) ? rawTab : FriendsTabEnum.Friends;
 
   const {
     friends,
@@ -40,6 +42,7 @@ function FriendsPage() {
     friendsLoading,
     requestsLoading,
     blockedLoading,
+    isOffline,
     requestCount,
     sentRequestCount,
     blockedCount,
@@ -132,6 +135,7 @@ function FriendsPage() {
         icon={Users}
         title={t.friends}
         subtitle={t.subtitle}
+        className="md:d-block hidden"
         badge={
           <GBadge>
             <GIcon icon={Gamepad2} size={SizeEnum.xs} color={AccentColorEnum.Primary} />
@@ -141,6 +145,12 @@ function FriendsPage() {
       />
 
       <GTabs tabs={tabs} value={activeTab} onChange={changeTab} fullWidth responsive />
+
+      {isOffline && (
+        <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning" role="status">
+          {t.offlineWarning}
+        </div>
+      )}
 
       <div className="pt-1">
         <GAsync loading={tabLoading} spinnerSize={SizeEnum.lg} className="py-10">

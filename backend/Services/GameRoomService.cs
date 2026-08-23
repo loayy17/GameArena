@@ -161,7 +161,7 @@ namespace backend.Services
             {
                 room.HandleAction(playerId, action);
 
-                if (room.IsBotGame)
+                if (room.IsBotGame && room.NeedsGameLoop)
                     room.MakeBotMove();
 
                 await _hubContext.Clients.Group(roomId)
@@ -171,12 +171,18 @@ namespace backend.Services
                 {
                     await CompleteRoundAsync(room, roomId);
                 }
+                else if (room.IsBotGame && !room.NeedsGameLoop)
+                {
+                    _ = RunBotMoveAsync(room, roomId, room.BotMoveDelayMs);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ProcessActionAsync error");
             }
         }
+
+        
 
         public async Task<bool> StartGameAsync(string roomId, string playerId, string? friendId)
         {
@@ -478,6 +484,23 @@ namespace backend.Services
                 room.Player2Username = null;
                 room.IsFull = false;
                 room.InvitedPlayerId = null;
+            }
+        }
+        private async Task RunBotMoveAsync(BaseGameRoom room, string roomId, int delayMs)
+        {
+            try
+            {
+                await Task.Delay(delayMs + Random.Shared.Next(0, 400));
+                if (!_rooms.ContainsKey(roomId)) return;
+                room.MakeBotMove();
+                await _hubContext.Clients.Group(roomId)
+                    .SendAsync("gameState", room.GetStatePayload());
+                if (room.WinnerPlayerId != null)
+                    await CompleteRoundAsync(room, roomId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RunBotMoveAsync error");
             }
         }
     }

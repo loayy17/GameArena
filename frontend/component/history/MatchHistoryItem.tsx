@@ -16,11 +16,11 @@ export function MatchHistoryItem({ match, locale, winLabel, lossLabel, drawLabel
   const resultLabel = isWin ? winLabel : isLoss ? lossLabel : drawLabel;
 
   return (
-    <GCard padding={SizeEnum.sm} className="flex items-center gap-4">
-      <GIcon icon={game.icon} size={SizeEnum.md} tile tileGradient={game.tileGradient} />
+    <GCard padding={SizeEnum.sm} className="flex items-center gap-3">
+      <GIcon icon={game.icon} size={SizeEnum.md} tile tileGradient={game.tileGradient} tileColor={AccentColorEnum.OnPrimary} className="shrink-0" />
       <div className="min-w-0 flex-1">
-        <div className="mb-2 flex items-center gap-2">
-          <h3 className="truncate text-sm font-bold text-text sm:text-base">{gameLabel}</h3>
+        <div className="mb-1 flex items-center gap-2">
+          <h3 className="truncate text-sm font-bold text-text">{gameLabel}</h3>
           <GBadge variant={badgeVariant} size={SizeEnum.sm} className="shrink-0">
             {resultLabel}
           </GBadge>

@@ -6,6 +6,7 @@ namespace backend.Services.Interface
     public interface IAuthService
     {
         Task<AuthResponse> LoginAsync(LoginRequest request);
+        Task<AuthResponse> LoginByVerifiedEmailAsync(string email);
         Task RegisterAsync(RegisterRequest request);
         Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken);
         Task RevokeRefreshTokenAsync(string refreshToken);

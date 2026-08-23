@@ -1,45 +1,49 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { GCard } from "@/component/common/GCard";
 import { GButton } from "@/component/common/GButton";
+import { GameAnimation } from "./GameAnimation";
 import type { IGameCardProps } from "./def/GameCard";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 
-const LottiePlayer = dynamic(() => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player), { ssr: false });
+function GameCard({ name, desc, path, playLabel, animation, compact = false, onPlay }: IGameCardProps) {
+  const router = useRouter();
 
-function GameCard({ name, desc, onClick, playLabel, animation }: IGameCardProps) {
-  const [reducedMotion, setReducedMotion] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }
-    return false;
-  });
+  const handlePlay = () => {
+    if (onPlay) return onPlay();
+    if (path) router.push(path);
+  };
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, []);
-
-  return (
-    <GCard padding={SizeEnum.lg} className="flex flex-col items-center gap-4">
-      <LottiePlayer
-        autoplay={!reducedMotion}
-        loop={!reducedMotion}
-        src={animation}
-        className="w-32 h-32"
-        style={{ animationPlayState: reducedMotion ? "paused" : "running" }}
-      />
-      <div className="flex flex-1 flex-col">
-        <h3 className="text-xl font-bold text-text text-center">{name}</h3>
-        <p className="my-2 text-sm text-text-secondary text-center flex-1">{desc}</p>
-        <GButton variant={ButtonVariantEnum.Primary} size={SizeEnum.sm} onClick={onClick}>
+  if (compact) {
+    return (
+      <GCard padding={SizeEnum.None} className="flex items-center gap-3 p-3 sm:p-4">
+        <GameAnimation src={animation} className="size-20 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-base font-bold tracking-tight text-text">{name}</h3>
+          <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-secondary">{desc}</p>
+        </div>
+        <GButton variant={ButtonVariantEnum.Primary} size={SizeEnum.sm} onClick={handlePlay} className="shrink-0">
           {playLabel}
         </GButton>
+      </GCard>
+    );
+  }
+
+  return (
+    <GCard padding={SizeEnum.None} className="flex flex-col overflow-hidden">
+      <div className="flex w-full items-center justify-center py-8">
+        <GameAnimation src={animation} className="size-36" />
+      </div>
+      <div className="flex flex-1 flex-col w-full px-5 pb-5">
+        <h3 className="text-lg font-bold text-text tracking-tight">{name}</h3>
+        <p className="mt-1 text-sm text-text-secondary leading-relaxed">{desc}</p>
+        <div className="mt-auto pt-4">
+          <GButton variant={ButtonVariantEnum.Primary} size={SizeEnum.sm} onClick={handlePlay} fullWidth>
+            {playLabel}
+          </GButton>
+        </div>
       </div>
     </GCard>
   );

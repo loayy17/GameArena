@@ -10,8 +10,7 @@ const fr = {
   cancel: "Annuler",
   leaveConfirm: "Quitter et démarrer une nouvelle",
   returnToGame: "Retour à la partie",
-  gameRunning: "Partie en cours",
-  leaveConfirmation: "Confirmation de sortie de partie"
+  gameRunning: "Partie en cours"
 }
 ;
 export { fr };

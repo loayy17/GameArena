@@ -6,6 +6,8 @@ export const ar = {
     all: "الكل",
     gameInvites: "دعوات الألعاب",
     friendRequests: "طلبات الصداقة",
+    messages: "الرسائل",
+    other: "أخرى",
   },
   empty: {
     title: "لا توجد إشعارات",
@@ -25,6 +27,10 @@ export const ar = {
   },
   actions: {
     dismiss: "إخفاء",
+    accept: "قبول",
+    decline: "رفض",
+    reply: "رد",
+    markRead: "تحديد كمقروء",
   },
   time: {
     justNow: "الآن",

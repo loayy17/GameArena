@@ -4,7 +4,7 @@ import { Home } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -40,25 +40,34 @@ function GameActive({ children, gameType }: IGameActiveProps) {
       : state.player1Username || t.game.opponent;
 
   const backToLobbyButton = (
-    <GButton onClick={() => leaveGame()} variant={ButtonVariantEnum.Secondary} className="flex-1" startIcon={<GIcon icon={Home} size={SizeEnum.sm} />}>
+    <GButtonAsync
+      onClick={() => leaveGame()}
+      variant={ButtonVariantEnum.Secondary}
+      className="flex-1"
+      startIcon={<GIcon icon={Home} size={SizeEnum.sm} />}>
       {t.result.backToLobby}
-    </GButton>
+    </GButtonAsync>
   );
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="w-full max-w-xl space-y-6">
+    <div className="flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-xl space-y-4 sm:space-y-6">
         <GamePlayersHeader gameType={gameType} />
 
         {!isOver && (
-          <GameTurnIndicator isMyTurn={isMyTurn} currentTurnText={t.game.yourTurn} waitingText={t.game.waitingFor.replace("{name}", opponentName)} />
+          <GameTurnIndicator
+            isMyTurn={isMyTurn}
+            currentTurnText={t.game.yourTurn}
+            waitingText={state.isBotGame ? t.game.botThinking.replace("{name}", opponentName) : t.game.waitingFor.replace("{name}", opponentName)}
+            thinking={state.isBotGame && !isMyTurn}
+          />
         )}
         <div>{children}</div>
         {!isOver ? (
           <div className="flex justify-center">
-            <GButton onClick={() => leaveGame()} variant={ButtonVariantEnum.Danger} size={SizeEnum.sm}>
+            <GButtonAsync onClick={() => leaveGame()} variant={ButtonVariantEnum.Danger} size={SizeEnum.sm}>
               {t.game.leaveGame}
-            </GButton>
+            </GButtonAsync>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 mt-8">
@@ -70,23 +79,23 @@ function GameActive({ children, gameType }: IGameActiveProps) {
             <div className="flex gap-4 w-full max-w-xs">
               {pendingPlayAgainRequest ? (
                 <>
-                  <GButton onClick={() => respondPlayAgain(true)} className="flex-1">
+                  <GButtonAsync onClick={() => respondPlayAgain(true)} className="flex-1">
                     {t.result.accept}
-                  </GButton>
-                  <GButton onClick={() => respondPlayAgain(false)} variant={ButtonVariantEnum.Danger} className="flex-1">
+                  </GButtonAsync>
+                  <GButtonAsync onClick={() => respondPlayAgain(false)} variant={ButtonVariantEnum.Danger} className="flex-1">
                     {t.result.reject}
-                  </GButton>
+                  </GButtonAsync>
                 </>
               ) : sessionEnded ? (
                 backToLobbyButton
               ) : requestedPlayAgain ? (
-                <GButton loading loadingText={t.result.waiting} className="flex-1">
+                <GButtonAsync busy loadingText={t.result.waiting} className="flex-1">
                   {t.result.waiting}
-                </GButton>
+                </GButtonAsync>
               ) : (
-                <GButton onClick={() => requestPlayAgain()} className="flex-1">
+                <GButtonAsync onClick={() => requestPlayAgain()} className="flex-1">
                   {t.result.playAgain}
-                </GButton>
+                </GButtonAsync>
               )}
               {!sessionEnded && !pendingPlayAgainRequest && backToLobbyButton}
             </div>

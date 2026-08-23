@@ -10,6 +10,11 @@ const en = {
   french: "Français",
   userMenu: "User menu",
   settings: "Settings",
+  help: "Help",
+  reportBug: "Report Bug",
+  healthServices: "Health Services",
+  privacyPolicy: "Privacy Policy",
+  termsOfService: "Terms of Service",
 };
 
 type TUserMenuTranslation = typeof en;

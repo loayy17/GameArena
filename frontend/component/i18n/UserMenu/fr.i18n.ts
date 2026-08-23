@@ -10,6 +10,11 @@ const fr = {
   french: "Français",
   userMenu: "Menu utilisateur",
   settings: "Paramètres",
+  help: "Aide",
+  reportBug: "Signaler un bug",
+  healthServices: "Services de santé",
+  privacyPolicy: "Politique de confidentialité",
+  termsOfService: "Conditions d'utilisation",
 };
 
 export { fr };

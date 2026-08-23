@@ -6,6 +6,7 @@ enum SizeEnum {
   lg = "lg",
   xl = "xl",
   icon = "icon",
+  iconSm = "iconSm",
   full = "full",
 }
 export { SizeEnum };

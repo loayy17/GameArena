@@ -1,51 +1,58 @@
 const en = {
-tictactoe: {
+  tictactoe: {
     name: "Tic Tac Toe",
     description: "Deploy strategic marks in a classic 3x3 duel",
-    instruction: "Take turns placing X or O. Get three in a row to win."
+    instruction: "Take turns placing X or O. Get three in a row to win.",
+    guide: "Tap an empty cell to place your mark",
   },
   snake: {
     name: "Snake",
     description: "Grow your snake and dominate the arena",
     arrowKeysHint: "Use arrow keys to control",
-    instruction: "Steer with arrow keys or swipe to eat food and grow. Don't hit walls or your opponent."
+    swipeHint: "Swipe on the board to steer",
+    instruction: "Steer with arrow keys or swipe to eat food and grow. Don't hit walls or your opponent.",
+    guide: "Steer with the arrow keys or swipe",
   },
   pingpong: {
     name: "Ping Pong",
     description: "Classic paddle showdown in real-time",
     controlHint: "Use W/S or ↑/↓ to move your paddle",
-    instruction: "Move your paddle with W/S or ↑/↓ (drag on touch). First to 5 points wins."
+    dragHint: "Drag on the board to move your paddle",
+    instruction: "Move your paddle with W/S or ↑/↓ (drag on touch). First to 5 points wins.",
+    guide: "Drag your paddle up and down",
   },
   rockpaperscissors: {
     name: "Rock Paper Scissors",
     description: "Classic hand game - choose rock, paper, or scissors",
     instruction: "Pick Rock, Paper, or Scissors each round. Rock beats scissors, scissors beats paper, paper beats rock.",
+    guide: "Pick one — both players reveal at once",
     rock: "Rock",
     paper: "Paper",
-    scissors: "Scissors"
+    scissors: "Scissors",
   },
   connectfour: {
     name: "Connect Four",
     description: "Drop discs and connect four in a row to win",
-    instruction: "Drop discs into a column on your turn. Connect four in a row to win."
+    instruction: "Drop discs into a column on your turn. Connect four in a row to win.",
+    guide: "Choose a column to drop your disc",
   },
   lobby: {
     searchingTitle: "Searching for opponent...",
     quick: "Quick",
     invite: "Invite",
     searchError: "Failed to find a match. Please try again.",
-    createLobbyError: "Failed to create lobby. Please try again."
+    createLobbyError: "Failed to create lobby. Please try again.",
   },
   waiting: {
     subtitle: "Waiting for opponent to accept invite or join...",
     startVsAI: "Start Game (vs AI)",
     inviteFriend: "Invite Friend",
-    cancelMatch: "Cancel Match"
+    cancelMatch: "Cancel Match",
   },
   ready: {
     title: "OPPONENT FOUND!",
     startGame: "Start Game",
-    waitingForStart: "Waiting for host to start..."
+    waitingForStart: "Waiting for host to start...",
   },
   game: {
     you: "You",
@@ -59,14 +66,17 @@ tictactoe: {
     player2: "Player 2",
     yourTurn: "Your Turn - Make your move!",
     waitingFor: "Waiting for {name}...",
+    botThinking: "{name} is thinking...",
     leaveGame: "Leave Game",
-    firstTo: "First to {score}"
+    firstTo: "First to {score}",
+    howToPlay: "How to Play",
+    backToGames: "Back to Games",
   },
   invite: {
     title: "Invite a Friend",
     cancel: "Cancel",
     searchFriends: "Search friends...",
-    noFriends: "No friends found"
+    noFriends: "No friends found",
   },
   result: {
     winShort: "WIN",
@@ -77,11 +87,9 @@ tictactoe: {
     waiting: "Waiting...",
     accept: "Accept",
     reject: "Reject",
-    playAgainRequest: "wants to play again!"
-  }
-}
-;
-
+    playAgainRequest: "wants to play again!",
+  },
+};
 type GameTranslations = typeof en;
 
 export { en, type GameTranslations };

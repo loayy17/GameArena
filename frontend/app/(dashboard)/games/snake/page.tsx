@@ -1,34 +1,83 @@
 "use client";
 
-import clsx from "clsx";
-import { useRef } from "react";
+import { useState } from "react";
 
-import { useAuth } from "@/app/providers/AuthProvider";
 import type { ISnakeGameState } from "@/app/providers/def/IGameState";
 import { useGame } from "@/app/providers/GameProvider";
 import { GCard } from "@/component/common/GCard";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
+import { ScoreBoard } from "@/component/games/common/ScoreBoard";
 import { DIRECTIONS, GameActionTypes } from "@/domain/constant/game-actions";
 import { INPUT_THROTTLE_MS } from "@/domain/constant/game-constants";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useGameInput } from "@/hooks/useGameInput";
+import { useGameStateView } from "@/hooks/useGameStateView";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 
-import type { ICellProps, IGameBoardProps } from "./def/SnakeBoard";
+import type { IGameBoardProps, ISnakePoint } from "./def/SnakeBoard";
 
-const CELL_STYLES: Record<number, string> = {
-  0: "bg-surface border border-border-light",
-  1: "bg-accent border border-accent",
-  2: "bg-primary border border-primary",
-  3: "bg-warning border border-warning",
-};
+interface ISnakeLayerProps {
+  snake: ISnakePoint[];
+  bodyClass: string;
+  headClass: string;
+  boardWidth: number;
+  boardHeight: number;
+}
+
+function SnakeLayer({ snake, bodyClass, headClass, boardWidth, boardHeight }: ISnakeLayerProps) {
+  return snake.map((segment, index) => (
+    <div
+      key={index}
+      className={`absolute transition-transform duration-100 ease-linear will-change-transform ${index === 0 ? headClass : bodyClass}`}
+      style={{
+        width: `${100 / boardWidth}%`,
+        height: `${100 / boardHeight}%`,
+        transform: `translate(${segment.x * 100}%, ${segment.y * 100}%) scale(${index === 0 ? 0.95 : 0.85})`,
+      }}
+    />
+  ));
+}
+
+function GameBoard({ boardWidth, boardHeight, mySnake, oppSnake, food }: IGameBoardProps) {
+  const inBounds = (p: ISnakePoint) => p.x >= 0 && p.x < boardWidth && p.y >= 0 && p.y < boardHeight;
+
+  return (
+    <div dir="ltr" className="absolute inset-0">
+      <SnakeLayer
+        snake={oppSnake}
+        bodyClass="rounded-[35%] bg-warning/80"
+        headClass="rounded-md bg-warning"
+        boardWidth={boardWidth}
+        boardHeight={boardHeight}
+      />
+      <SnakeLayer
+        snake={mySnake}
+        bodyClass="rounded-[35%] bg-accent/80"
+        headClass="rounded-md bg-accent"
+        boardWidth={boardWidth}
+        boardHeight={boardHeight}
+      />
+      {inBounds(food) && (
+        <div
+          className="absolute p-[12%] transition-transform duration-100 ease-linear"
+          style={{
+            width: `${100 / boardWidth}%`,
+            height: `${100 / boardHeight}%`,
+            transform: `translate(${food.x * 100}%, ${food.y * 100}%)`,
+          }}>
+          <div className="size-full animate-pulse rounded-full bg-danger" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SnakePage() {
   const { state } = useGame();
-  const { user } = useAuth();
   const t = useGameTranslation();
-  const boardRef = useRef<HTMLDivElement>(null);
+  const { isPlayer1 } = useGameStateView(state);
+  const [board, setBoard] = useState<HTMLDivElement | null>(null);
 
   const isSnake = !!state && "player1Snake" in state;
   const isActive = isSnake && !(state as ISnakeGameState).isFinished;
@@ -50,7 +99,7 @@ function SnakePage() {
     resolveDirection,
     createAction: (dir) => ({ type: GameActionTypes.CHANGE_DIRECTION, direction: dir }),
     throttleMs: INPUT_THROTTLE_MS.SNAKE,
-    boardRef,
+    boardElement: board,
     pointerMode: "swipe",
   });
 
@@ -59,8 +108,6 @@ function SnakePage() {
   }
 
   const snakeState = state as ISnakeGameState;
-  const myPlayerId = user?.id;
-  const isPlayer1 = snakeState.player1Id === myPlayerId;
 
   const mySnake = isPlayer1 ? snakeState.player1Snake : snakeState.player2Snake;
   const oppSnake = isPlayer1 ? snakeState.player2Snake : snakeState.player1Snake;
@@ -70,20 +117,16 @@ function SnakePage() {
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.Snake}>
       <GCard padding={SizeEnum.md}>
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-center">
-            <div className="text-sm text-text-muted">{t.game.you}</div>
-            <div className="text-2xl font-bold text-accent">{myScore}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-text-muted">{t.game.opponent}</div>
-            <div className="text-2xl font-bold text-warning">{oppScore}</div>
-          </div>
-        </div>
+        <ScoreBoard
+          className="mb-4"
+          variant="compact"
+          left={{ score: myScore, label: t.game.you, colorClass: "text-accent" }}
+          right={{ score: oppScore, label: t.game.opponent, colorClass: "text-warning" }}
+        />
 
         <div
-          ref={boardRef}
-          className="relative rounded border border-border-light overflow-hidden touch-none select-none"
+          ref={setBoard}
+          className="relative overflow-hidden rounded-2xl border border-game-board-border bg-game-board shadow-inner touch-none select-none"
           style={{ aspectRatio: `${snakeState.boardWidth} / ${snakeState.boardHeight}` }}>
           <GameBoard
             boardWidth={snakeState.boardWidth}
@@ -94,39 +137,15 @@ function SnakePage() {
           />
         </div>
 
-        {!snakeState.isFinished && <p className="mt-4 text-center text-xs text-text-muted">{t.snake.arrowKeysHint}</p>}
+        {!snakeState.isFinished && (
+          <p className="mt-4 text-center text-xs text-text-muted">
+            <span className="md:hidden">{t.snake.swipeHint}</span>
+            <span className="hidden md:inline">{t.snake.arrowKeysHint}</span>
+          </p>
+        )}
       </GCard>
     </GameLayoutWrapper>
   );
-}
-
-function GameBoard({ boardWidth, boardHeight, mySnake, oppSnake, food }: IGameBoardProps) {
-  const grid = new Array(boardHeight).fill(0).map(() => new Array(boardWidth).fill(0));
-  const inBounds = (p: { x: number; y: number }) => p.x >= 0 && p.x < boardWidth && p.y >= 0 && p.y < boardHeight;
-
-  mySnake.forEach((s) => {
-    if (inBounds(s)) grid[s.y][s.x] = 1;
-  });
-  oppSnake.forEach((s) => {
-    if (inBounds(s)) grid[s.y][s.x] = 2;
-  });
-  if (inBounds(food)) grid[food.y][food.x] = 3;
-
-  return (
-    <div
-      dir="ltr"
-      className="absolute inset-0 grid gap-0"
-      style={{
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
-        gridTemplateRows: `repeat(${boardHeight}, 1fr)`,
-      }}>
-      {grid.map((row, y) => row.map((cell, x) => <Cell key={`${y}-${x}`} type={cell as 0 | 1 | 2 | 3} />))}
-    </div>
-  );
-}
-
-function Cell({ type }: ICellProps) {
-  return <div className={clsx("w-full h-full", CELL_STYLES[type])} />;
 }
 
 export default SnakePage;

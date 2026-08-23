@@ -55,4 +55,4 @@ export type IPingPongGameState = IGameState & {
   player2Paddle: { x: number; y: number; height: number };
   paddleWidth: number;
 };
-export type IConnectFourGameState = IGameState & { board: number[][] };
+export type IConnectFourGameState = Omit<IGameState, "board"> & { board: number[][] };

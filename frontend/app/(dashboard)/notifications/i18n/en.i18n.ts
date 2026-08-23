@@ -6,6 +6,8 @@ export const en = {
     all: "All",
     gameInvites: "Game Invites",
     friendRequests: "Friend Requests",
+    messages: "Messages",
+    other: "Other",
   },
   empty: {
     title: "No notifications",
@@ -25,6 +27,10 @@ export const en = {
   },
   actions: {
     dismiss: "Dismiss",
+    accept: "Accept",
+    decline: "Decline",
+    reply: "Reply",
+    markRead: "Mark as read",
   },
   time: {
     justNow: "Just now",

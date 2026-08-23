@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, KeyRound } from "lucide-react";
-import { AuthLayout } from "../layout";
 import { GTextField } from "@/component/common/GTextField";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { en, type TForgotPasswordTranslation } from "./i18n/en.i18n";
 import { ar } from "./i18n/ar.i18n";
@@ -63,43 +62,46 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <GIcon icon={KeyRound} size={SizeEnum.xl} tile tileColor={AccentColorEnum.OnPrimary} />
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-text tracking-tight">{t.forgotPassword}</h1>
-            <p className="text-sm text-text-muted mt-0.5">{t.description}</p>
-          </div>
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <GIcon icon={KeyRound} size={SizeEnum.xl} tile tileColor={AccentColorEnum.OnPrimary} />
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-text tracking-tight">{t.forgotPassword}</h1>
+          <p className="text-sm text-text-muted mt-0.5">{t.description}</p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); void send(); }} className="space-y-5">
-          {apiError && (
-            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-              {apiError}
-            </div>
-          )}
-          <GTextField
-            label={t.email}
-            placeholder={t.placeholder.email}
-            value={email}
-            type="email"
-            required
-            error={errors.email}
-            onChange={(e) => handleChange(e.target.value)}
-            className="w-full"
-          />
-          <GButton type="submit" loading={loading} loadingText={t.sendCode} fullWidth>
-            {t.sendCode}
-          </GButton>
-          <div className="pt-2 text-center">
-            <Link href="/login" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
-              <GIcon icon={ArrowLeft} size={SizeEnum.sm} flip />
-              {t.backToLogin}
-            </Link>
-          </div>
-        </form>
       </div>
-    </AuthLayout>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send();
+        }}
+        className="space-y-5">
+        {apiError && (
+          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            {apiError}
+          </div>
+        )}
+        <GTextField
+          label={t.email}
+          placeholder={t.placeholder.email}
+          value={email}
+          type="email"
+          required
+          error={errors.email}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-full"
+        />
+        <GButtonAsync type="submit" busy={loading} loadingText={t.sendCode} fullWidth>
+          {t.sendCode}
+        </GButtonAsync>
+        <div className="pt-2 text-center">
+          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
+            <GIcon icon={ArrowLeft} size={SizeEnum.sm} flip />
+            {t.backToLogin}
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 }
 

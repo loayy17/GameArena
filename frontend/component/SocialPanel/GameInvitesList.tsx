@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GCard } from "@/component/common/GCard";
 import { GList } from "@/component/common/GList";
-import { GModal } from "@/component/common/GModal";
+import { LeaveGameModal } from "@/component/games/common/LeaveGameModal";
 import { useTranslation } from "@/hooks/useSetting";
 import { GamesList } from "@/domain/constant/games";
 import { en, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
@@ -71,31 +71,26 @@ export function GameInvitesList({ onAfterAccept }: IGameInvitesListProps) {
           <GCard key={invite.roomId} padding={SizeEnum.sm} className="bg-primary-muted border-primary/20">
             <p className="text-sm font-medium text-text">{t.invites.wantsToPlay.replace("{{name}}", invite.inviterName ?? "")}</p>
             <div className="flex gap-2 mt-2">
-              <GButton size={SizeEnum.md} onClick={() => handleAccept(invite.roomId, gamePath(invite.gameType))}>
+              <GButtonAsync size={SizeEnum.md} onClick={() => handleAccept(invite.roomId, gamePath(invite.gameType))}>
                 {t.invites.accept}
-              </GButton>
-              <GButton size={SizeEnum.md} variant={ButtonVariantEnum.Secondary} onClick={() => dismissGameInvite(invite.roomId)}>
+              </GButtonAsync>
+              <GButtonAsync size={SizeEnum.md} variant={ButtonVariantEnum.Secondary} onClick={() => dismissGameInvite(invite.roomId)}>
                 {t.invites.decline}
-              </GButton>
+              </GButtonAsync>
             </div>
           </GCard>
         )}
       </GList>
 
-      <GModal open={pendingAccept !== null} onClose={handleCancelAccept} role="alertdialog" ariaLabel={t.acceptInviteConfirmation}>
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-text mb-2">{t.leaveTitle}</h2>
-          <p className="text-sm text-text-secondary mb-6">{t.leaveDesc}</p>
-          <div className="flex gap-3">
-            <GButton onClick={handleCancelAccept} variant={ButtonVariantEnum.Secondary} fullWidth>
-              {t.cancel}
-            </GButton>
-            <GButton onClick={handleConfirmAccept} variant={ButtonVariantEnum.Danger} fullWidth>
-              {t.leaveAccept}
-            </GButton>
-          </div>
-        </div>
-      </GModal>
+      <LeaveGameModal
+        open={pendingAccept !== null}
+        title={t.leaveTitle}
+        description={t.leaveDesc}
+        cancelLabel={t.cancel}
+        confirmLabel={t.leaveAccept}
+        onCancel={handleCancelAccept}
+        onConfirm={handleConfirmAccept}
+      />
     </div>
   );
 }

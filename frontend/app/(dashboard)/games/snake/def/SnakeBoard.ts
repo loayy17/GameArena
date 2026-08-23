@@ -1,4 +1,4 @@
-interface ISnakePoint {
+export interface ISnakePoint {
   x: number;
   y: number;
 }
@@ -9,8 +9,4 @@ export interface IGameBoardProps {
   mySnake: ISnakePoint[];
   oppSnake: ISnakePoint[];
   food: ISnakePoint;
-}
-
-export interface ICellProps {
-  type: 0 | 1 | 2 | 3;
 }

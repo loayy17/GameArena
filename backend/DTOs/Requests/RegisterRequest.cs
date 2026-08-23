@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
+using backend.Utils;
 
 namespace backend.DTOs.Requests
 {
@@ -7,6 +7,6 @@ namespace backend.DTOs.Requests
         [Required] string FirstName,
         [Required] string LastName,
         [Required] string UserName,
-        [Required, EmailAddress] string Email,
-        [Required, MinLength(8), MaxLength(100)] string Password);
+        [Required, RegularExpression(ValidationRules.EmailPattern)] string Email,
+        [Required, RegularExpression(ValidationRules.PasswordPattern)] string Password);
 }

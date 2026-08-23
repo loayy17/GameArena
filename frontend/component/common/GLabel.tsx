@@ -1,6 +1,7 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
+import { GTooltip } from "./GTooltip";
 
 import { ar } from "@/component/i18n/GLabel/ar.i18n";
 import { fr } from "@/component/i18n/GLabel/fr.i18n";
@@ -13,12 +14,12 @@ function GLabel({ required, className, children, ...props }: IGLabelProps) {
   const t = useTranslation({ en, ar, fr }) as GLabelTranslation;
 
   return (
-    <label className={clsx("block text-sm font-medium text-text-secondary", className)} {...props}>
+    <label className={cn("block text-sm font-medium text-text-secondary mb-1", className)} {...props}>
       {children}
       {required && (
-        <span className="text-danger ms-0.5" aria-label={t.required}>
-          *
-        </span>
+        <GTooltip content={t.required} side="top">
+          <span className="text-accent ms-0.5 cursor-help">*</span>
+        </GTooltip>
       )}
     </label>
   );

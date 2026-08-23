@@ -12,6 +12,10 @@ const en = {
   haveAccount: "Already have an account?",
   signIn: "Sign in",
   unknownError: "An unknown error occurred",
+  acceptPolicyAndTerms: "I accept the policy and terms",
+  policy: "Policy",
+  terms: "Terms",
+  and: "and",
   dynamicFieldRequired: (field: string) => `${field} is required`,
   placeholder: {
     firstName: "Enter your first name",

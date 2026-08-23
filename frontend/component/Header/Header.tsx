@@ -1,16 +1,15 @@
 "use client";
 
-import { ArrowBigLeftDash, ArrowBigRightDashIcon, ChevronDown, ChevronUp, Hexagon, Menu, UsersRound } from "lucide-react";
+import { Menu, UsersRound } from "lucide-react";
 
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useTranslation } from "@/hooks/useSetting";
 
+import { BrandMark } from "@/component/common/BrandMark";
 import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
-import { GBadge } from "@/component/common/GBadge";
 import { UserMenu } from "@/component/UserMenu/UserMenu";
 
-import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 
@@ -31,61 +30,68 @@ function Header({ sidebar, social }: IHeaderProps) {
   const socialBadge = friendRequestCount + unreadMessageCount + unreadNotificationCount + gameInvites.length;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-sticky flex h-14 items-center gap-2 border-b border-border bg-bg-sidebar px-3">
-      <div className="hidden md:flex shrink-0 px-2 ">
-        <GButton
-          variant={ButtonVariantEnum.Subtle}
-          size={SizeEnum.icon}
-          rounded={SizeEnum.full}
-          aria-label={t.mainNavigation}
-          title={t.mainNavigation}
-          aria-expanded={sidebar?.open || !sidebar?.collapsed}
-          onClick={() => {
-            sidebar?.toggleCollapsed();
-            sidebar?.toggleMobile();
-          }}>
-          <GIcon icon={Menu} size={SizeEnum.md} />
-        </GButton>
+    <header className="fixed inset-x-0 top-0 z-sticky flex h-14 items-center gap-2 border-b border-border/60 bg-bg-sidebar/80 backdrop-blur-md px-3">
+      <GButton
+        variant={ButtonVariantEnum.Subtle}
+        size={SizeEnum.icon}
+        rounded={SizeEnum.full}
+        className={sidebar?.open ? "hidden md:inline-flex xl:hidden bg-primary-muted text-primary" : "hidden md:inline-flex xl:hidden"}
+        aria-label={t.mainNavigation}
+        aria-expanded={sidebar?.open}
+        onClick={() => sidebar?.toggleMobile()}>
+        <GIcon icon={Menu} size={SizeEnum.md} />
+      </GButton>
+      <GButton
+        variant={ButtonVariantEnum.Subtle}
+        size={SizeEnum.icon}
+        rounded={SizeEnum.full}
+        className={sidebar && !sidebar.collapsed ? "hidden xl:inline-flex bg-primary-muted text-primary" : "hidden xl:inline-flex"}
+        aria-label={t.mainNavigation}
+        aria-expanded={sidebar ? !sidebar.collapsed : undefined}
+        onClick={() => sidebar?.toggleCollapsed()}>
+        <GIcon icon={Menu} size={SizeEnum.md} />
+      </GButton>
+
+      <div className="min-w-0 flex-1">
+        <BrandMark name={t.brand} onClick={() => router.push("/")} />
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <GIcon icon={Hexagon} size={SizeEnum.sm} className="shrink-0" />
-        <span className="truncate text-lg font-bold cursor-pointer" onClick={() => router.push("/")}>
-          {t.brand}
-        </span>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5">
         <UserMenu />
+        {/* Social: drawer on <xl */}
         <GButton
           variant={ButtonVariantEnum.Subtle}
           size={SizeEnum.icon}
           rounded={SizeEnum.full}
+          className={social?.open ? "relative inline-flex xl:hidden bg-primary-muted text-primary" : "relative inline-flex xl:hidden"}
           aria-label={st.friendsAndInvites}
-          title={st.friendsAndInvites}
-          onClick={() => {
-            social?.toggleCollapsed();
-            social?.toggleMobile();
-          }}>
-          <span className="relative inline-flex">
-            <span className="inline-flex md:hidden">
-              <GIcon icon={social?.open ? ChevronDown : ChevronUp} size={SizeEnum.sm} />
+          aria-expanded={social?.open}
+          onClick={() => social?.toggleMobile()}>
+          <GIcon icon={UsersRound} size={SizeEnum.md} />
+          {socialBadge > 0 && (
+            <span
+              aria-hidden
+              className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-on-primary ring-2 ring-bg-sidebar">
+              {socialBadge > 99 ? "99+" : socialBadge}
             </span>
-            <span className="hidden md:inline-flex xl:hidden">
-              <GIcon icon={social?.open ? ArrowBigRightDashIcon : ArrowBigLeftDash} size={SizeEnum.sm} />
+          )}
+        </GButton>
+        <GButton
+          variant={ButtonVariantEnum.Subtle}
+          size={SizeEnum.icon}
+          rounded={SizeEnum.full}
+          className={social && !social.collapsed ? "relative hidden xl:inline-flex bg-primary-muted text-primary" : "relative hidden xl:inline-flex"}
+          aria-label={st.friendsAndInvites}
+          aria-expanded={social ? !social.collapsed : undefined}
+          onClick={() => social?.toggleCollapsed()}>
+          <GIcon icon={UsersRound} size={SizeEnum.md} />
+          {socialBadge > 0 && (
+            <span
+              aria-hidden
+              className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-on-primary ring-2 ring-bg-sidebar">
+              {socialBadge > 99 ? "99+" : socialBadge}
             </span>
-            <span className="hidden xl:inline-flex">
-              <GIcon icon={social?.collapsed ? ArrowBigLeftDash : ArrowBigRightDashIcon} size={SizeEnum.sm} />
-            </span>
-            <GIcon icon={UsersRound} size={SizeEnum.md} />
-            {socialBadge > 0 && (
-              <span className="absolute -top-1 -inset-e-1">
-                <GBadge variant={AccentColorEnum.Danger} size={SizeEnum.xs} className="min-w-4 justify-center px-1">
-                  {socialBadge > 99 ? "99+" : socialBadge}
-                </GBadge>
-              </span>
-            )}
-          </span>
+          )}
         </GButton>
       </div>
     </header>

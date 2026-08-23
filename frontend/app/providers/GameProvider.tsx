@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useConnections } from "@/app/providers/ConnectionProvider";
 import { gameService } from "@/services/def/GameService";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
+import { GAMES_BY_TYPE } from "@/domain/constant/games";
 import { PLAY_AGAIN_TIMEOUT_MS } from "@/domain/constant/game-constants";
 import type { TNullable } from "@/domain/type/TCommon";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
@@ -73,6 +74,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     };
   }, [goToLobby, clearFlags]);
 
+  const activeRoomId = state?.roomId ?? null;
+  const lastRoomRef = useRef<TNullable<string>>(null);
+
+  useEffect(() => {
+    const previous = lastRoomRef.current;
+    lastRoomRef.current = activeRoomId;
+    if (!activeRoomId || activeRoomId === previous) return;
+    const config = GAMES_BY_TYPE[state?.gameType as GamesKindEnum];
+    if (!config) return;
+    router.push(`/games/${config.path}`);
+  }, [activeRoomId, state?.gameType, router]);
+
   const findMatch = useCallback(
     async (game: GamesKindEnum) => {
       if (isSearchingRef.current) return;
@@ -109,8 +122,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const leaveGame = useCallback(async () => {
     try {
       await gameService.leaveGame();
-    } catch {
-    }
+    } catch {}
     goToLobby();
   }, [goToLobby]);
 
@@ -145,12 +157,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const resetGame = useCallback(async () => {
     try {
       if (isSearching) await gameService.cancelSearch();
-    } catch {
-    }
+    } catch {}
     try {
       await gameService.leaveGame();
-    } catch {
-    }
+    } catch {}
     goToLobby();
   }, [goToLobby, isSearching]);
 

@@ -6,7 +6,7 @@ const friendsApi = clientFactory(
   {
     sendFriendRequest: {
       verb: HttpVerbEnum.Post,
-      template: "/request/{friendId}",
+      template: "/request/{receiverId}",
     },
     getReceivedFriendRequests: {
       verb: HttpVerbEnum.Get,
@@ -43,6 +43,10 @@ const friendsApi = clientFactory(
     unblockUser: {
       verb: HttpVerbEnum.Post,
       template: "/unblock/{blockedId}",
+    },
+    getBlockedUsers: {
+      verb: HttpVerbEnum.Get,
+      template: "/blocked",
     },
   },
   undefined,

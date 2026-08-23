@@ -25,6 +25,7 @@ export interface IGameTurnIndicatorProps {
   isMyTurn: boolean;
   currentTurnText: string;
   waitingText: string;
+  thinking?: boolean;
 }
 
 export interface IGamePlayersHeaderProps {

@@ -1,99 +1,73 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import { forwardRef } from "react";
-import { IndicatorPositionEnum } from "@/domain/enum/IndicatorPositionEnum";
+import { GTooltip } from "./GTooltip";
 import { NavOrientationEnum } from "@/domain/enum/NavOrientationEnum";
-import { navIndicator } from "@/domain/constant/nav-indicator";
 import type { IGNavProps } from "./def/GNav";
 
 const navBase = {
-  itemIdle: "text-text-secondary hover:bg-primary-muted hover:text-text",
+  itemIdle: "text-text-secondary hover:bg-surface-hover hover:text-text",
   itemActive: "bg-primary-muted text-primary font-semibold",
 };
 
-const responsiveIndicator = {
-  active: "border-t-[3px] border-t-primary md:border-t-0 md:border-s-[3px] md:border-s-primary",
-  idle: "border-t-[3px] border-t-transparent md:border-t-0 md:border-s-[3px] md:border-s-transparent",
-};
-
-const invertedResponsiveIndicator = {
-  active: "border-s-[3px] border-s-primary md:border-s-0 md:border-t-[3px] md:border-t-primary",
-  idle: "border-s-[3px] border-s-transparent md:border-s-0 md:border-t-[3px] md:border-t-transparent",
-};
-
 const GNav = forwardRef<HTMLDivElement, IGNavProps>(
-  (
-    {
-      items,
-      orientation = NavOrientationEnum.Vertical,
-      indicator = IndicatorPositionEnum.Start,
-      collapsed = false,
-      stacked = false,
-      responsive = false,
-      responsiveInverted = false,
-      className,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ items, orientation = NavOrientationEnum.Vertical, collapsed = false, stacked = false, className, ...props }, ref) => {
     const isVertical = orientation === NavOrientationEnum.Vertical;
-    const indicatorStyles =
-      responsive && indicator === IndicatorPositionEnum.Start
-        ? responsiveIndicator
-        : responsiveInverted
-          ? invertedResponsiveIndicator
-          : navIndicator[indicator];
-    const itemWidth = responsive ? "w-auto md:w-full" : responsiveInverted ? "w-full md:w-auto" : isVertical ? "w-full" : "shrink-0";
 
     return (
-      <div
-        ref={ref}
-        className={clsx(
-          "flex",
-          responsive
-            ? "flex-row flex-wrap gap-1 md:flex-col md:gap-1"
-            : responsiveInverted
-              ? "flex-col gap-1 md:flex-row md:flex-wrap md:gap-1"
-              : clsx(isVertical ? "flex-col gap-1" : "flex-row"),
-          className,
-        )}>
+      <div ref={ref} className={cn("flex", stacked ? "flex-row gap-1" : isVertical ? "flex-col gap-1" : "flex-row gap-1", className)}>
         {items.map((item) => {
           const active = Boolean(item.active);
-          return (
+          const buttonEl = (
             <button
               key={item.id}
               type="button"
               disabled={item.disabled}
-              className={clsx(
+              className={cn(
                 stacked
-                  ? "flex-1 flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 min-w-0 text-2xs"
-                  : clsx("flex items-center gap-3 px-3 h-11 text-sm min-w-0", itemWidth),
-                "relative font-medium text-start",
+                  ? "relative flex-1 flex flex-col items-center justify-center gap-1 px-1 py-2 min-h-11 min-w-0 text-2xs rounded-xl"
+                  : cn("flex items-center gap-3 px-3 h-11 text-sm min-w-0", isVertical ? "w-full" : "shrink-0"),
+                "relative font-medium text-start cursor-pointer disabled:cursor-not-allowed",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                active ? indicatorStyles.active : indicatorStyles.idle,
+                "transition-colors",
                 active ? navBase.itemActive : navBase.itemIdle,
                 collapsed && "justify-center px-2",
               )}
               aria-current={active ? "page" : undefined}
-              title={collapsed && item.label ? String(item.label) : undefined}
               onClick={item.onClick}
               {...props}>
+              {active && !stacked && (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute rounded-full bg-primary",
+                    isVertical ? "start-0.5 top-1/2 -translate-y-1/2 h-6 w-1" : "top-0.5 left-1/2 -translate-x-1/2 w-6 h-1",
+                  )}
+                />
+              )}
               {item.icon && (
-                <span className={clsx("relative shrink-0", collapsed && "mx-auto", stacked && "mb-0.5")}>
+                <span
+                  className={cn("relative inline-flex items-center justify-center shrink-0", stacked ? "size-6" : "size-5", collapsed && "mx-auto")}>
                   {item.icon}
-
-                  {collapsed && item.badge && <span className="absolute -top-1.5 -inset-e-1.5">{item.badge}</span>}
+                  {collapsed && item.badge && (
+                    <span aria-hidden className="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-danger border-2 border-bg-sidebar" />
+                  )}
+                  {stacked && item.badge && <span className="absolute -top-1.5 -end-2">{item.badge}</span>}
                 </span>
               )}
-              {!collapsed && item.label && (
-                <span className={clsx("min-w-0 leading-snug whitespace-normal truncate", (responsive || responsiveInverted) && "md:flex-1")}>
-                  {item.label}
-                </span>
-              )}
-              {!collapsed && item.badge && <span className="ms-auto shrink-0">{item.badge}</span>}
+              {!collapsed && item.label && <span className="min-w-0 truncate leading-snug">{item.label}</span>}
+              {!collapsed && !stacked && item.badge && <span className="ms-auto shrink-0">{item.badge}</span>}
             </button>
           );
+          if (collapsed && item.label) {
+            return (
+              <GTooltip key={item.id} content={String(item.label)} side={isVertical ? "right" : "top"}>
+                {buttonEl}
+              </GTooltip>
+            );
+          }
+          return buttonEl;
         })}
       </div>
     );

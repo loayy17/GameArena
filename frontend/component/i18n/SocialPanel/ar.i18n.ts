@@ -2,6 +2,12 @@ const ar = {
   title: "التواصل",
   online: "متصل",
   message: "رسالة",
+  invite: "دعوة للعب",
+  inviteTitle: "ادعُ {name} للعب",
+  inviteSent: "تم إرسال الدعوة",
+  inviteFailed: "تعذر إرسال الدعوة",
+  reply: "رد",
+  markRead: "تحديد كمقروء",
   active: "نشط",
   searchPlaceholder: "بحث عن الأصدقاء...",
   friendsAndInvites: "لوحة التواصل",
@@ -27,7 +33,6 @@ const ar = {
   sentYouRequest: "أرسل لك طلب صداقة",
   noNotificationsTitle: "لا توجد إشعارات",
   noNotificationsDescription: "الإشعارات ستظهر هنا.",
-  acceptInviteConfirmation: "تأكيد قبول الدعوة",
   send: "إرسال",
   viewAll: "عرض الكل"
 }

@@ -10,7 +10,18 @@ const en = {
       email: "Email",
       save: "Save Changes",
       saved: "Profile updated successfully",
-      saveFailed: "Failed to save profile"
+      saveFailed: "Failed to save profile",
+      avatar: "Avatar",
+      avatarUpload: "Upload Avatar",
+      avatarUploading: "Uploading…",
+      avatarRemove: "Remove Avatar",
+      avatarSaved: "Avatar updated successfully",
+      avatarSaveFailed: "Failed to upload avatar",
+      avatarRemoved: "Avatar removed",
+      avatarRemoveFailed: "Failed to remove avatar",
+      avatarTooLarge: "Image must be 2MB or smaller",
+      avatarInvalidType: "Only PNG, JPEG, WebP, or GIF images are allowed",
+      invalidUsername: "Username must be 3-20 characters using letters, numbers, or underscores",
     },
     password: {
       title: "Change Password",
@@ -21,7 +32,7 @@ const en = {
       save: "Update Password",
       saved: "Password changed successfully",
       saveFailed: "Failed to change password",
-      invalidCurrentPassword: "Invalid current password"
+      invalidCurrentPassword: "Invalid current password",
     },
     preferences: {
       title: "Preferences",
@@ -36,11 +47,9 @@ const en = {
       showGameActivity: "Show Game Activity",
       showNotifications: "Show Notifications",
       recordsPerPage: "Records per Page",
-    }
-  }
-}
-;
-
+    },
+  },
+};
 type TSettingsTranslation = typeof en;
 
 export { en, type TSettingsTranslation };

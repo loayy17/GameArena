@@ -7,6 +7,7 @@ const en = {
   history: "Match History",
   notifications: "Notifications",
   settings: "Settings",
+  profile: "Profile",
   logout: "Logout",
   user: "User",
   mainNavigation: "Main navigation",

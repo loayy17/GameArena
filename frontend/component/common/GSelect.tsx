@@ -1,12 +1,12 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import { ChevronDown } from "lucide-react";
 import { forwardRef, useId } from "react";
 import { GLabel } from "./GLabel";
 import type { IGSelectProps } from "./def/GSelect";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { fieldSize } from "@/domain/constant/size-classes";
+import { fieldBase, fieldSize } from "@/domain/constant/size-classes";
 
 const GSelect = forwardRef<HTMLSelectElement, IGSelectProps<string | number>>(
   ({ label, error, className, startIcon, options, placeholder, size = SizeEnum.md, id: providedId, ...props }, ref) => {
@@ -15,7 +15,11 @@ const GSelect = forwardRef<HTMLSelectElement, IGSelectProps<string | number>>(
     const errorId = `${selectId}-error`;
     return (
       <div className="space-y-2">
-        {label && <GLabel required={props.required} htmlFor={selectId}>{label}</GLabel>}
+        {label && (
+          <GLabel required={props.required} htmlFor={selectId}>
+            {label}
+          </GLabel>
+        )}
 
         <div className="relative">
           {startIcon && <div className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2 text-text-muted">{startIcon}</div>}
@@ -25,14 +29,13 @@ const GSelect = forwardRef<HTMLSelectElement, IGSelectProps<string | number>>(
             id={selectId}
             aria-describedby={error ? errorId : undefined}
             aria-invalid={error ? true : undefined}
-            className={clsx(
-              "w-full bg-surface border border-border rounded-md text-text appearance-none",
-              "hover:border-border-light focus:border-primary focus:ring-3 focus:ring-primary-muted",
-              "placeholder:text-text-muted",
+            className={cn(
+              fieldBase,
+              "appearance-none",
               fieldSize[size],
               startIcon && "ps-10",
               "pe-9",
-              error && "border-danger focus:ring-3 focus:ring-danger-muted",
+              error && "border-danger focus:border-danger focus:ring-danger-muted",
               className,
             )}
             {...props}>
@@ -48,7 +51,7 @@ const GSelect = forwardRef<HTMLSelectElement, IGSelectProps<string | number>>(
             ))}
           </select>
 
-          <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+          <ChevronDown className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" />
         </div>
 
         {error && (

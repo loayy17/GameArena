@@ -21,6 +21,10 @@ class ChatService extends SignalRServiceBase {
     this.addHandler("chat:private", (data: unknown) => {
       this.subs.dispatch("chat:private", normalizeMessage(data as IPrivateMessagePayload));
     });
+
+    this.addHandler("chat:typing", (data: unknown) => {
+      this.subs.dispatch("chat:typing", data as { senderId: string; receiverId: string });
+    });
   }
 
   getMessagesByFriendId(friendId: string, signal?: AbortSignal): TPromise<IMessage[]> {
@@ -35,8 +39,16 @@ class ChatService extends SignalRServiceBase {
     await this.requireConnection("Social").invoke("SendPrivateMessage", receiverId, content);
   }
 
+  async sendTyping(receiverId: string): Promise<void> {
+    await this.requireConnection("Social").invoke("SendTyping", receiverId);
+  }
+
   onPrivateMessage(handler: (message: IMessage) => void): () => void {
     return this.subscribe("chat:private", handler as Handler);
+  }
+
+  onTyping(handler: (data: { senderId: string; receiverId: string }) => void): () => void {
+    return this.subscribe("chat:typing", handler as Handler);
   }
 }
 

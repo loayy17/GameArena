@@ -35,13 +35,6 @@ export function useMessages(initialFriendId?: TNullable<string>) {
   const loadGenRef = useRef(0);
   const controllerRef = useRef<TNullable<AbortController>>(null);
 
-  useEffect(() => {
-    if (initialFriendId && initialFriendId !== prevInitialRef.current) {
-      prevInitialRef.current = initialFriendId;
-      setSelectedFriendId(initialFriendId);
-    }
-  }, [initialFriendId]);
-
   const [draft, setDraft] = useState("");
   const [localMessages, setLocalMessages] = useState<IMessage[]>([]);
   const [apiMessages, setApiMessages] = useState<IMessage[]>([]);
@@ -49,6 +42,31 @@ export function useMessages(initialFriendId?: TNullable<string>) {
   const [error, setError] = useState<TNullable<string>>(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<TNullable<string>>(null);
+  const [typing, setTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentRef = useRef(0);
+
+  useEffect(() => {
+    const offTyping = chatService.onTyping((data) => {
+      if (!selectedFriendId || data.senderId !== selectedFriendId) return;
+      setTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => setTyping(false), 2500);
+    });
+
+    return () => {
+      offTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [selectedFriendId]);
+
+  const notifyTyping = useCallback(() => {
+    if (!selectedFriendId || !isConnected) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2000) return;
+    lastTypingSentRef.current = now;
+    void chatService.sendTyping(selectedFriendId).catch(() => {});
+  }, [selectedFriendId, isConnected]);
 
   useEffect(() => {
     controllerRef.current?.abort();
@@ -112,6 +130,7 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     loadGenRef.current++;
     setSelectedFriendId(friendId);
     setLocalMessages([]);
+    setDraft("");
     if (!friendId) {
       setApiMessages([]);
       setLoadingMessages(false);
@@ -119,6 +138,13 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     }
     setSendError(null);
   }, []);
+
+  useEffect(() => {
+    const next = initialFriendId ?? null;
+    if (next === prevInitialRef.current) return;
+    prevInitialRef.current = next;
+    selectFriend(next);
+  }, [initialFriendId, selectFriend]);
 
   const sendMessage = useCallback(async () => {
     const content = draft.trim();
@@ -161,6 +187,8 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     error,
     sending,
     sendError,
+    typing,
+    notifyTyping,
     selectFriend,
     sendMessage,
   };

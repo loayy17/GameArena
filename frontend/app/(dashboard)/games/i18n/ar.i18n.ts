@@ -10,8 +10,7 @@ const ar = {
   cancel: "إلغاء",
   leaveConfirm: "غادر وابدأ جديدة",
   returnToGame: "العودة إلى اللعبة",
-  gameRunning: "اللعبة جارية",
-  leaveConfirmation: "تأكيد مغادرة اللعبة"
+  gameRunning: "اللعبة جارية"
 }
 ;
 

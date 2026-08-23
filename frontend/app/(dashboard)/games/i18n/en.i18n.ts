@@ -10,8 +10,7 @@ const en = {
   cancel: "Cancel",
   leaveConfirm: "Leave & Start New",
   returnToGame: "Return to Game",
-  gameRunning: "Game Running",
-  leaveConfirmation: "Leave game confirmation"
+  gameRunning: "Game Running"
 }
 ;
 type TGamesTranslation = typeof en;

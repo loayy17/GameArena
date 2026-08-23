@@ -1,9 +1,10 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 import { GBadge } from "./GBadge";
 import type { IGTabsProps } from "./def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { GButton } from "./GButton";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 
@@ -17,7 +18,10 @@ function renderTabBadge<T extends string | number>(tab: { id: T; badge?: number 
   }
 
   return (
-    <GBadge size={SizeEnum.sm} className="ms-auto min-w-5 justify-center">
+    <GBadge
+      variant={AccentColorEnum.Danger}
+      size={SizeEnum.sm}
+      className={active ? "ms-auto min-w-5 justify-center bg-on-primary text-primary" : "ms-auto min-w-5 justify-center"}>
       {tab.badge}
     </GBadge>
   );
@@ -39,10 +43,11 @@ function GTabs<T extends string | number>({
   return (
     <div className={responsive ? "w-full mb-3" : undefined}>
       <nav
+        role="tablist"
         aria-orientation={responsive ? undefined : "horizontal"}
-        className={clsx(
-          "flex border rounded-2xl overflow-hidden",
-          responsive ? "flex-col md:flex-row md:flex-wrap" : clsx("flex-row", fullWidth ? "flex-nowrap" : "flex-wrap"),
+        className={cn(
+          "flex border border-border/60 shadow-md rounded-xl overflow-hidden bg-surface/50",
+          responsive ? "flex-col md:flex-row md:flex-wrap" : cn("flex-row", fullWidth ? "flex-nowrap" : "flex-wrap"),
           fullWidth && !responsive && "w-full",
           className,
         )}>
@@ -52,17 +57,21 @@ function GTabs<T extends string | number>({
           return (
             <GButton
               key={tab.id}
+              role="tab"
+              aria-selected={active}
+              id={`tab-${tab.id}`}
+              aria-controls={`tabpanel-${value}`}
               variant={active ? ButtonVariantEnum.Primary : ButtonVariantEnum.Subtle}
               rounded={SizeEnum.None}
               onClick={() => onChange(tab.id)}
-              className={clsx(
+              className={cn(
                 fullWidth && !responsive && "flex-1 justify-center",
                 fullWidth && responsive && "w-full md:flex-1 md:justify-center",
                 tabClassName,
               )}>
               {renderIcon ? renderIcon(tab, active) : tab.icon}
               <span
-                className={clsx(
+                className={cn(
                   "min-w-0 truncate leading-snug",
                   responsive ? "flex-1 text-start whitespace-normal md:flex-none md:text-center" : "whitespace-nowrap",
                 )}>

@@ -7,6 +7,7 @@ const ar = {
   history: "سجل المباريات",
   notifications: "الإشعارات",
   settings: "الإعدادات",
+  profile: "الملف الشخصي",
   logout: "تسجيل الخروج",
   user: "مستخدم",
   mainNavigation: "التنقل الرئيسي",

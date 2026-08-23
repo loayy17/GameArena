@@ -21,7 +21,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const redirectedRef = useRef(false);
   const sidebarAside = useAside(false);
-  const socialAside = useAside(false);
+  const socialAside = useAside(true);
 
   useEffect(() => {
     if (requireAuth && !loading && !user && !redirectedRef.current) {
@@ -46,7 +46,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Header sidebar={sidebarAside} social={socialAside} />
             <div className="flex min-h-0 flex-1 pt-14">
               <Sidebar aside={sidebarAside} />
-              <main className="flex flex-1 flex-col overflow-y-auto md:pb-mobile-nav md:pb-0 custom-scrollbar">{children}</main>
+              <main className="flex flex-1 flex-col overflow-y-auto custom-scrollbar sm:pb-mobile-nav md:pb-0">{children}</main>
               <SocialPanel aside={socialAside} />
             </div>
             <MobileFooter />

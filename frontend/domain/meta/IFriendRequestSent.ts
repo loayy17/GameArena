@@ -5,6 +5,7 @@ interface IFriendRequestSent {
   receiverFirstName: TNullable<string>;
   receiverLastName: TNullable<string>;
   receiverUserName: TNullable<string>;
+  receiverAvatarUrl?: TNullable<string>;
   sentAt: Date;
 }
 export type { IFriendRequestSent };

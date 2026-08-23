@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using backend.Utils;
 
 namespace backend.DTOs.Requests
 {
     public record VerifyOtpRequest(
-        [Required, EmailAddress] string Email,
+        [Required, RegularExpression(ValidationRules.EmailPattern)] string Email,
         [Required] string Otp);
 }

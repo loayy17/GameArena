@@ -1,5 +1,5 @@
 const fr = {
-  required: "requis",
+  required: "Ce champ est requis",
 };
 
 export { fr };

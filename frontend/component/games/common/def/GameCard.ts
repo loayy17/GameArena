@@ -2,6 +2,8 @@ export interface IGameCardProps {
   name: string;
   desc: string;
   animation: string;
-  onClick: () => void;
+  path?: string;
   playLabel: string;
+  compact?: boolean;
+  onPlay?: () => void;
 }

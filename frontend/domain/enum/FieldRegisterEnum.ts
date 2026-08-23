@@ -5,6 +5,7 @@ enum FieldRegisterEnum {
   firstName,
   lastName,
   userName,
+  policyAndTerms,
 }
 
 export { FieldRegisterEnum };

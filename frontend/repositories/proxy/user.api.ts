@@ -8,6 +8,10 @@ const userApi = clientFactory(
       verb: HttpVerbEnum.Get,
       template: "/profile",
     },
+    publicProfile: {
+      verb: HttpVerbEnum.Get,
+      template: "/{id}",
+    },
     search: {
       verb: HttpVerbEnum.Post,
       template: "/search",
@@ -27,6 +31,14 @@ const userApi = clientFactory(
     updatePreferences: {
       verb: HttpVerbEnum.Put,
       template: "/preferences",
+    },
+    uploadAvatar: {
+      verb: HttpVerbEnum.Post,
+      template: "/avatar",
+    },
+    removeAvatar: {
+      verb: HttpVerbEnum.Delete,
+      template: "/avatar",
     },
   },
   undefined,

@@ -2,20 +2,21 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+
 import { useAuth } from "@/app/providers/AuthProvider";
+import { useTranslation } from "@/hooks/useSetting";
 import { GSpinner } from "@/component/common/GSpinner";
-import { GIcon } from "@/component/common/GIcon";
 import { GCard } from "@/component/common/GCard";
-import { Hexagon } from "lucide-react";
 import { LangTheme } from "@/component/LangTheme/LangTheme";
 import { BrandText } from "@/component/common/BrandText";
-import { useTranslation } from "@/hooks/useSetting";
+
+import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
+
 import { en, type TAuthLayoutTranslation } from "./i18n/en.i18n";
 import { ar } from "./i18n/ar.i18n";
 import { fr } from "./i18n/fr.i18n";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
-import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 
 function AuthLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,40 +33,59 @@ function AuthLayout({ children }: { children: ReactNode }) {
 
   if (loading || user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg">
+      <div className="flex min-h-screen items-center justify-center bg-bg">
         <GSpinner size={SizeEnum.lg} />
       </div>
     );
   }
 
+  const features = [
+    [t.features.instantPlay, "bg-primary/10 text-primary border-primary/20"],
+    [t.features.playWithFriends, "bg-secondary/10 text-secondary border-secondary/20"],
+    [t.features.rankedMatches, "bg-accent/10 text-accent border-accent/20"],
+    [t.features.seasonalEvents, "bg-success/10 text-success border-success/20"],
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-bg">
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:items-center lg:justify-center p-8 lg:p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5 auth-hero-grid" />
-        <div className="absolute inset-0 auth-hero-glow opacity-20" />
-        <div className="relative max-w-md w-full text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary text-on-primary mb-8">
-            <GIcon icon={Hexagon} size={SizeEnum.lg} color={AccentColorEnum.OnPrimary} />
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 text-text">
+    <div className="min-h-screen bg-bg md:flex">
+      <section className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-1 lg:flex-col lg:items-center lg:justify-center lg:p-12">
+        <div className="auth-hero-grid absolute inset-0 opacity-[0.04]" />
+        <div className="absolute left-1/2 top-1/4 size-96 -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 left-1/3 size-64 rounded-full bg-secondary/8 blur-[100px]" />
+
+        <div className="relative w-full max-w-md text-center">
+          <Image
+            src="/arena404_hero.png"
+            alt="404 Arena"
+            width={120}
+            height={120}
+            className="mx-auto mb-8 size-32 object-contain drop-shadow-2xl"
+            priority
+          />
+
+          <h1 className="mb-4 text-4xl font-bold tracking-tight text-text sm:text-5xl">
             <BrandText name={t.brand} />
           </h1>
-          <p className="text-lg text-text-secondary mb-8 max-w-sm mx-auto">{t.heroSubtitle}</p>
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.instantPlay}</span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.playWithFriends}</span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.rankedMatches}</span>
-            <span className="px-3 py-1.5 rounded-full bg-bg text-text-muted text-xs font-medium">{t.features.seasonalEvents}</span>
+
+          <p className="mx-auto mb-8 max-w-sm text-lg leading-relaxed text-text-secondary">{t.heroSubtitle}</p>
+
+          <div className="mb-10 flex flex-wrap justify-center gap-2">
+            {features.map(([label, style]) => (
+              <span key={label} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${style}`}>
+                {label}
+              </span>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="flex-1 flex flex-col min-h-screen p-4 lg:p-8">
-        <div className="flex justify-end">
+      <div className="flex min-h-screen flex-1 flex-col p-4 lg:p-8">
+        <header className="max-w-xl mx-auto w-full">
           <LangTheme />
-        </div>
-        <main className="flex flex-1 items-center justify-center my-2">
-          <GCard variant={CardVariantEnum.Elevated} padding={SizeEnum.xl} className="w-full max-w-xl">
+        </header>
+
+        <main className="flex flex-1 items-center py-2">
+          <GCard variant={CardVariantEnum.Elevated} padding={SizeEnum.xl} className="w-full max-w-xl mx-auto">
             {children}
           </GCard>
         </main>
@@ -74,9 +94,4 @@ function AuthLayout({ children }: { children: ReactNode }) {
   );
 }
 
-function AuthRouteLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
-}
-
-export { AuthLayout };
-export default AuthRouteLayout;
+export default AuthLayout;

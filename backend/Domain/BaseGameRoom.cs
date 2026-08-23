@@ -42,6 +42,7 @@ namespace backend.Domain
         }
 
         public abstract object GetStatePayload();
+        public virtual int BotMoveDelayMs => 1000;
 
         protected Dictionary<string, object?> GetBasePayload() => new()
         {

@@ -4,7 +4,7 @@ import { Play } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
 import { getGameConfig } from "@/domain/constant/games";
@@ -30,7 +30,7 @@ function GameReady({ gameType }: IGameReadyProps) {
 
         <div className="flex items-center justify-center gap-6 mb-10">
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-accent bg-accent-muted">
+            <div className="size-20 rounded-2xl flex items-center justify-center border-2 border-accent bg-accent-muted">
               <span className="text-3xl font-bold text-accent">{gameInfo.symbol1}</span>
             </div>
             <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
@@ -41,7 +41,7 @@ function GameReady({ gameType }: IGameReadyProps) {
           <div className="text-text-muted font-bold italic text-xl">{t.game.vs}</div>
 
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-warning bg-warning-bg">
+            <div className="size-20 rounded-2xl flex items-center justify-center border-2 border-warning bg-warning-bg">
               <span className="text-3xl font-bold text-warning">{gameInfo.symbol2}</span>
             </div>
             <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
@@ -50,14 +50,14 @@ function GameReady({ gameType }: IGameReadyProps) {
           </div>
         </div>
 
-        <GButton
+        <GButtonAsync
           disabled={!isHost}
           onClick={() => startGame(state.player2Id ?? null, gameType)}
           fullWidth
           size={SizeEnum.lg}
           startIcon={<GIcon icon={Play} size={SizeEnum.lg} />}>
           {isHost ? t.ready.startGame : t.ready.waitingForStart}
-        </GButton>
+        </GButtonAsync>
       </GCard>
     </div>
   );

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { GTextField } from "@/component/common/GTextField";
-import { GButton } from "@/component/common/GButton";
+import { GCheckbox } from "@/component/common/GCheckbox";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { emailValidator, passwordValidator } from "@/lib/utils";
 import { en, type TRegisterTranslation } from "@/app/(auth)/register/i18n/en.i18n";
@@ -38,6 +39,7 @@ function RegisterForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [userName, setUserName] = useState("");
+  const [policyAndTerms, setPolicyAndTerms] = useState(false);
   const [apiError, setApiError] = useState({ link: "", message: "" });
 
   const [errors, setErrors] = useState({
@@ -47,9 +49,17 @@ function RegisterForm() {
     firstName: "",
     lastName: "",
     userName: "",
+    policyAndTerms: "",
   });
 
-  const validate = (emailVal: string, passwordVal: string, firstNameVal: string, lastNameVal: string, userNameVal: string) => {
+  const validate = (
+    emailVal: string,
+    passwordVal: string,
+    firstNameVal: string,
+    lastNameVal: string,
+    userNameVal: string,
+    policyAndTermsVal: boolean,
+  ) => {
     return {
       email: emailValidator(t)(emailVal) || "",
       password: passwordValidator(t)(passwordVal) || "",
@@ -61,6 +71,7 @@ function RegisterForm() {
       firstName: firstNameVal.trim() ? "" : t.dynamicFieldRequired(t.firstName),
       lastName: lastNameVal.trim() ? "" : t.dynamicFieldRequired(t.lastName),
       userName: userNameVal.trim() ? "" : t.dynamicFieldRequired(t.userName),
+      policyAndTerms: policyAndTermsVal ? "" : t.dynamicFieldRequired(t.acceptPolicyAndTerms),
     };
   };
 
@@ -76,7 +87,7 @@ function RegisterForm() {
 
   const register = async () => {
     try {
-      const nextErrors = validate(email, password, firstName, lastName, userName);
+      const nextErrors = validate(email, password, firstName, lastName, userName, policyAndTerms);
       setErrors(nextErrors);
       if (Object.values(nextErrors).some((error) => error)) return;
       setLoading(true);
@@ -106,23 +117,27 @@ function RegisterForm() {
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <GIcon icon={UserPlus} size={SizeEnum.xl} tile tileColor={AccentColorEnum.OnPrimary} />
+        <div className="flex items-center justify-center size-12 rounded-xl bg-primary/15">
+          <GIcon icon={UserPlus} size={SizeEnum.xl} color={AccentColorEnum.Primary} />
+        </div>
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-text tracking-tight">{t.register}</h1>
           <p className="text-sm text-text-muted mt-0.5">{t.createAccount}</p>
         </div>
       </div>
       <form
-        className="space-y-6"
+        className="space-y-5"
         onSubmit={(e) => {
           e.preventDefault();
           register();
         }}>
         {apiError.message && (
-          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-            <p>{apiError.message}</p>
+          <div role="alert" className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            <p className="font-medium">{apiError.message}</p>
             {apiError.link && (
-              <Link href={apiError.link} className="mt-1 inline-block font-semibold text-primary hover:text-primary-hover">
+              <Link
+                href={apiError.link}
+                className="mt-1 inline-block font-semibold text-primary hover:text-primary-hover underline underline-offset-2">
                 {t.signIn}
               </Link>
             )}
@@ -192,14 +207,28 @@ function RegisterForm() {
             />
           </div>
         </div>
+        <div className="md:col-span-2">
+          <GCheckbox error={errors.policyAndTerms} required checked={policyAndTerms} onChange={(e) => setPolicyAndTerms(e.target.checked)}>
+            <span className="text-sm text-text-secondary">
+              {t.acceptPolicyAndTerms}
+              <Link href="/privacy" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
+                {t.policy}
+              </Link>
+              {t.and}
+              <Link href="/terms" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
+                {t.terms}
+              </Link>
+            </span>
+          </GCheckbox>
+        </div>
 
-        <GButton loading={loading} loadingText={t.createElipses} fullWidth type="submit">
+        <GButtonAsync busy={loading} loadingText={t.createElipses} fullWidth type="submit">
           {t.create}
-        </GButton>
+        </GButtonAsync>
 
-        <div className="text-sm text-center text-text-secondary pt-2 border-t border-border/40">
+        <div className="text-sm text-center text-text-secondary pt-4 border-t border-border/40">
           {t.haveAccount}
-          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1">
+          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
             {t.signIn}
           </Link>
         </div>

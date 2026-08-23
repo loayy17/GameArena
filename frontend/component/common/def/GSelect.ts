@@ -14,5 +14,3 @@ export interface IGSelectProps<TValue extends string | number = string> extends 
   placeholder?: string;
   size?: SizeEnum;
 }
-
-export type { IGSelectOption };

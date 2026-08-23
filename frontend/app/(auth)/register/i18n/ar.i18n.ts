@@ -12,6 +12,10 @@ const ar = {
   haveAccount: "هل لديك حساب بالفعل؟",
   signIn: "تسجيل الدخول",
   unknownError: "حدث خطأ غير معروف",
+  acceptPolicyAndTerms: "أوافق على السياسة والشروط",
+  policy: "السياسة",
+  terms: "الشروط",
+  and: "و",
   dynamicFieldRequired: (field: string) => `حقل ${field} مطلوب`,
   placeholder: {
     firstName: "أدخل اسمك الأول",

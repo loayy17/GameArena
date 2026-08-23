@@ -36,7 +36,7 @@ function SocialPanel({ aside: asideProp }: ISocialPanelProps) {
     acceptRequest,
     declineRequest,
   } = useDashboardData();
-  const asideDefault = useAside(false);
+  const asideDefault = useAside();
   const aside = asideProp ?? asideDefault;
 
   const [activeTab, setActiveTab] = useState<SocialTabId>(SocialTabId.Friends);
@@ -50,7 +50,7 @@ function SocialPanel({ aside: asideProp }: ISocialPanelProps) {
     <>
       <SocialPanelHeader title={t.title} onlineCount={onlineCount} onlineLabel={t.online} showClose={aside.open} onClose={aside.closeMobile} />
 
-      <div className="px-2">
+      <div className="px-3">
         <SocialTabs
           value={activeTab}
           onChange={(tab) => {
@@ -68,7 +68,7 @@ function SocialPanel({ aside: asideProp }: ISocialPanelProps) {
       </div>
 
       {activeTab === SocialTabId.Friends && (
-        <div className="px-2 pt-2">
+        <div className="px-3 pt-3">
           <GTextField
             id="social-search"
             value={searchQuery}
@@ -99,16 +99,16 @@ function SocialPanel({ aside: asideProp }: ISocialPanelProps) {
   return (
     <>
       {!aside.collapsed && (
-        <aside className="hidden xl:flex xl:h-full xl:w-80 xl:shrink-0 xl:flex-col xl:border-s xl:border-border xl:bg-bg-sidebar">
+        <aside className="hidden xl:flex xl:h-full xl:w-80 xl:shrink-0 xl:flex-col xl:border-s xl:border-border/60 xl:bg-bg-sidebar">
           {panelContent}
         </aside>
       )}
 
-      <GModal open={aside.open} onClose={aside.closeMobile} side="end" ariaLabel={t.friendsAndInvites} className="hidden md:block xl:hidden">
+      <GModal className="hidden md:block xl:hidden" open={aside.open} onClose={aside.closeMobile} side="end" ariaLabel={t.friendsAndInvites}>
         {panelContent}
       </GModal>
 
-      <GModal open={aside.open} onClose={aside.closeMobile} side="bottom" ariaLabel={t.friendsAndInvites} className="md:hidden">
+      <GModal className="block md:hidden" open={aside.open} onClose={aside.closeMobile} side="bottom" ariaLabel={t.friendsAndInvites}>
         {panelContent}
       </GModal>
     </>

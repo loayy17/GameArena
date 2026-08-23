@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { en, type TOtpTranslation } from "../i18n/Otp/en.i18n";
 import { ar } from "../i18n/Otp/ar.i18n";
@@ -126,13 +126,18 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
       )}
 
       <div className="space-y-2 pt-1">
-        <GButton type="submit" loading={loading.verify} loadingText={t.verify} className="w-full">
+        <GButtonAsync type="submit" busy={loading.verify} loadingText={t.verify} className="w-full">
           {t.verify}
-        </GButton>
+        </GButtonAsync>
 
-        <GButton type="button" variant={ButtonVariantEnum.Subtle} disabled={loading.verify || loading.resend} onClick={resend} className="w-full">
+        <GButtonAsync
+          type="button"
+          variant={ButtonVariantEnum.Subtle}
+          disabled={loading.verify || loading.resend}
+          onClick={resend}
+          className="w-full">
           {t.resendCode}
-        </GButton>
+        </GButtonAsync>
       </div>
     </form>
   );

@@ -51,13 +51,7 @@ export function AuthProvider({ requireAuth, children }: { requireAuth: boolean; 
   }, [loadUser]);
 
   const refreshUser = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      return await loadUser();
-    } finally {
-      setLoading(false);
-    }
+    return await loadUser();
   }, [loadUser]);
 
   const updatePreferences = useCallback((newPreferences: Partial<IUserPreferences>) => {

@@ -22,6 +22,7 @@ import { chatService } from "@/services/def/ChatService";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 
 const formatStatus = (status: UserStatusEnum, t: TMessagesTranslation) => {
   switch (status) {
@@ -260,15 +261,15 @@ function MessagesPage() {
                   className="flex-1"
                   disabled={sending}
                 />
-                <GButton
+                <GButtonAsync
                   onClick={() => void sendMessage()}
                   disabled={!draft.trim() || !isConnected || sending}
-                  loading={sending}
+                  busy={sending}
                   loadingText={t.send}
                   size={SizeEnum.md}
                   startIcon={<GIcon icon={Send} size={SizeEnum.sm} color={AccentColorEnum.OnPrimary} />}>
                   <span className="hidden sm:inline">{t.send}</span>
-                </GButton>
+                </GButtonAsync>
               </div>
             </footer>
           </>

@@ -2,6 +2,12 @@ const en = {
   title: "Social",
   online: "online",
   message: "Message",
+  invite: "Invite to play",
+  inviteTitle: "Invite {name} to play",
+  inviteSent: "Invite sent",
+  inviteFailed: "Couldn't send the invite",
+  reply: "Reply",
+  markRead: "Mark as read",
   active: "Active",
   searchPlaceholder: "Search friends...",
   friendsAndInvites: "Social Panel",
@@ -27,7 +33,6 @@ const en = {
   sentYouRequest: "sent you a friend request",
   noNotificationsTitle: "No notifications",
   noNotificationsDescription: "Notifications will appear here.",
-  acceptInviteConfirmation: "Accept invite confirmation",
   send: "Send",
   viewAll: "View All"
 }

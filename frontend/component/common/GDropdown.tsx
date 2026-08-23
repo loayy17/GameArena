@@ -2,14 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
 
-import { GBackdrop } from "./GBackdrop";
 import type { IGDropdownProps } from "./def/GDropdown";
-
-const MENU_WIDTH = 208;
-const VIEWPORT_GAP = 4;
-const MENU_GAP = 6;
 
 type TPosition = {
   x: number;
@@ -30,36 +25,49 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const rtl = document.documentElement.dir === "rtl";
-    const menuWidth = menuRect.width || MENU_WIDTH;
+    const menuWidth = menuRect.width || 208;
     const menuHeight = menuRect.height;
     let x: number;
     let y: number;
     switch (align) {
       case "left":
-        x = rtl ? triggerRect.right + MENU_GAP : triggerRect.left - menuWidth - MENU_GAP;
+        x = rtl ? triggerRect.right + 6 : triggerRect.left - menuWidth - 6;
         y = triggerRect.top;
         break;
       case "right":
-        x = rtl ? triggerRect.left - menuWidth - MENU_GAP : triggerRect.right + MENU_GAP;
+        x = rtl ? triggerRect.left - menuWidth - 6 : triggerRect.right + 6;
         y = triggerRect.top;
         break;
       case "top":
         x = rtl ? triggerRect.right - menuWidth : triggerRect.left;
-        y = triggerRect.top - menuHeight - MENU_GAP;
+        y = triggerRect.top - menuHeight - 6;
         break;
       case "end":
       default:
         x = rtl ? triggerRect.left : triggerRect.right - menuWidth;
-        y = triggerRect.bottom + MENU_GAP;
+        y = triggerRect.bottom + 6;
         break;
     }
-    const maxX = viewportWidth - menuWidth - VIEWPORT_GAP;
-    const maxY = viewportHeight - menuHeight - VIEWPORT_GAP;
-    x = Math.max(VIEWPORT_GAP, Math.min(x, maxX));
-    y = Math.max(VIEWPORT_GAP, Math.min(y, maxY));
+    const maxX = viewportWidth - menuWidth - 4;
+    const maxY = viewportHeight - menuHeight - 4;
+    x = Math.max(4, Math.min(x, maxX));
+    y = Math.max(4, Math.min(y, maxY));
 
     setPosition({ x, y });
   }, [align]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest("[data-gdropdown-menu]")) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -121,26 +129,24 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className 
       </div>
       {open &&
         createPortal(
-          <>
-            <GBackdrop onClick={onClose} />
-            <div
-              ref={menuRef}
-              role="menu"
-              aria-orientation="vertical"
-              className={clsx("fixed z-popover w-52 overflow-hidden rounded-xl border border-border bg-bg-card shadow-lg", className)}
-              style={
-                position
-                  ? {
-                      left: position.x,
-                      top: position.y,
-                    }
-                  : {
-                      visibility: "hidden",
-                    }
-              }>
-              {children}
-            </div>
-          </>,
+          <div
+            ref={menuRef}
+            data-gdropdown-menu
+            role="menu"
+            aria-orientation="vertical"
+            className={cn("fixed z-popover w-52 overflow-hidden rounded-xl border border-border bg-bg-card shadow-lg", className)}
+            style={
+              position
+                ? {
+                    left: position.x,
+                    top: position.y,
+                  }
+                : {
+                    visibility: "hidden",
+                  }
+            }>
+            {children}
+          </div>,
           document.body,
         )}
     </>

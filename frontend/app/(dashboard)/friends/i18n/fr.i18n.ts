@@ -47,7 +47,18 @@ const fr = {
   actions: {
     block: "Bloquer l'utilisateur",
     removeFriend: "Retirer l'ami"
-  }
+  },
+  confirm: {
+    blockTitle: "Bloquer l'utilisateur ?",
+    blockDesc: "L'utilisateur sera retiré de vos amis et bloqué. Vous pourrez le débloquer plus tard depuis l'onglet Bloqués.",
+    removeTitle: "Retirer l'ami ?",
+    removeDesc: "Cet ami sera retiré de votre liste. Vous pourrez envoyer une nouvelle demande plus tard.",
+    cancelTitle: "Annuler la demande ?",
+    cancelDesc: "Cette demande d'ami sera annulée.",
+    confirm: "Confirmer",
+    cancel: "Annuler"
+  },
+  offlineWarning: "Vous êtes hors ligne — les données peuvent être obsolètes. Reconnexion..."
 }
 ;
 

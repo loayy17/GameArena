@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Filter, Search, UserPlus, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Check, Filter, Search, UserPlus, X } from "lucide-react";
 import { ar } from "@/app/(dashboard)/friends/i18n/ar.i18n";
 import { fr } from "@/app/(dashboard)/friends/i18n/fr.i18n";
 import { en, type TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
+import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { GAvatar } from "@/component/common/GAvatar";
 import { GBadge } from "@/component/common/GBadge";
 import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
 import { GList } from "@/component/common/GList";
@@ -28,8 +31,6 @@ import { SEARCH_DEBOUNCE_MS } from "@/domain/constant/debounce";
 import { friendService } from "@/services/def/FriendService";
 import { userService } from "@/services/def/UserService";
 
-import type { ISearchResult } from "./def/SearchTab";
-
 const defaultFilter: IUserFilterRequest = {
   name: "",
   userStatus: UserStatusEnum.All,
@@ -41,12 +42,16 @@ const displayName = (user: IUserSummary, fallback: string) =>
 function SearchTab() {
   const t = useTranslation({ en, ar, fr }) as TFriendsTranslation;
   const resolveError = useErrorMessage();
+  const { friends, requests, sentRequests, blockedUsers } = useDashboardData();
   const [userFilter, setUserFilter] = useState<IUserFilterRequest>(defaultFilter);
-  const [searchResults, setSearchResults] = useState<ISearchResult[]>([]);
+  const [searchUsers, setSearchUsers] = useState<IUserSummary[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<TNullable<string>>(null);
+  const [actionError, setActionError] = useState<TNullable<string>>(null);
+  const [sendingId, setSendingId] = useState<TNullable<string>>(null);
 
   const query = userFilter.name?.trim() ?? "";
+  const status = userFilter.userStatus;
 
   useEffect(() => {
     let ignore = false;
@@ -54,7 +59,7 @@ function SearchTab() {
     const performSearch = async () => {
       if (!query) {
         if (!ignore) {
-          setSearchResults([]);
+          setSearchUsers([]);
           setSearchError(null);
           setSearching(false);
         }
@@ -65,28 +70,11 @@ function SearchTab() {
       if (!ignore) setSearchError(null);
 
       try {
-        const [usersRes, sentRes, friendsRes] = await Promise.all([
-          userService.list(userFilter),
-          friendService.getSentFriendRequests(),
-          friendService.getFriends(userFilter),
-        ]);
-
-        const sentIds = new Set((sentRes.data ?? []).map((request: { receiverId: string }) => request.receiverId));
-        const friendIds = new Set((friendsRes.data ?? []).map((friend: IUserSummary) => friend.id));
-
-        if (!ignore) {
-          setSearchResults(
-            (usersRes.data ?? [])
-              .filter((user: IUserSummary) => !friendIds.has(user.id))
-              .map((user: IUserSummary) => ({
-                ...user,
-                isSendRequest: sentIds.has(user.id),
-              })),
-          );
-        }
+        const usersRes = await userService.list({ name: query, userStatus: status });
+        if (!ignore) setSearchUsers(usersRes.data ?? []);
       } catch (e: unknown) {
         if (!ignore) {
-          setSearchResults([]);
+          setSearchUsers([]);
           setSearchError(resolveError(toErrorCode(e), t.searchTab.searchError));
         }
       } finally {
@@ -102,21 +90,50 @@ function SearchTab() {
       window.clearTimeout(timer);
       ignore = true;
     };
-  }, [query, userFilter, t.searchTab.searchError, resolveError]);
+  }, [query, status, t.searchTab.searchError, resolveError]);
+
+  const searchResults = useMemo(() => {
+    const friendIds = new Set(friends.map((f) => f.id));
+    const blockedIds = new Set(blockedUsers.map((b) => b.id));
+    const sentIds = new Set(sentRequests.map((r) => r.receiverId));
+    const incomingIds = new Set(requests.map((r) => r.senderId));
+    return searchUsers
+      .filter((user) => !friendIds.has(user.id) && !blockedIds.has(user.id))
+      .map((user) => ({
+        ...user,
+        isSendRequest: sentIds.has(user.id),
+        isIncomingRequest: incomingIds.has(user.id),
+      }));
+  }, [searchUsers, friends, blockedUsers, sentRequests, requests]);
 
   const handleSendRequest = async (receiverId: string) => {
+    setSendingId(receiverId);
+    setActionError(null);
     try {
       await friendService.sendFriendRequest(receiverId);
-      setSearchResults((prev) => prev.map((user) => (user.id === receiverId ? { ...user, isSendRequest: true } : user)));
     } catch (e: unknown) {
-      setSearchError(resolveError(toErrorCode(e), t.searchTab.sendError));
+      setActionError(resolveError(toErrorCode(e), t.searchTab.sendError));
     }
+    setSendingId(null);
+  };
+
+  const handleAcceptRequest = async (senderId: string) => {
+    setSendingId(senderId);
+    setActionError(null);
+    try {
+      await friendService.acceptFriendRequest(senderId);
+      setSearchUsers((prev) => prev.filter((user) => user.id !== senderId));
+    } catch (e: unknown) {
+      setActionError(resolveError(toErrorCode(e), t.searchTab.sendError));
+    }
+    setSendingId(null);
   };
 
   const clearSearch = () => {
     setUserFilter(defaultFilter);
-    setSearchResults([]);
+    setSearchUsers([]);
     setSearchError(null);
+    setActionError(null);
   };
 
   return (
@@ -136,7 +153,7 @@ function SearchTab() {
                 aria-label={t.searchTab.clearSearch}
                 variant={ButtonVariantEnum.Subtle}
                 size={SizeEnum.xs}
-                className="p-0! text-text-muted hover:text-text">
+                className="p-0 text-text-muted hover:text-text">
                 <GIcon icon={X} size={SizeEnum.sm} color={AccentColorEnum.Muted} flip={false} />
               </GButton>
             )
@@ -171,31 +188,58 @@ function SearchTab() {
                 {t.searchTab.noResults}
               </GCard>
             ) : (
-              <GList items={searchResults} keyExtractor={(user) => user.id} pageSize={10} listClassName="gap-3">
-                {(user) => (
-                  <GCard padding={SizeEnum.sm} className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <GAvatar firstName={user.firstName} lastName={user.lastName} status={user.status} size={SizeEnum.sm} />
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-text">{displayName(user, t.searchTab.unknownUser)}</p>
-                        <p className="truncate text-xs text-text-muted">{user.userName ? `@${user.userName}` : t.searchTab.noUsername}</p>
-                      </div>
-                    </div>
+              <GCard padding={SizeEnum.None} className="overflow-hidden">
+                <GList items={searchResults} keyExtractor={(user) => user.id} pageSize={10} listClassName="divide-y divide-border/60">
+                  {(user) => (
+                    <div className="flex items-center justify-between gap-4 px-4 py-3">
+                      <Link
+                        href={`/profile/${user.id}`}
+                        className="flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                        <GAvatar
+                          firstName={user.firstName}
+                          lastName={user.lastName}
+                          avatarUrl={user.avatarUrl}
+                          status={user.status}
+                          size={SizeEnum.sm}
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-text">{displayName(user, t.searchTab.unknownUser)}</p>
+                          <p className="truncate text-xs text-text-muted">{user.userName ? `@${user.userName}` : t.searchTab.noUsername}</p>
+                        </div>
+                      </Link>
 
-                    {user.isSendRequest ? (
-                      <GBadge variant={AccentColorEnum.Muted}>{t.searchTab.requestSent}</GBadge>
-                    ) : (
-                      <GButton
-                        onClick={() => void handleSendRequest(user.id)}
-                        size={SizeEnum.sm}
-                        variant={ButtonVariantEnum.Primary}
-                        startIcon={<GIcon icon={UserPlus} size={SizeEnum.sm} className="text-on-primary" />}>
-                        {t.searchTab.add}
-                      </GButton>
-                    )}
-                  </GCard>
-                )}
-              </GList>
+                      {user.isIncomingRequest ? (
+                        <GButtonAsync
+                          onClick={() => void handleAcceptRequest(user.id)}
+                          size={SizeEnum.sm}
+                          variant={ButtonVariantEnum.Primary}
+                          busy={sendingId === user.id}
+                          disabled={sendingId !== null}
+                          startIcon={<GIcon icon={Check} size={SizeEnum.sm} className="text-on-primary" />}>
+                          {t.requestsTab.accept}
+                        </GButtonAsync>
+                      ) : user.isSendRequest ? (
+                        <GBadge variant={AccentColorEnum.Muted}>{t.searchTab.requestSent}</GBadge>
+                      ) : (
+                        <GButtonAsync
+                          onClick={() => void handleSendRequest(user.id)}
+                          size={SizeEnum.sm}
+                          variant={ButtonVariantEnum.Primary}
+                          busy={sendingId === user.id}
+                          disabled={sendingId !== null}
+                          startIcon={<GIcon icon={UserPlus} size={SizeEnum.sm} className="text-on-primary" />}>
+                          {t.searchTab.add}
+                        </GButtonAsync>
+                      )}
+                    </div>
+                  )}
+                </GList>
+              </GCard>
+            )}
+            {actionError && (
+              <p className="text-xs text-danger" role="alert">
+                {actionError}
+              </p>
             )}
           </div>
         ) : (

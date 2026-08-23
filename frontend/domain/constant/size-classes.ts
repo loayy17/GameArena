@@ -2,34 +2,37 @@ import { SizeEnum } from "../enum/SizeEnum";
 import type { THashMap } from "../type/TCommon";
 
 export const iconSize: THashMap<string> = {
-  [SizeEnum.None]: "h-0 w-0",
-  [SizeEnum.xs]: "h-3 w-3",
-  [SizeEnum.sm]: "h-4 w-4",
-  [SizeEnum.md]: "h-5 w-5",
-  [SizeEnum.lg]: "h-6 w-6",
-  [SizeEnum.xl]: "h-8 w-8",
-  [SizeEnum.icon]: "h-11 w-11",
+  [SizeEnum.None]: "size-0",
+  [SizeEnum.xs]: "size-3.5",
+  [SizeEnum.sm]: "size-4",
+  [SizeEnum.md]: "size-5",
+  [SizeEnum.lg]: "size-6",
+  [SizeEnum.xl]: "size-8",
+  [SizeEnum.icon]: "size-11",
 };
 
 export const squareSize: THashMap<string> = {
-  [SizeEnum.xs]: "w-8 h-8",
-  [SizeEnum.sm]: "w-12 h-12",
-  [SizeEnum.md]: "w-16 h-16",
+  [SizeEnum.xs]: "size-8",
+  [SizeEnum.sm]: "size-12",
+  [SizeEnum.md]: "size-16",
+  [SizeEnum.lg]: "size-20",
+  [SizeEnum.xl]: "size-28",
 };
 
 export const spinnerSize: THashMap<string> = {
-  [SizeEnum.sm]: "h-4 w-4",
-  [SizeEnum.md]: "h-6 w-6",
-  [SizeEnum.lg]: "h-10 w-10",
+  [SizeEnum.sm]: "size-4",
+  [SizeEnum.md]: "size-5",
+  [SizeEnum.lg]: "size-8",
 };
 
 export const controlSize: THashMap<string> = {
-  [SizeEnum.xs]: "h-4 px-2.5 text-xs gap-1",
-  [SizeEnum.sm]: "h-8 px-3 text-sm gap-1.5",
-  [SizeEnum.md]: "h-12 px-4 text-sm gap-2",
-  [SizeEnum.lg]: "h-16 px-5 text-lg gap-2.5",
-  [SizeEnum.xl]: "h-20 px-6 text-xl gap-3",
-  [SizeEnum.icon]: "h-11 w-11 p-0",
+  [SizeEnum.xs]: "h-7 px-2.5 text-xs gap-1",
+  [SizeEnum.sm]: "h-9 px-3 text-sm gap-1.5",
+  [SizeEnum.md]: "h-11 px-4 text-sm gap-2",
+  [SizeEnum.lg]: "h-14 px-5 text-base gap-2.5",
+  [SizeEnum.xl]: "h-16 px-6 text-lg gap-3",
+  [SizeEnum.icon]: "size-11 p-0",
+  [SizeEnum.iconSm]: "size-8 p-0",
 };
 
 export const fieldSize: THashMap<string> = {
@@ -39,6 +42,7 @@ export const fieldSize: THashMap<string> = {
 };
 
 export const paddingSize: THashMap<string> = {
+  [SizeEnum.None]: "p-0",
   [SizeEnum.sm]: "p-3",
   [SizeEnum.md]: "p-4",
   [SizeEnum.lg]: "p-6",
@@ -47,10 +51,10 @@ export const paddingSize: THashMap<string> = {
 
 export const radiusSize: THashMap<string> = {
   [SizeEnum.None]: "rounded-none",
-  [SizeEnum.sm]: "rounded-sm",
-  [SizeEnum.md]: "rounded-md",
-  [SizeEnum.lg]: "rounded-lg",
-  [SizeEnum.xl]: "rounded-xl",
+  [SizeEnum.sm]: "rounded-md",
+  [SizeEnum.md]: "rounded-lg",
+  [SizeEnum.lg]: "rounded-xl",
+  [SizeEnum.xl]: "rounded-2xl",
   [SizeEnum.full]: "rounded-full",
 };
 
@@ -73,4 +77,4 @@ export const pageSize: THashMap<string> = {
 };
 
 export const fieldBase =
-  "w-full bg-surface border border-border rounded-md text-text hover:border-border-light focus:border-primary focus:ring-3 focus:ring-primary-muted placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full bg-surface border border-border rounded-lg text-text placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-60 focus:border-primary focus:ring-2 focus:ring-primary-muted hover:border-border-light";

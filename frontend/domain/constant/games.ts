@@ -19,6 +19,7 @@ export interface IGameConfig {
   nameKey: string;
   descriptionKey: string;
   instructionKey: string;
+  guideKey: string;
 }
 
 const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
@@ -37,6 +38,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     nameKey: "tictactoe.name",
     descriptionKey: "tictactoe.description",
     instructionKey: "tictactoe.instruction",
+    guideKey: "tictactoe.guide",
   },
   [GamesKindEnum.PingPong]: {
     id: "pingpong",
@@ -53,6 +55,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     nameKey: "pingpong.name",
     descriptionKey: "pingpong.description",
     instructionKey: "pingpong.instruction",
+    guideKey: "pingpong.guide",
   },
   [GamesKindEnum.Snake]: {
     id: "snake",
@@ -69,6 +72,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     nameKey: "snake.name",
     descriptionKey: "snake.description",
     instructionKey: "snake.instruction",
+    guideKey: "snake.guide",
   },
   [GamesKindEnum.RockPaperScissors]: {
     id: "rockpaperscissors",
@@ -85,6 +89,7 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     nameKey: "rockpaperscissors.name",
     descriptionKey: "rockpaperscissors.description",
     instructionKey: "rockpaperscissors.instruction",
+    guideKey: "rockpaperscissors.guide",
   },
   [GamesKindEnum.ConnectFour]: {
     id: "connectfour",
@@ -93,14 +98,15 @@ const gameConfigs: Record<GamesKindEnum, IGameConfig> = {
     path: "connect-four",
     tileGradient: "from-primary to-accent",
     animation: "/connect_four.json",
-    symbol1: "🔴",
-    symbol2: "🟡",
+    symbol1: "",
+    symbol2: "",
     player1Colors: { box: "border-accent bg-accent-muted", badge: "bg-accent", turn: "text-accent" },
     player2Colors: { box: "border-warning bg-warning-bg", badge: "bg-warning", turn: "text-warning" },
     needsInput: false,
     nameKey: "connectfour.name",
     descriptionKey: "connectfour.description",
     instructionKey: "connectfour.instruction",
+    guideKey: "connectfour.guide",
   },
 };
 
@@ -114,8 +120,16 @@ export function getGameConfig(gameType: GamesKindEnum): IGameConfig {
   return config;
 }
 
-export function translateGameInfo(t: GameTranslations, gameType: GamesKindEnum): { name: string; description: string; instruction: string } {
+export function translateGameInfo(
+  t: GameTranslations,
+  gameType: GamesKindEnum,
+): { name: string; description: string; instruction: string; guide: string } {
   const config = getGameConfig(gameType);
   const lookup = (key: string): string => (t as unknown as Record<string, unknown>)[key] as string;
-  return { name: lookup(config.nameKey), description: lookup(config.descriptionKey), instruction: lookup(config.instructionKey) };
+  return {
+    name: lookup(config.nameKey),
+    description: lookup(config.descriptionKey),
+    instruction: lookup(config.instructionKey),
+    guide: lookup(config.guideKey),
+  };
 }

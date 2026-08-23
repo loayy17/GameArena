@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { AuthLayout } from "../layout";
 import { GTextField } from "@/component/common/GTextField";
-import { GButton } from "@/component/common/GButton";
+import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
 import { OtpForm } from "@/component/auth/OtpForm";
 import { useTranslation } from "@/hooks/useSetting";
@@ -79,7 +78,7 @@ function ResetPasswordPage() {
   };
 
   return (
-    <AuthLayout>
+    <>
       {step === ResetPasswordStepEnum.Otp && (
         <OtpForm
           email={email}
@@ -112,9 +111,9 @@ function ResetPasswordPage() {
             onChange={(e) => handlePasswordChange(e.target.value)}
             className="w-full"
           />
-          <GButton type="submit" loading={loading} loadingText={t.resetPassword} fullWidth>
+          <GButtonAsync type="submit" busy={loading} loadingText={t.resetPassword} fullWidth>
             {t.resetPassword}
-          </GButton>
+          </GButtonAsync>
           <div className="pt-2 text-center">
             <Link href="/login" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
               <GIcon icon={ArrowLeft} size={SizeEnum.sm} flip />
@@ -123,7 +122,7 @@ function ResetPasswordPage() {
           </div>
         </form>
       )}
-    </AuthLayout>
+    </>
   );
 }
 
