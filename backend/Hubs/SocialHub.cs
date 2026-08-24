@@ -73,6 +73,12 @@ namespace backend.Hubs
             await Clients.Group($"user:{receiverId}").SendAsync("chat:private", msg);
         }
 
+        public async Task SendTyping(Guid receiverId)
+        {
+            var senderId = GetUserId();
+            await Clients.Group($"user:{receiverId}").SendAsync("chat:typing", new { senderId, receiverId });
+        }
+
         public async Task RequestCounters()
             => await _notificationService.SendCountersAsync(GetUserId());
 
