@@ -1,20 +1,20 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-
-import type { IGameState, RPSChoice } from "@/app/providers/def/IGameState";
 import { useGame } from "@/app/providers/GameProvider";
 import { GCard } from "@/component/common/GCard";
+import { GButton } from "@/component/common/GButton";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
 import { ScoreBoard } from "@/component/games/common/ScoreBoard";
-import { GameActionTypes } from "@/domain/constant/game-actions";
-import { RPS_CHOICE_EMOJI, RPS_CHOICES } from "@/domain/constant/game-constants";
+import { GameActionTypes, RPS_CHOICE_EMOJI, RPS_CHOICES } from "@/domain/constant/games";
+import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { isRpsState } from "@/app/providers/def/IGameState";
 import { useGameStateView } from "@/hooks/useGameStateView";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 
-type RPSState = IGameState & { player1Choice?: RPSChoice; player2Choice?: RPSChoice };
+import type { IRevealPanelProps } from "./def/RpsBoard";
 
 const CHOICE_ITEMS = RPS_CHOICES.map((choice) => ({
   id: choice,
@@ -22,12 +22,12 @@ const CHOICE_ITEMS = RPS_CHOICES.map((choice) => ({
   emoji: RPS_CHOICE_EMOJI[choice],
 }));
 
-function RevealPanel({ label, choice, placeholder, isWinner }: { label: string; choice?: RPSChoice; placeholder: string; isWinner: boolean }) {
+function RevealPanel({ label, choice, placeholder, isWinner }: IRevealPanelProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2 rounded-xl border py-4 transition-colors",
-        isWinner ? "border-success/50 bg-success-bg" : "border-border/60 bg-bg-card",
+        "flex flex-col items-center gap-2 rounded-xl border py-4",
+        isWinner ? "border-success/50 bg-success-muted" : "border-border/60 bg-bg-card",
       )}>
       <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{label}</span>
       <span key={choice ?? placeholder} className="animate-scale-in text-4xl sm:text-5xl">
@@ -42,11 +42,11 @@ function RockPaperScissorsPage() {
   const t = useGameTranslation();
   const { myPlayerId, isPlayer1, isMyTurn, isOver } = useGameStateView(state);
 
-  if (!state || !("winScore" in state)) {
+  if (!isRpsState(state)) {
     return <GameLayoutWrapper gameType={GamesKindEnum.RockPaperScissors}>{null}</GameLayoutWrapper>;
   }
 
-  const rpsState = state as RPSState;
+  const rpsState = state;
   const myChoice = isPlayer1 ? rpsState.player1Choice : rpsState.player2Choice;
   const rawOppChoice = isPlayer1 ? rpsState.player2Choice : rpsState.player1Choice;
   const myScore = isPlayer1 ? rpsState.player1Score : rpsState.player2Score;
@@ -61,7 +61,7 @@ function RockPaperScissorsPage() {
 
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.RockPaperScissors}>
-      <GCard padding={SizeEnum.md}>
+      <GCard className="p-4">
         <ScoreBoard
           className="mb-5"
           winScore={rpsState.winScore}
@@ -71,14 +71,14 @@ function RockPaperScissorsPage() {
 
         <div className="grid grid-cols-3 gap-3">
           {CHOICE_ITEMS.map(({ id, labelKey, emoji }) => (
-            <button
+            <GButton
               key={id}
-              type="button"
+              variant={ButtonVariantEnum.Subtle}
+              size={SizeEnum.None}
               disabled={!canPick}
               onClick={() => handleChoice(id)}
               className={cn(
-                "flex flex-col items-center justify-center gap-2 rounded-2xl border py-6 transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "flex flex-col items-center justify-center gap-2 rounded-2xl border py-6",
                 myChoice === id
                   ? "border-primary bg-primary-muted ring-2 ring-primary/40"
                   : canPick
@@ -87,7 +87,7 @@ function RockPaperScissorsPage() {
               )}>
               <span className="text-4xl sm:text-5xl">{emoji}</span>
               <span className="text-xs font-semibold text-text-secondary">{t.rockpaperscissors[labelKey]}</span>
-            </button>
+            </GButton>
           ))}
         </div>
 

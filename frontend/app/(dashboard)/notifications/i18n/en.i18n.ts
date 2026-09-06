@@ -16,11 +16,6 @@ export const en = {
   error: {
     title: "Unable to load requests",
   },
-  gameInvite: {
-    title: "Game Invitation",
-    description: "{name} invited you to play {game}",
-    fallbackName: "Someone",
-  },
   friendRequest: {
     title: "Friend Request",
     description: "{name} wants to be your friend",
@@ -31,6 +26,7 @@ export const en = {
     decline: "Decline",
     reply: "Reply",
     markRead: "Mark as read",
+    error: "Action failed. Please try again.",
   },
   time: {
     justNow: "Just now",

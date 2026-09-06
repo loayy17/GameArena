@@ -13,6 +13,7 @@ namespace backend.Hubs
     public class GameHub(
         IGameRoomService _roomService,
         IEventBus _eventBus,
+        INotificationService _notificationService,
         ILogger<GameHub> _logger) : Hub
     {
         private string GetPlayerId() =>
@@ -43,8 +44,13 @@ namespace backend.Hubs
             _roomService.RegisterConnection(playerId, Context.ConnectionId);
             if (TryGetPlayerRoom(playerId, out var room, out var roomId))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, roomId!);
-                await Clients.Caller.SendAsync("gameState", room!.GetStatePayload());
+                if (room!.WinnerPlayerId != null)
+                   await _roomService.LeaveGameAsync(playerId);
+                else
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, roomId!);
+                    await Clients.Caller.SendAsync("gameState", room!.GetStatePayload());
+                }
             }
 
             await base.OnConnectedAsync();
@@ -69,9 +75,14 @@ namespace backend.Hubs
 
                 if (TryGetPlayerRoom(playerId, out var existingRoom, out var existingRoomId))
                 {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
-                    await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
-                    return;
+                    if (existingRoom!.GameType == gameType && existingRoom.WinnerPlayerId == null)
+                    {
+                        await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
+                        await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
+                        return;
+                    }
+
+                    await _roomService.LeaveGameAsync(playerId);
                 }
 
                 var username = GetUsername();
@@ -185,6 +196,10 @@ namespace backend.Hubs
         {
             var playerId = GetPlayerId();
             var username = GetUsername();
+
+            if (TryGetPlayerRoom(playerId, out _, out _))
+                await _roomService.LeaveGameAsync(playerId);
+
             var room = _roomService.CreatePrivateRoom(gameType, playerId, username, null);
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
             await Clients.Caller.SendAsync("gameState", room.GetStatePayload());
@@ -197,9 +212,14 @@ namespace backend.Hubs
 
             if (TryGetPlayerRoom(playerId, out var existingRoom, out var existingRoomId))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
-                await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
-                return;
+                if (existingRoom!.GameType == gameType && existingRoom.WinnerPlayerId == null)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
+                    await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
+                    return;
+                }
+
+                await _roomService.LeaveGameAsync(playerId);
             }
 
             var room = _roomService.CreatePrivateRoom(gameType, playerId, username, friendId);
@@ -227,6 +247,9 @@ namespace backend.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
                 if (_roomService.TryGetRoom(roomId, out var room))
                     await Clients.Group(roomId).SendAsync("gameState", room!.GetStatePayload());
+
+                if (Guid.TryParse(playerId, out var joinerId))
+                    await _notificationService.DeleteNotificationsByReferenceAsync(joinerId, NotificationType.GameInvite, roomId);
             }
         }
     }

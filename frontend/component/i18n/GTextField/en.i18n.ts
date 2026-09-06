@@ -12,7 +12,7 @@ const en = {
     [PasswordValidationEnum.MinLength]:
       "Password must be at least 8 characters long",
     [PasswordValidationEnum.MaxLength]:
-      "Password must not exceed 20 characters",
+      "Password must not exceed 64 characters",
     [PasswordValidationEnum.Uppercase]:
       "Password must contain at least one uppercase letter",
     [PasswordValidationEnum.Lowercase]:
@@ -23,6 +23,9 @@ const en = {
       "Password must contain at least one special character",
     [PasswordValidationEnum.NoSpaces]: "Password must not contain spaces",
   },
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  passwordHint: "8+ characters with upper & lowercase, a number and a symbol",
 };
 
 type GTextFieldTranslation = typeof en;

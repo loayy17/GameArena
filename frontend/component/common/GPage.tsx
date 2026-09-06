@@ -1,7 +1,8 @@
 import { cn } from "@/lib/cn";
-import type { IGPageProps } from "./def/GPage";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { pageSize } from "@/domain/constant/size-classes";
+import { pageSize } from "@/domain/constant/style-tokens";
+
+import type { IGPageProps } from "./def/GPage";
 
 function GPage({ children, size = SizeEnum.md, className }: IGPageProps) {
   return (

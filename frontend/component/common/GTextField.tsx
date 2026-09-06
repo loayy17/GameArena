@@ -1,64 +1,62 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { forwardRef, useId } from "react";
-import { GLabel } from "./GLabel";
-import type { IGTextFieldProps } from "./def/GTextField";
-import { fieldBase, fieldSize } from "@/domain/constant/size-classes";
+import { useField } from "@/hooks/useField";
+import { fieldBase, fieldError, fieldSize } from "@/domain/constant/style-tokens";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 
-const GTextField = forwardRef<HTMLInputElement, IGTextFieldProps>(
-  ({ label, error, startIcon, endIcon, required, size = SizeEnum.md, className, name, id: providedId, type = "text", ...props }, ref) => {
-    const generatedId = useId();
-    const inputId = providedId ?? (name ? `field-${name}` : `field-${generatedId}`);
-    const errorId = `${inputId}-error`;
+import { GLabel } from "./GLabel";
 
-    const hasStartIcon = Boolean(startIcon);
-    const hasEndIcon = Boolean(endIcon);
+import type { IGTextFieldProps } from "./def/GTextField";
 
-    return (
-      <div className={cn("space-y-2", className)}>
-        {label && (
-          <GLabel required={required} htmlFor={inputId}>
-            {label}
-          </GLabel>
+function GTextField({ label, error, hint, startIcon, endIcon, endAction, required, size = SizeEnum.md, className, name, id, type = "text", ref, ...props }: IGTextFieldProps) {
+  const field = useField({ id, name, prefix: "field", error, hint });
+  const hasStartIcon = Boolean(startIcon);
+  const hasEnd = Boolean(endAction ?? endIcon);
+
+  return (
+    <div className={cn("space-y-2", className)}>
+      {label && (
+        <GLabel required={required} htmlFor={field.inputId}>
+          {label}
+        </GLabel>
+      )}
+      <div className="relative">
+        {startIcon && (
+          <span aria-hidden="true" className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2 text-text-muted">
+            {startIcon}
+          </span>
         )}
-        <div className="relative">
-          {startIcon && (
-            <span aria-hidden="true" className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2 text-text-muted">
-              {startIcon}
-            </span>
-          )}
-          <input
-            ref={ref}
-            id={inputId}
-            name={name}
-            type={type}
-            aria-required={required || undefined}
-            {...props}
-            aria-describedby={error ? errorId : undefined}
-            aria-invalid={error ? true : undefined}
-            className={cn(
-              fieldBase,
-              fieldSize[size],
-              hasStartIcon && "ps-10",
-              hasEndIcon && "pe-10",
-              error && "border-danger focus:border-danger focus:ring-danger-muted",
-              "transition-colors",
-            )}
-          />
-          {endIcon && <span className="absolute end-3 top-1/2 -translate-y-1/2">{endIcon}</span>}
-        </div>
-        {error && (
-          <p id={errorId} role="alert" className="mt-1.5 text-xs text-danger font-medium">
-            {error}
-          </p>
+        <input
+          ref={ref}
+          id={field.inputId}
+          name={name}
+          type={type}
+          aria-required={required || undefined}
+          aria-describedby={field.describedBy}
+          aria-invalid={field.invalid}
+          {...props}
+          className={cn(fieldBase, fieldSize[size], hasStartIcon && "ps-10", hasEnd && "pe-10", error && fieldError)}
+        />
+        {endAction ? (
+          <span className="absolute end-1.5 top-1/2 -translate-y-1/2">{endAction}</span>
+        ) : (
+          endIcon && <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2">{endIcon}</span>
         )}
       </div>
-    );
-  },
-);
-
-GTextField.displayName = "GTextField";
+      {error ? (
+        <p {...field.errorProps} className="mt-1.5 text-xs font-medium text-danger">
+          {error}
+        </p>
+      ) : (
+        hint && (
+          <p {...field.hintProps} className="mt-1.5 text-xs text-text-muted">
+            {hint}
+          </p>
+        )
+      )}
+    </div>
+  );
+}
 
 export { GTextField };

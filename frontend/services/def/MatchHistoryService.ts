@@ -1,5 +1,6 @@
 import { matchHistoryApi } from "@/repositories/proxy/matchHistory.api";
 import { withFullName } from "@/domain/lib/userUtils";
+
 import type { IMatchHistory } from "@/domain/meta/IMatchHistory";
 import type { TPromise } from "@/domain/type/TCommon";
 

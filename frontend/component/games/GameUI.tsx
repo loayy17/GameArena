@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/cn";
 import { Bot, User, Zap } from "lucide-react";
 
+import { cn } from "@/lib/cn";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GCard } from "@/component/common/GCard";
@@ -11,9 +11,9 @@ import { GSpinner } from "@/component/common/GSpinner";
 import { getGameConfig } from "@/domain/constant/games";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import type { TNullable, TOptional } from "@/domain/type/TCommon";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 
+import type { TNullable, TOptional } from "@/domain/type/TCommon";
 import type { IGamePlayersHeaderProps, IGameTurnIndicatorProps, IPlayerCardProps, TPlayerResult } from "./def/GameUI";
 
 const RESULT_STYLES: Record<TPlayerResult, { badge: string }> = {
@@ -35,7 +35,7 @@ function PlayerCard({ playerId, playerUsername, symbol, isBot, fallbackName, isT
     <div className="col-span-3 flex flex-col items-center text-center p-2 relative">
       <div
         className={cn(
-          "relative size-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 transition-all duration-200",
+          "relative size-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center border-2",
           result === "win"
             ? "border-success bg-success/10 ring-2 ring-success/20 shadow-lg shadow-success/15"
             : isTurn && symbolColors
@@ -73,7 +73,7 @@ function GameTurnIndicator({ isMyTurn, currentTurnText, waitingText, thinking }:
   return (
     <div
       className={cn(
-        "w-full py-3 px-4 rounded-xl border text-center font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200",
+        "w-full py-3 px-4 rounded-xl border text-center font-bold text-sm flex items-center justify-center gap-2",
         isMyTurn ? "bg-primary/10 border-primary/30 text-text shadow-sm shadow-primary/10" : "bg-surface border-border text-text-secondary",
       )}>
       {thinking && !isMyTurn ? (
@@ -117,7 +117,7 @@ function GamePlayersHeader({ gameType }: IGamePlayersHeaderProps) {
   const p2Result = getPlayerResult(player2Id);
 
   return (
-    <GCard padding={SizeEnum.sm} className="grid grid-cols-7 items-center">
+    <GCard className="grid grid-cols-7 items-center p-3">
       <PlayerCard
         playerId={player1Id ?? null}
         playerUsername={player1Username ?? null}

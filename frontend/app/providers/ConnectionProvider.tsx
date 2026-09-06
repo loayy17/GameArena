@@ -1,17 +1,22 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { ConnectionState, type HubConnectionStates } from "@/domain/enum/ConnectionState";
+
+import { ConnectionState } from "@/domain/enum/ConnectionState";
 import { friendService } from "@/services/def/FriendService";
 import { notificationService } from "@/services/def/NotificationService";
 import { chatService } from "@/services/def/ChatService";
 import { gameService } from "@/services/def/GameService";
+import { apiBase } from "@/app/network";
+
 import { useAuth } from "./AuthProvider";
+
+import type { HubConnectionStates } from "@/domain/enum/ConnectionState";
+import type { IConnectionProviderProps } from "./def/IProviders";
 import type { HubConnection } from "@microsoft/signalr";
 import type { IConnectionContext } from "@/domain/meta/IConnectionContext";
 import type { TNullable, TOptional } from "@/domain/type/TCommon";
-import { apiBase } from "@/app/network";
 
 const ConnectionContext = createContext<TOptional<IConnectionContext>>(undefined);
 
@@ -25,7 +30,7 @@ function createConnection(name: string): HubConnection {
     .build();
 }
 
-export function ConnectionProvider({ children }: { children: React.ReactNode }) {
+export function ConnectionProvider({ children }: IConnectionProviderProps) {
   const { user } = useAuth();
   const [gameConnection, setGameConnection] = useState<TNullable<HubConnection>>(null);
   const [socialConnection, setSocialConnection] = useState<TNullable<HubConnection>>(null);
@@ -133,17 +138,6 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       friendService.disconnect();
       notificationService.disconnect();
       chatService.disconnect();
-
-      if (gameRef.current) {
-        gameRef.current.off("Reconnecting");
-        gameRef.current.off("Reconnected");
-        gameRef.current.off("Closed");
-      }
-      if (socialRef.current) {
-        socialRef.current.off("Reconnecting");
-        socialRef.current.off("Reconnected");
-        socialRef.current.off("Closed");
-      }
 
       gameRef.current?.stop().catch(() => {});
       socialRef.current?.stop().catch(() => {});

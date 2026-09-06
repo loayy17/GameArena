@@ -33,6 +33,7 @@ const ar: TMessagesTranslation = {
   error: {
     title: "تعذر تحميل الرسائل",
     send: "تعذر إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+    retry: "إعادة المحاولة",
   },
 };
 

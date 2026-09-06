@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import type { THashMap, TTranslate } from "@/domain/type/TCommon";
+
 import { LocaleEnum } from "@/domain/enum/LocaleEnum";
 import { ThemeEnum } from "@/domain/enum/ThemeEnum";
 
-let currentLocale: LocaleEnum = LocaleEnum.Ar;
+import type { THashMap, TTranslate } from "@/domain/type/TCommon";
+
+let currentLocale: LocaleEnum = LocaleEnum.En;
 let currentTheme: ThemeEnum = ThemeEnum.Dark;
 
 const listeners = new Set<() => void>();
@@ -31,8 +33,8 @@ function updateThemeDOM(theme: ThemeEnum) {
 }
 
 if (typeof window !== "undefined") {
-  currentLocale = (localStorage.getItem("locale") as LocaleEnum) ?? "en";
-  currentTheme = (localStorage.getItem("theme") as ThemeEnum) ?? "dark";
+  currentLocale = (localStorage.getItem("locale") as LocaleEnum) ?? LocaleEnum.En;
+  currentTheme = (localStorage.getItem("theme") as ThemeEnum) ?? ThemeEnum.Dark;
 }
 
 function getLocale(): LocaleEnum {
@@ -62,12 +64,12 @@ function setTheme(theme: ThemeEnum) {
 }
 
 export function useLocale() {
-  const locale = useSyncExternalStore(subscribe, getLocale, () => "en" as LocaleEnum);
+  const locale = useSyncExternalStore(subscribe, getLocale, () => LocaleEnum.En);
   return [locale, setLocale] as const;
 }
 
 export function useTheme() {
-  const theme = useSyncExternalStore(subscribe, getTheme, () => "dark");
+  const theme = useSyncExternalStore(subscribe, getTheme, () => ThemeEnum.Dark);
   return [theme, setTheme] as const;
 }
 

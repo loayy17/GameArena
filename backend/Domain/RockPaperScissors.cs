@@ -21,7 +21,7 @@ namespace backend.Domain
         public override object GetStatePayload()
         {
             var p = GetBasePayload();
-            p["winScore"] = 3;
+            p["winScore"] = 0;
             p["boardWidth"] = 1;
             p["boardHeight"] = 1;
             p["tickRateHz"] = 0;

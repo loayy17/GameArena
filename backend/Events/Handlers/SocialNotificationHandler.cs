@@ -22,7 +22,8 @@ public class SocialNotificationHandler(
     IEventHandler<UserBlockedEvent>,
     IEventHandler<UserUnblockedEvent>,
     IEventHandler<FriendRequestCancelledEvent>,
-    IEventHandler<GameInviteSentEvent>
+    IEventHandler<GameInviteSentEvent>,
+    IEventHandler<GameInviteCancelledEvent>
 {
     public async Task HandleAsync(FriendRequestSentEvent eventHappen)
     {
@@ -53,6 +54,12 @@ public class SocialNotificationHandler(
                 friendName = eventHappen.AccepterName
             });
 
+        await _notificationService.DeleteNotificationsByReferenceAsync(
+            eventHappen.AccepterId,
+            NotificationType.FriendRequest,
+            eventHappen.SenderId.ToString()
+        );
+
         await _notificationService.CreateNotificationAsync(
             eventHappen.SenderId,
             "FriendRequestAccepted",
@@ -78,6 +85,12 @@ public class SocialNotificationHandler(
             {
                 userId = eventHappen.DeclinerId
             });
+
+        await _notificationService.DeleteNotificationsByReferenceAsync(
+            eventHappen.DeclinerId,
+            NotificationType.FriendRequest,
+            eventHappen.SenderId.ToString()
+        );
 
         await NotifyRequestChangeAsync(eventHappen.SenderId, eventHappen.DeclinerId);
     }
@@ -113,9 +126,8 @@ public class SocialNotificationHandler(
             ? eventHappen.Content[..50] + "..."
             : eventHappen.Content;
 
-        await _notificationService.CreateNotificationAsync(
+        await _notificationService.ReplaceUnreadNewMessageAsync(
             eventHappen.ReceiverId,
-            "NewMessage",
             "New Message",
             preview,
             eventHappen.SenderId.ToString()
@@ -133,6 +145,17 @@ public class SocialNotificationHandler(
             "GameInvite",
             "Game Invite",
             $"{eventHappen.InviterName} invited you to play {eventHappen.GameType}",
+            eventHappen.RoomId
+        );
+    }
+
+    public async Task HandleAsync(GameInviteCancelledEvent eventHappen)
+    {
+        if (!Guid.TryParse(eventHappen.ReceiverId, out var receiverId)) return;
+
+        await _notificationService.DeleteNotificationsByReferenceAsync(
+            receiverId,
+            NotificationType.GameInvite,
             eventHappen.RoomId
         );
     }
@@ -186,6 +209,12 @@ public class SocialNotificationHandler(
             {
                 senderId = eventHappen.SenderId
             });
+
+        await _notificationService.DeleteNotificationsByReferenceAsync(
+            eventHappen.ReceiverId,
+            NotificationType.FriendRequest,
+            eventHappen.SenderId.ToString()
+        );
 
         await NotifyRequestChangeAsync(eventHappen.SenderId, eventHappen.ReceiverId);
     }

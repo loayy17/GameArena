@@ -11,6 +11,7 @@ interface IGameContext {
   lastGameType: TNullable<GamesKindEnum>;
   pendingPlayAgainRequest: TNullable<{ requesterId: string; requesterUsername: string }>;
   requestedPlayAgain: boolean;
+  playAgainTimedOut: boolean;
   findMatch(gameKind: GamesKindEnum): Promise<void>;
   startGame(friendId: TNullable<string>, gameKind: GamesKindEnum): Promise<void>;
   inviteFriend(friendId: string, gameKind: GamesKindEnum): Promise<void>;

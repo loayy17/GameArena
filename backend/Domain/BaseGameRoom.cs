@@ -20,6 +20,7 @@ namespace backend.Domain
         public bool HasStarted { get; set; }
         public string? WinnerPlayerId { get; set; }
         public string? WinnerSymbol { get; set; }
+        public string[] WinningCells { get; protected set; } = [];
         public bool IsBotGame { get; set; }
         public string? CurrentTurnPlayerId { get; set; }
         public int[] Score { get; set; } = [0, 0];
@@ -51,6 +52,7 @@ namespace backend.Domain
             ["currentTurnPlayerId"] = CurrentTurnPlayerId,
             ["winnerPlayerId"] = WinnerPlayerId,
             ["winnerSymbol"] = WinnerSymbol,
+            ["winningCells"] = WinningCells,
             ["isFinished"] = IsFinished,
             ["hasStarted"] = HasStarted,
             ["isFull"] = IsFull,
@@ -81,6 +83,7 @@ namespace backend.Domain
             Interlocked.Exchange(ref _roundResultPersisted, 0);
             WinnerPlayerId = null;
             WinnerSymbol = null;
+            WinningCells = [];
             IsFinished = false;
             HasStarted = true;
             CurrentTurnPlayerId = Player1Id;

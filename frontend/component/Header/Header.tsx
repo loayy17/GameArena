@@ -1,98 +1,291 @@
 "use client";
 
-import { Menu, UsersRound } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Activity,
+  Bell,
+  Bug,
+  ChevronDown,
+  ChevronRight,
+  CircleHelp,
+  FileText,
+  Globe,
+  LogOut,
+  Menu,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Scale,
+  Settings,
+  Sun,
+  User,
+  UsersRound,
+} from "lucide-react";
 
-import { useDashboardData } from "@/app/providers/DashboardDataProvider";
-import { useTranslation } from "@/hooks/useSetting";
-
-import { BrandMark } from "@/component/common/BrandMark";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { useLogout } from "@/hooks/useLogout";
+import { withFullName } from "@/domain/lib/userUtils";
+import { useNotificationList } from "@/hooks/useNotificationList";
+import { useLocale, useTheme, useTranslation } from "@/hooks/useSetting";
+import { GBrandMark } from "@/component/common/GBrandMark";
 import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
-import { UserMenu } from "@/component/UserMenu/UserMenu";
-
+import { GBadge } from "@/component/common/GBadge";
+import { GDropdown } from "@/component/common/GDropdown";
+import { GMenuItem } from "@/component/common/GMenuItem";
+import { GLocalePickerItems } from "@/component/common/GLocalePickerItems";
+import { GAvatar } from "@/component/common/GAvatar";
+import { GUserRow } from "@/component/user/GUserRow";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
+import { LocaleEnum } from "@/domain/enum/LocaleEnum";
+import { ThemeEnum } from "@/domain/enum/ThemeEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-
 import { ar as sideAr } from "@/component/i18n/SideBar/ar.i18n";
 import { fr as sideFr } from "@/component/i18n/SideBar/fr.i18n";
-import { en as sideEn, type TSidebarTranslation } from "@/component/i18n/SideBar/en.i18n";
+import { en as sideEn } from "@/component/i18n/SideBar/en.i18n";
 import { ar as socialAr } from "@/component/i18n/SocialPanel/ar.i18n";
 import { fr as socialFr } from "@/component/i18n/SocialPanel/fr.i18n";
-import { en as socialEn, type TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
-import { useRouter } from "next/navigation";
+import { en as socialEn } from "@/component/i18n/SocialPanel/en.i18n";
+import { ar as menuAr } from "@/component/i18n/UserMenu/ar.i18n";
+import { fr as menuFr } from "@/component/i18n/UserMenu/fr.i18n";
+import { en as menuEn } from "@/component/i18n/UserMenu/en.i18n";
+
+import type { TSidebarTranslation } from "@/component/i18n/SideBar/en.i18n";
+import type { TSocialPanelTranslation } from "@/component/i18n/SocialPanel/en.i18n";
+import type { TUserMenuTranslation } from "@/component/i18n/UserMenu/en.i18n";
 import type { IHeaderProps } from "./def/Header";
 
-function Header({ sidebar, social }: IHeaderProps) {
-  const t = useTranslation({ en: sideEn, ar: sideAr, fr: sideFr }) as TSidebarTranslation;
-  const st = useTranslation({ en: socialEn, ar: socialAr, fr: socialFr }) as TSocialPanelTranslation;
-  const { friendRequestCount, unreadMessageCount, unreadNotificationCount, gameInvites } = useDashboardData();
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+const BUG_REPORT_MAILTO = SUPPORT_EMAIL ? `mailto:${SUPPORT_EMAIL}?subject=GameArena%20Bug%20Report` : null;
+
+const localeLabels = (t: TUserMenuTranslation) => ({
+  [LocaleEnum.En]: t.english,
+  [LocaleEnum.Ar]: t.arabic,
+  [LocaleEnum.Fr]: t.french,
+});
+
+function UserMenu() {
+  const { user } = useAuth();
   const router = useRouter();
-  const socialBadge = friendRequestCount + unreadMessageCount + unreadNotificationCount + gameInvites.length;
+  const logout = useLogout();
+
+  const [locale, setLocale] = useLocale();
+  const [theme, setTheme] = useTheme();
+  const t = useTranslation<TUserMenuTranslation>({ en: menuEn, ar: menuAr, fr: menuFr });
+
+  const [open, setOpen] = useState(false);
+  const [nestedOpen, setNestedOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const closeMenu = () => {
+    setNestedOpen(false);
+    setHelpOpen(false);
+    setOpen(false);
+  };
+
+  const goTo = (path: string) => {
+    closeMenu();
+    router.push(path);
+  };
+
+  const toggleSubmenu = (which: "nested" | "help") => {
+    setNestedOpen(which === "nested" ? (current) => !current : false);
+    setHelpOpen(which === "help" ? (current) => !current : false);
+  };
+
+  const navigateDelayed = (path: string) => {
+    setTimeout(() => {
+      router.push(path);
+      closeMenu();
+    }, 10);
+  };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-sticky flex h-14 items-center gap-2 border-b border-border/60 bg-bg-sidebar/80 backdrop-blur-md px-3">
-      <GButton
-        variant={ButtonVariantEnum.Subtle}
-        size={SizeEnum.icon}
-        rounded={SizeEnum.full}
-        className={sidebar?.open ? "hidden md:inline-flex xl:hidden bg-primary-muted text-primary" : "hidden md:inline-flex xl:hidden"}
-        aria-label={t.mainNavigation}
-        aria-expanded={sidebar?.open}
-        onClick={() => sidebar?.toggleMobile()}>
-        <GIcon icon={Menu} size={SizeEnum.md} />
-      </GButton>
-      <GButton
-        variant={ButtonVariantEnum.Subtle}
-        size={SizeEnum.icon}
-        rounded={SizeEnum.full}
-        className={sidebar && !sidebar.collapsed ? "hidden xl:inline-flex bg-primary-muted text-primary" : "hidden xl:inline-flex"}
-        aria-label={t.mainNavigation}
-        aria-expanded={sidebar ? !sidebar.collapsed : undefined}
-        onClick={() => sidebar?.toggleCollapsed()}>
-        <GIcon icon={Menu} size={SizeEnum.md} />
-      </GButton>
+    <GDropdown
+      open={open}
+      onClose={closeMenu}
+      align="end"
+      trigger={
+        <GButton
+          variant={ButtonVariantEnum.Subtle}
+          size={SizeEnum.md}
+          aria-label={t.userMenu}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          onClick={() => {
+            setOpen((current) => !current);
+            setNestedOpen(false);
+            setHelpOpen(false);
+          }}
+          className="rounded-full">
+          <div className="flex items-center gap-2">
+            <GAvatar user={user ?? {}} size={SizeEnum.xs} />
+            <span className="hidden max-w-32 truncate text-sm font-medium text-text sm:inline-block">
+              {user ? withFullName(user).fullName : ""}
+            </span>
+            <GIcon icon={ChevronDown} size={SizeEnum.xs} className="shrink-0 text-text-muted" />
+          </div>
+        </GButton>
+      }>
+      <div className="border-b border-border p-2">
+        {user && <GUserRow user={user} size={SizeEnum.xs} />}
+      </div>
+
+      <GMenuItem icon={User} label={t.profile} onClick={() => user?.id && goTo(`/profile/${user.id}`)} />
+      <GMenuItem icon={Bell} label={t.notifications} onClick={() => goTo("/notifications")} />
+      <GMenuItem
+        icon={theme === ThemeEnum.Dark ? Sun : Moon}
+        label={theme === ThemeEnum.Dark ? t.light : t.dark}
+        onClick={() => {
+          setTheme(theme === ThemeEnum.Dark ? ThemeEnum.Light : ThemeEnum.Dark);
+          closeMenu();
+        }}
+      />
+
+      <GDropdown
+        open={nestedOpen && open}
+        onClose={() => setNestedOpen(false)}
+        align="left"
+        trigger={
+          <GMenuItem
+            icon={Globe}
+            className="w-full"
+            label={`${t.language}: ${localeLabels(t)[locale]}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSubmenu("nested");
+            }}>
+            <GIcon icon={ChevronRight} size={SizeEnum.xs} />
+          </GMenuItem>
+        }>
+        <GLocalePickerItems
+          locale={locale}
+          labels={localeLabels(t)}
+          onSelect={(nextLocale) => {
+            setLocale(nextLocale);
+            closeMenu();
+          }}
+        />
+      </GDropdown>
+
+      <GDropdown
+        open={helpOpen && open}
+        onClose={() => setHelpOpen(false)}
+        align="left"
+        trigger={
+          <GMenuItem
+            icon={CircleHelp}
+            className="w-full"
+            label={t.help}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSubmenu("help");
+            }}>
+            <GIcon icon={ChevronRight} size={SizeEnum.xs} />
+          </GMenuItem>
+        }>
+        {BUG_REPORT_MAILTO && (
+          <GMenuItem
+            icon={Bug}
+            label={t.reportBug}
+            onClick={() => {
+              closeMenu();
+              window.location.href = BUG_REPORT_MAILTO;
+            }}
+          />
+        )}
+        <GMenuItem icon={Activity} label={t.healthServices} onClick={() => navigateDelayed("/health")} />
+        <GMenuItem icon={FileText} label={t.privacyPolicy} onClick={() => navigateDelayed("/privacy")} />
+        <GMenuItem icon={Scale} label={t.termsOfService} onClick={() => navigateDelayed("/terms")} />
+      </GDropdown>
+      <GMenuItem icon={Settings} label={t.settings} onClick={() => goTo("/settings")} />
+      <GMenuItem
+        icon={LogOut}
+        label={t.logout}
+        className="text-danger"
+        onClick={() => {
+          closeMenu();
+          logout();
+        }}
+      />
+    </GDropdown>
+  );
+}
+
+function Header({ sidebar, social }: IHeaderProps) {
+  const t = useTranslation<TSidebarTranslation>({ en: sideEn, ar: sideAr, fr: sideFr });
+  const st = useTranslation<TSocialPanelTranslation>({ en: socialEn, ar: socialAr, fr: socialFr });
+  const { unreadCount: socialBadgeTotal } = useNotificationList("all");
+  const router = useRouter();
+
+  const socialBadgeEl =
+    socialBadgeTotal > 0 ? (
+      <span aria-hidden className="absolute -top-1 -end-1">
+        <GBadge count={socialBadgeTotal} size={SizeEnum.xs} className="h-4 min-w-4 px-1 text-2xs ring-2 ring-bg-sidebar" />
+      </span>
+    ) : undefined;
+
+  const iconToggle = (
+    icon: typeof Menu,
+    label: string,
+    active: boolean,
+    visibilityClass: string,
+    onClick: () => void,
+    state?: { expanded?: boolean; pressed?: boolean },
+    tooltipSide: "start" | "end" = "end",
+  ) => (
+    <GButton
+      icon={icon}
+      label={label}
+      variant={ButtonVariantEnum.Subtle}
+      size={SizeEnum.icon}
+      className={`${visibilityClass} ${active ? "bg-primary-muted text-primary" : ""}`}
+      tooltipSide={tooltipSide}
+      aria-expanded={state?.expanded}
+      aria-pressed={state?.pressed}
+      onClick={onClick}
+    />
+  );
+
+  return (
+    <header className="fixed inset-x-0 top-0 z-sticky flex h-14 items-center gap-2 border-b border-border/50 bg-bg-sidebar/80 px-3 backdrop-blur-md">
+      <span className="relative hidden md:inline-flex xl:hidden">
+        {iconToggle(Menu, t.mainNavigation, Boolean(sidebar?.open), "inline-flex", () => sidebar?.toggleMobile(), { expanded: sidebar?.open })}
+      </span>
+      <span className="relative hidden xl:inline-flex">
+        {iconToggle(
+          sidebar && !sidebar.collapsed ? PanelLeftClose : PanelLeftOpen,
+          t.mainNavigation,
+          Boolean(sidebar && !sidebar.collapsed),
+          "inline-flex",
+          () => sidebar?.toggleCollapsed(),
+          { pressed: sidebar ? !sidebar.collapsed : undefined },
+        )}
+      </span>
 
       <div className="min-w-0 flex-1">
-        <BrandMark name={t.brand} onClick={() => router.push("/")} />
+        <GBrandMark name={t.brand} onClick={() => router.push("/home")} />
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
         <UserMenu />
-        {/* Social: drawer on <xl */}
-        <GButton
-          variant={ButtonVariantEnum.Subtle}
-          size={SizeEnum.icon}
-          rounded={SizeEnum.full}
-          className={social?.open ? "relative inline-flex xl:hidden bg-primary-muted text-primary" : "relative inline-flex xl:hidden"}
-          aria-label={st.friendsAndInvites}
-          aria-expanded={social?.open}
-          onClick={() => social?.toggleMobile()}>
-          <GIcon icon={UsersRound} size={SizeEnum.md} />
-          {socialBadge > 0 && (
-            <span
-              aria-hidden
-              className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-on-primary ring-2 ring-bg-sidebar">
-              {socialBadge > 99 ? "99+" : socialBadge}
-            </span>
+        <span className="relative inline-flex xl:hidden">
+          {iconToggle(UsersRound, st.friendsAndInvites, Boolean(social?.open), "inline-flex", () => social?.toggleMobile(), { expanded: social?.open }, "start")}
+          {socialBadgeEl}
+        </span>
+        <span className="relative hidden xl:inline-flex">
+          {iconToggle(
+            UsersRound,
+            st.friendsAndInvites,
+            Boolean(social && !social.collapsed),
+            "inline-flex",
+            () => social?.toggleCollapsed(),
+            { pressed: social ? !social.collapsed : undefined },
+            "start",
           )}
-        </GButton>
-        <GButton
-          variant={ButtonVariantEnum.Subtle}
-          size={SizeEnum.icon}
-          rounded={SizeEnum.full}
-          className={social && !social.collapsed ? "relative hidden xl:inline-flex bg-primary-muted text-primary" : "relative hidden xl:inline-flex"}
-          aria-label={st.friendsAndInvites}
-          aria-expanded={social ? !social.collapsed : undefined}
-          onClick={() => social?.toggleCollapsed()}>
-          <GIcon icon={UsersRound} size={SizeEnum.md} />
-          {socialBadge > 0 && (
-            <span
-              aria-hidden
-              className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-on-primary ring-2 ring-bg-sidebar">
-              {socialBadge > 99 ? "99+" : socialBadge}
-            </span>
-          )}
-        </GButton>
+          {socialBadgeEl}
+        </span>
       </div>
     </header>
   );

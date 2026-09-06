@@ -1,107 +1,80 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
+
+import { AuthFrame } from "@/component/auth/AuthFrame";
 import { GTextField } from "@/component/common/GTextField";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
-import { GIcon } from "@/component/common/GIcon";
-import { en, type TForgotPasswordTranslation } from "./i18n/en.i18n";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
+import { GAlert } from "@/component/common/GAlert";
+import { GButton } from "@/component/common/GButton";
 import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
+import { useAuthAction } from "@/hooks/useAuthAction";
 import { emailValidator } from "@/lib/utils";
 import { authService } from "@/services/def/AuthService";
-import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
-import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+
+import { en } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+
+import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
+import type { TForgotPasswordTranslation } from "./i18n/en.i18n";
 
 function ForgotPasswordPage() {
   const router = useRouter();
-  const t = useTranslation({
+  const t = useTranslation<TForgotPasswordTranslation & GTextFieldTranslation>({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
     fr: { ...fr, ...FrTextField },
-  }) as TForgotPasswordTranslation & GTextFieldTranslation;
-  const resolveError = useErrorMessage();
+  });
+  const { loading, apiError, run } = useAuthAction();
 
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ email: "" });
-  const [apiError, setApiError] = useState("");
-
-  const validate = (value: string) => ({
-    email: emailValidator(t)(value) || "",
-  });
-
-  const handleChange = (value: string) => {
-    setEmail(value);
-    setErrors((prev) => ({ ...prev, email: "" }));
-  };
+  const [emailError, setEmailError] = useState("");
 
   const send = async () => {
-    const nextErrors = validate(email);
-    setErrors(nextErrors);
-    if (Object.values(nextErrors).some(Boolean) || loading) return;
+    const error = emailValidator(t)(email);
+    setEmailError(error || "");
+    if (error) return;
 
-    try {
-      setLoading(true);
-      setApiError("");
+    await run(async () => {
       await authService.forgotPassword({ email });
       router.push("/reset-password?email=" + encodeURIComponent(email));
-    } catch (e: unknown) {
-      setApiError(resolveError(toErrorCode(e), t.sendError));
-    } finally {
-      setLoading(false);
-    }
+    }, t.sendError);
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <GIcon icon={KeyRound} size={SizeEnum.xl} tile tileColor={AccentColorEnum.OnPrimary} />
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-text tracking-tight">{t.forgotPassword}</h1>
-          <p className="text-sm text-text-muted mt-0.5">{t.description}</p>
-        </div>
-      </div>
+    <AuthFrame icon={KeyRound} title={t.forgotPassword} description={t.description} backLabel={t.backToLogin}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void send();
         }}
         className="space-y-5">
-        {apiError && (
-          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-            {apiError}
-          </div>
-        )}
+        {apiError && <GAlert severity={AccentColorEnum.Danger}>{apiError}</GAlert>}
         <GTextField
           label={t.email}
           placeholder={t.placeholder.email}
           value={email}
+          error={emailError}
           type="email"
+          autoComplete="email"
           required
-          error={errors.email}
-          onChange={(e) => handleChange(e.target.value)}
           className="w-full"
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailError("");
+          }}
         />
-        <GButtonAsync type="submit" busy={loading} loadingText={t.sendCode} fullWidth>
+        <GButton type="submit" loading={loading} className="w-full">
           {t.sendCode}
-        </GButtonAsync>
-        <div className="pt-2 text-center">
-          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
-            <GIcon icon={ArrowLeft} size={SizeEnum.sm} flip />
-            {t.backToLogin}
-          </Link>
-        </div>
+        </GButton>
       </form>
-    </div>
+    </AuthFrame>
   );
 }
 

@@ -1,5 +1,6 @@
 import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
-import { THashMap } from "@/domain/type/TCommon";
+
+import type { THashMap } from "@/domain/type/TCommon";
 
 const en: THashMap<string, number> = {
   [ErrorCodeEnum.InvalidCredentials]: "Invalid email or password",

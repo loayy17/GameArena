@@ -1,6 +1,7 @@
 const en = {
   title: "Verify Email",
   description: "Enter your email to receive a verification code",
+  emailLabel: "Email",
   sendCode: "Send Code",
   sending: "Sending...",
   enterEmail: "Enter your email",

@@ -100,6 +100,7 @@ builder.Services.AddScoped<IFriendService, FriendService>();
 builder.Services.AddScoped<ISocialReadService, SocialReadService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IMatchHistoryService, MatchHistoryService>();
+builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddSingleton<IEventBus, EventBus>();
 builder.Services.AddDomainEventHandlers();
 builder.Services.AddScoped<INotificationService, NotificationService>();

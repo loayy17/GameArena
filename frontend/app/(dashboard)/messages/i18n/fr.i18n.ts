@@ -31,6 +31,7 @@ const fr = {
   error: {
     title: "Impossible de charger les messages",
     send: "Impossible d'envoyer le message. Veuillez réessayer.",
+    retry: "Réessayer",
   },
 };
 

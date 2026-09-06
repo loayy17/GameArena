@@ -19,7 +19,7 @@ namespace backend.Domain
             p["board"] = Board;
             p["boardWidth"] = Cols;
             p["boardHeight"] = Rows;
-            p["winScore"] = 4;
+            p["winScore"] = 1;
             p["tickRateHz"] = 0;
             return p;
         }
@@ -39,32 +39,30 @@ namespace backend.Domain
             return column.TryGetInt32(out col) && col >= 0 && col < Cols;
         }
 
-        private int CountDirection(int col, int row, int dCol, int dRow, int piece)
+        private void CollectDirection(int col, int row, int dCol, int dRow, int piece, List<(int Col, int Row)> cells)
         {
-            int count = 0;
             int currentCol = col + dCol;
             int currentRow = row + dRow;
             while (currentCol >= 0 && currentCol < Cols && currentRow >= 0 && currentRow < Rows && Board[currentCol][currentRow] == piece)
             {
-                count++;
+                cells.Add((currentCol, currentRow));
                 currentCol += dCol;
                 currentRow += dRow;
             }
-            return count;
         }
 
-        private bool CheckWinner(int col, int row, int piece)
+        private string[]? FindWinLine(int col, int row, int piece)
         {
             int[][] directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
             foreach (var direction in directions)
             {
-                int count = 1;
-                count += CountDirection(col, row, direction[0], direction[1], piece);
-                count += CountDirection(col, row, -direction[0], -direction[1], piece);
-                if (count >= 4)
-                    return true;
+                var cells = new List<(int Col, int Row)> { (col, row) };
+                CollectDirection(col, row, direction[0], direction[1], piece, cells);
+                CollectDirection(col, row, -direction[0], -direction[1], piece, cells);
+                if (cells.Count >= 4)
+                    return cells.Select(c => $"{c.Col}-{c.Row}").ToArray();
             }
-            return false;
+            return null;
         }
 
         private bool TryGetAvailableRow(int col, out int row)
@@ -97,8 +95,10 @@ namespace backend.Domain
                 int piece = playerId == Player1Id ? 1 : 2;
                 Board[col][row] = piece;
 
-                if (CheckWinner(col, row, piece))
+                var winLine = FindWinLine(col, row, piece);
+                if (winLine != null)
                 {
+                    WinningCells = winLine;
                     WinnerSymbol = piece == 1 ? "🔴" : "🟡";
                     CompleteRound(playerId);
                     return;
@@ -135,8 +135,10 @@ namespace backend.Domain
 
                 Board[randomCol][row] = piece;
 
-                if (CheckWinner(randomCol, row, piece))
+                var winLine = FindWinLine(randomCol, row, piece);
+                if (winLine != null)
                 {
+                    WinningCells = winLine;
                     WinnerSymbol = piece == 1 ? "🔴" : "🟡";
                     CompleteRound(botId);
                     return;

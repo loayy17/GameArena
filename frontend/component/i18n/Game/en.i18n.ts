@@ -4,6 +4,7 @@ const en = {
     description: "Deploy strategic marks in a classic 3x3 duel",
     instruction: "Take turns placing X or O. Get three in a row to win.",
     guide: "Tap an empty cell to place your mark",
+    cellLabel: (n: number) => `Cell ${n}`,
   },
   snake: {
     name: "Snake",
@@ -35,6 +36,7 @@ const en = {
     description: "Drop discs and connect four in a row to win",
     instruction: "Drop discs into a column on your turn. Connect four in a row to win.",
     guide: "Choose a column to drop your disc",
+    dropColumnLabel: (n: number) => `Drop in column ${n}`,
   },
   lobby: {
     searchingTitle: "Searching for opponent...",
@@ -48,6 +50,10 @@ const en = {
     startVsAI: "Start Game (vs AI)",
     inviteFriend: "Invite Friend",
     cancelMatch: "Cancel Match",
+    cancelTitle: "Cancel this match?",
+    cancelDescription: "Matchmaking will stop and the room will close.",
+    cancelConfirm: "Yes, cancel",
+    cancelStay: "Keep playing",
   },
   ready: {
     title: "OPPONENT FOUND!",
@@ -71,12 +77,22 @@ const en = {
     firstTo: "First to {score}",
     howToPlay: "How to Play",
     backToGames: "Back to Games",
+    disconnectedTitle: "Disconnected",
+    disconnectedDesc: "Connection lost. Please try again.",
+    opponentDisconnected: "Your opponent disconnected.",
+    leaveTitle: "Leave this game?",
+    leaveDescription: "Leaving now counts as a forfeit and the game will end.",
+    leaveConfirm: "Leave game",
+    leaveStay: "Keep playing",
   },
   invite: {
     title: "Invite a Friend",
     cancel: "Cancel",
     searchFriends: "Search friends...",
     noFriends: "No friends found",
+    receivedTitle: "Game Invitation",
+    receivedDescription: "{name} invited you to play {game}",
+    fallbackName: "Someone",
   },
   result: {
     winShort: "WIN",
@@ -88,6 +104,7 @@ const en = {
     accept: "Accept",
     reject: "Reject",
     playAgainRequest: "wants to play again!",
+    playAgainTimeout: "Your opponent didn't respond in time. You can try again.",
   },
 };
 type GameTranslations = typeof en;

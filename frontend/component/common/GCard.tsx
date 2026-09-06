@@ -1,26 +1,14 @@
 import { cn } from "@/lib/cn";
 import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
-import type { IGCardProps } from "./def/GCard";
-import { paddingSize, radiusSize } from "@/domain/constant/size-classes";
-import { cardVariantStyles } from "@/domain/constant/card-styles";
+import { cardVariantStyles } from "@/domain/constant/style-tokens";
 
-function GCard({
-  variant = CardVariantEnum.Default,
-  padding = SizeEnum.md,
-  rounded: roundedProp = SizeEnum.lg,
-  className,
-  children,
-  ...props
-}: IGCardProps) {
+import type { IGCardProps } from "./def/GCard";
+
+function GCard({ variant = CardVariantEnum.Default, className, children, ref, ...props }: IGCardProps) {
   return (
     <div
-      className={cn(
-        cardVariantStyles[variant],
-        paddingSize[padding],
-        radiusSize[roundedProp],
-        className,
-      )}
+      ref={ref}
+      className={cn("rounded-2xl p-5", cardVariantStyles[variant], className)}
       {...props}>
       {children}
     </div>

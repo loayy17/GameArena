@@ -13,13 +13,24 @@ export interface UseAsideReturn {
   toggleMobile: () => void;
 }
 
-export function useAside(defaultCollapsed = true): UseAsideReturn {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+function readStoredCollapsed(storageKey: string | undefined, fallback: boolean): boolean {
+  if (!storageKey || typeof window === "undefined") return fallback;
+  const stored = localStorage.getItem(storageKey);
+  return stored != null ? stored === "true" : fallback;
+}
+
+export function useAside(defaultCollapsed = true, storageKey?: string): UseAsideReturn {
+  const [collapsed, setCollapsed] = useState(() => readStoredCollapsed(storageKey, defaultCollapsed));
   const [open, setOpen] = useState(false);
 
-  const expand = () => setCollapsed(false);
-  const collapse = () => setCollapsed(true);
-  const toggleCollapsed = () => setCollapsed((c) => !c);
+  const persistCollapsed = (value: boolean) => {
+    setCollapsed(value);
+    if (storageKey) localStorage.setItem(storageKey, String(value));
+  };
+
+  const expand = () => persistCollapsed(false);
+  const collapse = () => persistCollapsed(true);
+  const toggleCollapsed = () => persistCollapsed(!collapsed);
 
   const openMobile = () => setOpen(true);
   const closeMobile = () => setOpen(false);

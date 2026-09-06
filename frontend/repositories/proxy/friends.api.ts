@@ -8,18 +8,6 @@ const friendsApi = clientFactory(
       verb: HttpVerbEnum.Post,
       template: "/request/{receiverId}",
     },
-    getReceivedFriendRequests: {
-      verb: HttpVerbEnum.Get,
-      template: "/requests",
-    },
-    getSentFriendRequests: {
-      verb: HttpVerbEnum.Get,
-      template: "/sent",
-    },
-    getFriends: {
-      verb: HttpVerbEnum.Post,
-      template: "/friends",
-    },
     acceptFriendRequest: {
       verb: HttpVerbEnum.Post,
       template: "/accept/{senderId}",
@@ -44,13 +32,7 @@ const friendsApi = clientFactory(
       verb: HttpVerbEnum.Post,
       template: "/unblock/{blockedId}",
     },
-    getBlockedUsers: {
-      verb: HttpVerbEnum.Get,
-      template: "/blocked",
-    },
   },
-  undefined,
-  (data) => data,
 );
 
 export { friendsApi };

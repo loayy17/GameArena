@@ -2,35 +2,42 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Lock, Settings, User } from "lucide-react";
+
 import { useTranslation } from "@/hooks/useSetting";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
-import { en, type TSettingsTranslation } from "./i18n/en.i18n";
-import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
+import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { GPage } from "@/component/common/GPage";
+import { GAlert } from "@/component/common/GAlert";
 import { GIcon } from "@/component/common/GIcon";
 import { GAsync } from "@/component/common/GAsync";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { SettingsTabEnum } from "@/domain/enum/SettingsTabEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { PageHeader } from "@/component/common/PageHeader";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+import { GPageHeader } from "@/component/common/GPageHeader";
 import { GTabs } from "@/component/common/GTabs";
-import { IGTabItem } from "@/component/common/def/GTabs";
 import { ProfileTab } from "@/component/settings/ProfileTab";
 import { PasswordTab } from "@/component/settings/PasswordTab";
 import { PreferencesTab } from "@/component/settings/PreferencesTab";
-import type { TNullable } from "@/domain/type/TCommon";
 
-function SettingsContent({ user }: { user: NonNullable<ReturnType<typeof useAuth>["user"]> }) {
-  const t = useTranslation({ en: { ...en, ...EnTextField }, ar: { ...ar, ...ArTextField }, fr: { ...fr, ...FrTextField } }) as TSettingsTranslation &
-    GTextFieldTranslation;
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+import { en } from "./i18n/en.i18n";
+
+import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
+import type { TSettingsTranslation } from "./i18n/en.i18n";
+import type { IGTabItem } from "@/component/common/def/GTabs";
+import type { TNullable } from "@/domain/type/TCommon";
+import type { ISettingsContentProps } from "./def/SettingsPage";
+
+function SettingsContent({ user }: ISettingsContentProps) {
+  const t = useTranslation<TSettingsTranslation & GTextFieldTranslation>({ en: { ...en, ...EnTextField }, ar: { ...ar, ...ArTextField }, fr: { ...fr, ...FrTextField } });
   const [activeTab, setActiveTab] = useState<SettingsTabEnum>(SettingsTabEnum.Profile);
-  const [saveMsg, setSaveMsg] = useState<TNullable<string>>(null);
+  const [saveMsg, setSaveMsg] = useState<TNullable<{ text: string; severity: "success" | "danger" }>>(null);
   const timerRef = useRef<TNullable<ReturnType<typeof setTimeout>>>(null);
-  const showMessage = useCallback((msg: string) => {
-    setSaveMsg(msg);
+  const showMessage = useCallback((msg: string, severity: "success" | "danger" = "success") => {
+    setSaveMsg({ text: msg, severity });
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setSaveMsg(null), 3000);
   }, []);
@@ -53,13 +60,13 @@ function SettingsContent({ user }: { user: NonNullable<ReturnType<typeof useAuth
 
   return (
     <GPage size={SizeEnum.xl}>
-      <PageHeader icon={Settings} title={t.title} subtitle={t.settings.profile.subtitle} />
+      <GPageHeader icon={Settings} title={t.title} subtitle={t.settings.profile.subtitle} />
       {saveMsg && (
-        <div role="status" className="mb-6 rounded-xl border border-success bg-success-bg p-4 text-center text-sm text-success">
-          {saveMsg}
-        </div>
+        <GAlert severity={saveMsg.severity === "danger" ? AccentColorEnum.Danger : AccentColorEnum.Success} className="mb-6 text-center">
+          {saveMsg.text}
+        </GAlert>
       )}
-      <GTabs tabs={navItems} value={activeTab} responsive fullWidth onChange={(id) => setActiveTab(id as SettingsTabEnum)} />
+      <GTabs tabs={navItems} value={activeTab} responsive onChange={(id) => setActiveTab(id as SettingsTabEnum)} tabClassName="w-full md:flex-1 md:justify-center" />
       {activeTab === SettingsTabEnum.Profile && <ProfileTab user={user} showMessage={showMessage} t={t} />}
       {activeTab === SettingsTabEnum.Password && <PasswordTab showMessage={showMessage} t={t} />}
       {activeTab === SettingsTabEnum.Preferences && <PreferencesTab user={user} showMessage={showMessage} t={t} />}

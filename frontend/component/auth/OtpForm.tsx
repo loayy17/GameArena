@@ -1,22 +1,31 @@
 "use client";
 
-import { useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
+import { useEffect, useRef, useState } from "react";
+
+import { GButton } from "@/component/common/GButton";
+import { GAlert } from "@/component/common/GAlert";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
-import { en, type TOtpTranslation } from "../i18n/Otp/en.i18n";
-import { ar } from "../i18n/Otp/ar.i18n";
-import { fr } from "../i18n/Otp/fr.i18n";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { useTranslation } from "@/hooks/useSetting";
-import type { TNullable } from "@/domain/type/TCommon";
-import type { IOtpFormProps } from "./def/OtpForm";
 import { emailVerificationService } from "@/services/def/EmailVerificationService";
 import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
 
-function OtpForm({ email, onSuccess }: IOtpFormProps) {
+import { en } from "../i18n/Otp/en.i18n";
+import { ar } from "../i18n/Otp/ar.i18n";
+import { fr } from "../i18n/Otp/fr.i18n";
+
+import type { ClipboardEvent, KeyboardEvent } from "react";
+import type { TOtpTranslation } from "../i18n/Otp/en.i18n";
+import type { TNullable } from "@/domain/type/TCommon";
+import type { IOtpFormProps } from "./def/OtpForm";
+
+function OtpForm({ email, onSuccess, onResend, validateOnly = false }: IOtpFormProps) {
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
   const [loading, setLoading] = useState({ verify: false, resend: false });
   const [error, setError] = useState("");
-  const t = useTranslation({ en, ar, fr }) as TOtpTranslation;
+  const [success, setSuccess] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const t = useTranslation<TOtpTranslation>({ en, ar, fr });
   const resolveError = useErrorMessage();
   const inputsRef = useRef<TNullable<HTMLInputElement>[]>([]);
 
@@ -29,6 +38,15 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
 
     if (value && index < 5) {
       inputsRef.current[index + 1]?.focus();
+    }
+
+    if (value && nextCode.every((d) => d !== "")) {
+      const fullOtp = nextCode.join("");
+      if (fullOtp.length === 6) {
+        setTimeout(() => {
+          void verifyWithCode(fullOtp);
+        }, 50);
+      }
     }
   };
 
@@ -45,6 +63,14 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
         setCode(nextCode);
       }
     }
+    if (e.key === "ArrowLeft" && index > 0) {
+      e.preventDefault();
+      inputsRef.current[index - 1]?.focus();
+    }
+    if (e.key === "ArrowRight" && index < 5) {
+      e.preventDefault();
+      inputsRef.current[index + 1]?.focus();
+    }
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
@@ -55,10 +81,13 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
     const digits = pastedData.split("");
     setCode(digits);
     inputsRef.current[5]?.focus();
+    setTimeout(() => {
+      void verifyWithCode(pastedData);
+    }, 50);
   };
 
-  const verify = async () => {
-    const otp = code.join("");
+  const verifyWithCode = async (otpValue?: string) => {
+    const otp = otpValue ?? code.join("");
 
     if (otp.length !== 6) {
       setError(t.enterFullCode);
@@ -68,7 +97,9 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
     try {
       setLoading((prev) => ({ ...prev, verify: true }));
       setError("");
-      await emailVerificationService.verifyOtp({ email, otp });
+      if (!validateOnly) {
+        await emailVerificationService.verifyOtp({ email, otp });
+      }
       onSuccess(otp);
     } catch (e: unknown) {
       setError(resolveError(toErrorCode(e), t.invalidCode));
@@ -77,18 +108,35 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
     }
   };
 
+  const verify = async () => {
+    await verifyWithCode();
+  };
+
   const resend = async () => {
-    if (!email || loading.resend) return;
+    if (!email || loading.resend || cooldown > 0) return;
     try {
       setLoading((prev) => ({ ...prev, resend: true }));
       setError("");
-      await emailVerificationService.sendOtp({ email });
+      setSuccess("");
+      if (onResend) {
+        await onResend();
+      } else {
+        await emailVerificationService.sendOtp({ email });
+      }
+      setSuccess(t.codeSent);
+      setCooldown(45);
     } catch (e: unknown) {
       setError(resolveError(toErrorCode(e), t.resendCodeFailed));
     } finally {
       setLoading((prev) => ({ ...prev, resend: false }));
     }
   };
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => (c <= 1 ? 0 : c - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   return (
     <form
@@ -114,30 +162,28 @@ function OtpForm({ email, onSuccess }: IOtpFormProps) {
             onChange={(e) => setDigit(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={handlePaste}
-            className="w-12 h-14 text-center font-bold text-lg border border-border rounded-xl bg-surface text-text focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-12 h-14 text-center font-bold text-lg border-2 border-text-muted/40 rounded-xl bg-surface text-text placeholder:text-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none caret-primary"
           />
         ))}
       </div>
 
-      {error && (
-        <p role="alert" className="text-danger text-xs font-medium text-center">
-          {error}
-        </p>
-      )}
+      {error && <GAlert severity={AccentColorEnum.Danger}>{error}</GAlert>}
+      {success && <GAlert severity={AccentColorEnum.Success}>{success}</GAlert>}
 
       <div className="space-y-2 pt-1">
-        <GButtonAsync type="submit" busy={loading.verify} loadingText={t.verify} className="w-full">
+        <GButton type="submit" loading={loading.verify} className="w-full">
           {t.verify}
-        </GButtonAsync>
+        </GButton>
 
-        <GButtonAsync
+        <GButton
           type="button"
           variant={ButtonVariantEnum.Subtle}
-          disabled={loading.verify || loading.resend}
+          disabled={loading.verify || loading.resend || cooldown > 0}
           onClick={resend}
+          loading={loading.resend}
           className="w-full">
-          {t.resendCode}
-        </GButtonAsync>
+          {cooldown > 0 ? `${t.resendCode} (${cooldown}s)` : t.resendCode}
+        </GButton>
       </div>
     </form>
   );

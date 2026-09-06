@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
-export type GTooltipSide = "top" | "bottom" | "left" | "right";
+export type GTooltipSide = "top" | "bottom" | "start" | "end";
 
-export interface IGTooltipProps {
+interface IGTooltipProps {
   content: ReactNode;
   side?: GTooltipSide;
   children: ReactNode;
   className?: string;
 }
+
+export type { IGTooltipProps };

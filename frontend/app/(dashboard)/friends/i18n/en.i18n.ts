@@ -58,7 +58,11 @@ const en = {
     confirm: "Confirm",
     cancel: "Cancel"
   },
-  offlineWarning: "You are offline — data may be outdated. Reconnecting..."
+  offlineWarning: "You are offline — data may be outdated. Reconnecting...",
+  error: {
+    title: "Error",
+    retry: "Retry"
+  }
 }
 ;
 

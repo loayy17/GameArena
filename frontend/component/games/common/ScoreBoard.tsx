@@ -1,11 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-
 import { useGameTranslation } from "@/hooks/useGameTranslation";
-import type { IScoreBoardProps, IScoreSide } from "./def/ScoreBoard";
 
-function ScoreColumn({ side, compact }: { side: IScoreSide; compact: boolean }) {
+import type { IScoreBoardProps, IScoreColumnProps } from "./def/ScoreBoard";
+
+function ScoreColumn({ side, compact }: IScoreColumnProps) {
   return (
     <div className="text-center">
       {compact && <div className="text-sm text-text-muted uppercase tracking-wider">{side.label}</div>}
@@ -32,7 +32,7 @@ function ScoreBoard({ left, right, winScore, variant = "vs", className }: IScore
       <ScoreColumn side={left} compact={false} />
       <div className="text-center text-text-muted font-bold flex flex-col justify-center">
         <span className="text-sm">{t.game.vs}</span>
-        {winScore != null && <span className="text-xs mt-0.5">{t.game.firstTo.replace("{score}", String(winScore))}</span>}
+        {winScore != null && winScore > 1 && <span className="text-xs mt-0.5">{t.game.firstTo.replace("{score}", String(winScore))}</span>}
       </div>
       <ScoreColumn side={right} compact={false} />
     </div>

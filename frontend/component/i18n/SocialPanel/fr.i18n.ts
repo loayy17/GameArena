@@ -34,7 +34,10 @@ const fr = {
   noNotificationsTitle: "Aucune notification",
   noNotificationsDescription: "Les notifications apparaîtront ici.",
   send: "Envoyer",
-  viewAll: "Tout voir"
+  viewAll: "Tout voir",
+  viewProfile: "Voir le profil",
+  actionFailed: "Une erreur est survenue. Veuillez réessayer.",
+  close: "Fermer"
 }
 ;
 

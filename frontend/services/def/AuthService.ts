@@ -1,4 +1,5 @@
 import { authProxy } from "@/repositories/proxy/auth.api";
+
 import type { IForgotPasswordRequest } from "@/domain/meta/IForgotPasswordRequest";
 import type { IRegisterRequest } from "@/domain/meta/IRegisterRequest";
 import type { IResetPasswordRequest } from "@/domain/meta/IResetPasswordRequest";

@@ -202,5 +202,34 @@ namespace backend.Services
                 .Where(n => n.Id == notificationId && n.UserId == userId)
                 .ExecuteDeleteAsync();
         }
+
+        public async Task DeleteNotificationsByReferenceAsync(Guid userId, NotificationType type, string referenceId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var deleted = await context.Notifications
+                .Where(n => n.UserId == userId && n.Type == type && n.ReferenceId == referenceId)
+                .ExecuteDeleteAsync();
+
+            if (deleted > 0)
+                await SendNotificationListAsync(userId);
+        }
+
+        public async Task ReplaceUnreadNewMessageAsync(Guid userId, string title, string body, string referenceId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            await context.Notifications
+                .Where(n => n.UserId == userId && n.Type == NotificationType.NewMessage && n.ReferenceId == referenceId && !n.IsRead)
+                .ExecuteDeleteAsync();
+
+            await CreateNotificationAsync(userId, nameof(NotificationType.NewMessage), title, body, referenceId);
+        }
+
+        private async Task SendNotificationListAsync(Guid userId)
+        {
+            var list = await GetNotificationsAsync(userId);
+            await hub.Clients
+                .Group($"user:{userId}")
+                .SendAsync("notification:list", list);
+        }
     }
 }

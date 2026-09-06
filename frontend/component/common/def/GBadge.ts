@@ -5,7 +5,8 @@ import type { SizeEnum } from "@/domain/enum/SizeEnum";
 interface IGBadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: AccentColorEnum;
   size?: SizeEnum;
-  children: ReactNode;
+  count?: number;
+  children?: ReactNode;
 }
 
 export type { IGBadgeProps };

@@ -16,11 +16,6 @@ export const fr = {
   error: {
     title: "Impossible de charger les demandes",
   },
-  gameInvite: {
-    title: "Invitation à jouer",
-    description: "{name} vous a invité à jouer à {game}",
-    fallbackName: "Quelqu'un",
-  },
   friendRequest: {
     title: "Demande d'ami",
     description: "{name} veut être votre ami",
@@ -31,6 +26,7 @@ export const fr = {
     decline: "Refuser",
     reply: "Répondre",
     markRead: "Marquer comme lu",
+    error: "L'action a échoué. Veuillez réessayer.",
   },
   time: {
     justNow: "À l'instant",

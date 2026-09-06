@@ -1,5 +1,6 @@
 const fr = {
   profile: "Profil",
+  notifications: "Notifications",
   theme: "Thème",
   language: "Langue",
   logout: "Déconnexion",

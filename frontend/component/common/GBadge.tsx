@@ -1,23 +1,36 @@
 import { cn } from "@/lib/cn";
-import type { IGBadgeProps } from "./def/GBadge";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
-import { accentBg } from "@/domain/constant/accent-bg";
+import { accentBg } from "@/domain/constant/style-tokens";
 
-const badgeBase = "inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-0.5 whitespace-nowrap";
+import type { IGBadgeProps } from "./def/GBadge";
 
-function GBadge({ variant = AccentColorEnum.Primary, size = SizeEnum.md, className, children, ...props }: IGBadgeProps) {
+const badgeBase = "inline-flex items-center gap-1 text-xs font-semibold rounded-full py-0.5 whitespace-nowrap";
+
+function GBadge({
+  count,
+  variant = AccentColorEnum.Primary,
+  size = count != null ? SizeEnum.sm : SizeEnum.md,
+  className,
+  children,
+  ...props
+}: IGBadgeProps) {
+  if (count != null && count <= 0) return null;
+
   return (
     <span
       className={cn(
         badgeBase,
+        count != null ? "px-1" : "px-2.5",
+        variant,
         accentBg[variant],
         (size === SizeEnum.xs || size === SizeEnum.sm) && "text-2xs",
         variant === AccentColorEnum.Secondary && "border border-border",
+        count != null && "min-w-5 justify-center leading-none tabular-nums",
         className,
       )}
       {...props}>
-      {children}
+      {count != null ? (count > 99 ? "99+" : count) : children}
     </span>
   );
 }

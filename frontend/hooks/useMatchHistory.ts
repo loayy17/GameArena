@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
 import { matchHistoryService } from "@/services/def/MatchHistoryService";
+
+import { useErrorMessage } from "./useErrorMessage";
+
 import type { IMatchHistory } from "@/domain/meta/IMatchHistory";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { AxiosError } from "axios";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
-import { useErrorMessage } from "./useErrorMessage";
 
 function buildSummary(matches: IMatchHistory[]) {
   return matches.reduce(
@@ -27,27 +30,33 @@ function useMatchHistory(statusFilter: MatchStatusEnum = MatchStatusEnum.All, li
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<TNullable<string>>(null);
   const errorMsg = useErrorMessage();
-  useEffect(() => {
-    let alive = true;
+  const loadGenRef = useRef(0);
+
+  const reload = useCallback(() => {
+    const gen = ++loadGenRef.current;
+    setLoading(true);
+    setError(null);
     matchHistoryService
       .getMatchHistory()
       .then((res) => {
-        if (!alive) return;
+        if (loadGenRef.current !== gen) return;
         if (res.data) setAllMatches(res.data);
       })
       .catch((err: unknown) => {
-        if (!alive) return;
+        if (loadGenRef.current !== gen) return;
         const axiosErr = err as AxiosError<IApiResponse<unknown>>;
         const code = axiosErr?.response?.data?.errorCode;
         setError(errorMsg(code));
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (loadGenRef.current === gen) setLoading(false);
       });
-    return () => {
-      alive = false;
-    };
   }, [errorMsg]);
+
+  useEffect(() => {
+    const timer = setTimeout(reload, 0);
+    return () => clearTimeout(timer);
+  }, [reload]);
 
   const summary = useMemo(() => buildSummary(allMatches), [allMatches]);
 
@@ -56,7 +65,7 @@ function useMatchHistory(statusFilter: MatchStatusEnum = MatchStatusEnum.All, li
     return limit ? list.slice(0, limit) : list;
   }, [statusFilter, limit, allMatches]);
 
-  return { matches, summary, loading, error };
+  return { matches, summary, loading, error, reload };
 }
 
 export { useMatchHistory };

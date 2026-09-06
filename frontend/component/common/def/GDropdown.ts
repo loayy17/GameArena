@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 
+type TPosition = {
+  x: number;
+  y: number;
+};
+
 interface IGDropdownProps {
   open: boolean;
   onClose: () => void;
@@ -7,6 +12,7 @@ interface IGDropdownProps {
   children: ReactNode;
   align?: "top" | "left" | "right" | "end";
   className?: string;
+  triggerClassName?: string;
 }
 
-export type { IGDropdownProps };
+export type { IGDropdownProps, TPosition };

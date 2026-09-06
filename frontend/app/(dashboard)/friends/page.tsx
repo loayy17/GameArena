@@ -1,17 +1,14 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Gamepad2, Search, Send, ShieldBan, UserCheck, Users } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useSetting";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
-import { en, type TFriendsTranslation } from "./i18n/en.i18n";
-
 import { GTabs } from "@/component/common/GTabs";
 import { GPage } from "@/component/common/GPage";
-import { PageHeader } from "@/component/common/PageHeader";
+import { GAlert } from "@/component/common/GAlert";
+import { GPageHeader } from "@/component/common/GPageHeader";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 import { GAsync } from "@/component/common/GAsync";
@@ -22,14 +19,20 @@ import { BlockedUsersTab } from "@/component/friend/BlockedUsersTab";
 import { SearchTab } from "@/component/friend/SearchTab";
 import { FriendsTabEnum } from "@/domain/enum/FriendsTabEnum";
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
-import type { IGTabItem } from "@/component/common/def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+import { en } from "./i18n/en.i18n";
+
+import type { TFriendsTranslation } from "./i18n/en.i18n";
+import type { IGTabItem } from "@/component/common/def/GTabs";
 
 function FriendsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslation({ en, ar, fr }) as TFriendsTranslation;
+  const t = useTranslation<TFriendsTranslation>({ en, ar, fr });
   const rawTab = searchParams.get("tab") as FriendsTabEnum | null;
   const allowedTabs = Object.values(FriendsTabEnum) as string[];
   const activeTab = rawTab && allowedTabs.includes(rawTab) ? rawTab : FriendsTabEnum.Friends;
@@ -76,13 +79,21 @@ function FriendsPage() {
         label: t.requests,
         icon: <GIcon icon={UserCheck} size={SizeEnum.sm} />,
         badge: requestCount || undefined,
+        badgeTone: AccentColorEnum.Warning,
       },
-      { id: FriendsTabEnum.Sent, label: t.sentRequests, icon: <GIcon icon={Send} size={SizeEnum.sm} />, badge: sentRequestCount || undefined },
+      {
+        id: FriendsTabEnum.Sent,
+        label: t.sentRequests,
+        icon: <GIcon icon={Send} size={SizeEnum.sm} />,
+        badge: sentRequestCount || undefined,
+        badgeTone: AccentColorEnum.Muted,
+      },
       {
         id: FriendsTabEnum.Blocked,
         label: t.blockedUsers,
         icon: <GIcon icon={ShieldBan} size={SizeEnum.sm} />,
         badge: blockedCount || undefined,
+        badgeTone: AccentColorEnum.Muted,
       },
       { id: FriendsTabEnum.Search, label: t.search, icon: <GIcon icon={Search} size={SizeEnum.sm} /> },
     ],
@@ -131,11 +142,11 @@ function FriendsPage() {
 
   return (
     <GPage size={SizeEnum.lg}>
-      <PageHeader
+      <GPageHeader
         icon={Users}
         title={t.friends}
         subtitle={t.subtitle}
-        className="md:d-block hidden"
+        className="hidden md:block"
         badge={
           <GBadge>
             <GIcon icon={Gamepad2} size={SizeEnum.xs} color={AccentColorEnum.Primary} />
@@ -144,15 +155,15 @@ function FriendsPage() {
         }
       />
 
-      <GTabs tabs={tabs} value={activeTab} onChange={changeTab} fullWidth responsive />
+      <GTabs tabs={tabs} value={activeTab} responsive onChange={changeTab} tabClassName="w-full md:flex-1 md:justify-center" panelId="friends-panel" />
 
       {isOffline && (
-        <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning" role="status">
+        <GAlert severity={AccentColorEnum.Warning}>
           {t.offlineWarning}
-        </div>
+        </GAlert>
       )}
 
-      <div className="pt-1">
+      <div id="friends-panel" className="pt-1" role="tabpanel" aria-label={String(tabs.find((tab) => tab.id === activeTab)?.label ?? "")}>
         <GAsync loading={tabLoading} spinnerSize={SizeEnum.lg} className="py-10">
           {renderTab()}
         </GAsync>

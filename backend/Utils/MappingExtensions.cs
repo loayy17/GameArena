@@ -17,6 +17,7 @@ public static class MappingExtensions
         Email = user.Email,
         FirstName = user.FirstName,
         LastName = user.LastName,
+        FullName = user.FullName,
         Role = user.Role,
         Status = presence.GetStatus(user.Id.ToString()),
         CreatedAt = user.CreatedAt,
@@ -27,7 +28,7 @@ public static class MappingExtensions
     };
 
     public static UserSummaryResponse ToSummaryResponse(this User user)
-        => new(user.Id, user.UserName, user.FirstName, user.LastName, user.Status, AvatarUrl(user.Id, user.Avatar));
+        => new(user.Id, user.UserName, user.FirstName, user.LastName, user.FullName, user.Status, AvatarUrl(user.Id, user.Avatar));
 
     public static MessageResponse ToResponse(this Message message) => new()
     {

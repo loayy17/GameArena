@@ -1,5 +1,6 @@
 const en = {
   profile: "Profile",
+  notifications: "Notifications",
   theme: "Theme",
   language: "Language",
   logout: "Logout",

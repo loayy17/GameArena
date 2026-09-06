@@ -16,7 +16,7 @@ public class TicTacToeRoom : BaseGameRoom
         p["board"] = Board;
         p["boardWidth"] = 3;
         p["boardHeight"] = 3;
-        p["winScore"] = 3;
+        p["winScore"] = 0;
         p["tickRateHz"] = 0;
         return p;
     }
@@ -52,8 +52,10 @@ public class TicTacToeRoom : BaseGameRoom
 
             Board[cell] = playerId == Player1Id ? "X" : "O";
 
-            if (GameHelper.CheckWinTicTacToe(Board))
+            var winLine = GameHelper.FindWinLineTicTacToe(Board);
+            if (winLine != null)
             {
+                WinningCells = winLine.Select(i => i.ToString()).ToArray();
                 WinnerSymbol = Board[cell];
                 CompleteRound(playerId);
                 return;
@@ -80,8 +82,10 @@ public class TicTacToeRoom : BaseGameRoom
             var botMove = TicTacToeMinimax.GetBestMove(Board, botSymbol);
             if (botMove < 0) return;
             Board[botMove] = botSymbol;
-            if (GameHelper.CheckWinTicTacToe(Board))
+            var winLine = GameHelper.FindWinLineTicTacToe(Board);
+            if (winLine != null)
             {
+                WinningCells = winLine.Select(i => i.ToString()).ToArray();
                 WinnerSymbol = Board[botMove];
                 CompleteRound(botId);
                 return;

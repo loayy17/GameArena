@@ -45,6 +45,7 @@ namespace backend.Services
                         UserName = u.UserName,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
+                        FullName = u.FirstName + " " + u.LastName,
                         AvatarUrl = MappingExtensions.AvatarUrl(u.Id, u.Avatar),
                         CreatedAt = u.CreatedAt,
                         Rank = u.Rank
@@ -89,9 +90,10 @@ namespace backend.Services
                     (b.BlockedId == currentUserId && b.BlockerId == u.Id)))
                 .Where(u => EF.Functions.ILike(u.UserName, $"%{name}%") ||
                             EF.Functions.ILike(u.FirstName, $"%{name}%") ||
-                            EF.Functions.ILike(u.LastName, $"%{name}%"))
+                            EF.Functions.ILike(u.LastName, $"%{name}%") ||
+                            EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{name}%"))
                 .Take(20)
-                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
+                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.FirstName + " " + u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
                 .ToListAsync();
 
             var results = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) });
@@ -223,8 +225,8 @@ namespace backend.Services
                     Player1Score = mh.Player1Score,
                     Player2Score = mh.Player2Score,
                     Opponent = mh.Player1Id == userId
-                        ? new UserSummaryResponse(mh.Player2.Id, mh.Player2.UserName, mh.Player2.FirstName, mh.Player2.LastName, mh.Player2.Status, MappingExtensions.AvatarUrl(mh.Player2.Id, mh.Player2.Avatar))
-                        : new UserSummaryResponse(mh.Player1.Id, mh.Player1.UserName, mh.Player1.FirstName, mh.Player1.LastName, mh.Player1.Status, MappingExtensions.AvatarUrl(mh.Player1.Id, mh.Player1.Avatar)),
+                        ? new UserSummaryResponse(mh.Player2.Id, mh.Player2.UserName, mh.Player2.FirstName, mh.Player2.LastName, mh.Player2.FirstName + " " + mh.Player2.LastName, mh.Player2.Status, MappingExtensions.AvatarUrl(mh.Player2.Id, mh.Player2.Avatar))
+                        : new UserSummaryResponse(mh.Player1.Id, mh.Player1.UserName, mh.Player1.FirstName, mh.Player1.LastName, mh.Player1.FirstName + " " + mh.Player1.LastName, mh.Player1.Status, MappingExtensions.AvatarUrl(mh.Player1.Id, mh.Player1.Avatar)),
                     Result = mh.Player1Id == userId
                         ? (mh.Player1Score > mh.Player2Score ? MatchStatus.Win : mh.Player1Score < mh.Player2Score ? MatchStatus.Lost : MatchStatus.Draw)
                         : (mh.Player2Score > mh.Player1Score ? MatchStatus.Win : mh.Player2Score < mh.Player1Score ? MatchStatus.Lost : MatchStatus.Draw)

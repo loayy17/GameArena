@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { History, AlertTriangle } from "lucide-react";
+import { AlertTriangle, History } from "lucide-react";
+
 import { useLocale, useTranslation } from "@/hooks/useSetting";
 import { useMatchHistory } from "@/hooks/useMatchHistory";
 import { GList } from "@/component/common/GList";
@@ -11,22 +12,25 @@ import { GEmpty } from "@/component/common/GEmpty";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
 import { GPage } from "@/component/common/GPage";
-import { PageHeader } from "@/component/common/PageHeader";
+import { GPageHeader } from "@/component/common/GPageHeader";
 import { MatchHistoryItem } from "@/component/history/MatchHistoryItem";
 import { MatchHistoryTable } from "@/component/history/MatchHistoryTable";
 import { MatchStatusEnum } from "@/domain/enum/MatchStatusEnum";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
-import { en, type THistoryTranslation } from "./i18n/en.i18n";
-import type { IGTabItem } from "@/component/common/def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+import { en } from "./i18n/en.i18n";
+
+import type { THistoryTranslation } from "./i18n/en.i18n";
+import type { IGTabItem } from "@/component/common/def/GTabs";
+
 export default function MatchHistoryPage() {
   const [locale] = useLocale();
-  const t = useTranslation({ en, ar, fr }) as THistoryTranslation;
+  const t = useTranslation<THistoryTranslation>({ en, ar, fr });
   const [filter, setFilter] = useState(MatchStatusEnum.All);
-  const { matches, loading, error } = useMatchHistory(filter);
+  const { matches, loading, error, reload } = useMatchHistory(filter);
   const tabs = useMemo<IGTabItem<MatchStatusEnum>[]>(
     () => [
       { id: MatchStatusEnum.All, label: t.filters.all },
@@ -39,11 +43,11 @@ export default function MatchHistoryPage() {
 
   return (
     <GPage size={SizeEnum.lg}>
-      <PageHeader
+      <GPageHeader
         icon={History}
         title={t.title}
         subtitle={t.subtitle}
-        className="md:d-block hidden"
+        className="hidden md:block"
         badge={
           <GBadge>
             <GIcon icon={History} size={SizeEnum.xs} color={AccentColorEnum.Primary} />
@@ -51,9 +55,17 @@ export default function MatchHistoryPage() {
           </GBadge>
         }
       />
-      <GTabs tabs={tabs} value={filter} onChange={setFilter} fullWidth className="mb-4" />
+      <GTabs tabs={tabs} value={filter} onChange={setFilter} className="mb-4" tabClassName="w-full md:flex-1 md:justify-center" />
 
-      <GAsync loading={loading} error={error} spinnerSize={SizeEnum.lg} errorTitle={t.error.title} errorIcon={AlertTriangle} className="py-16">
+      <GAsync
+        loading={loading}
+        error={error}
+        spinnerSize={SizeEnum.lg}
+        errorTitle={t.error.title}
+        errorIcon={AlertTriangle}
+        retryLabel={t.error.retry}
+        onRetry={reload}
+        className="py-16">
         {matches.length === 0 ? (
           <GEmpty
             icon={<GIcon icon={History} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}

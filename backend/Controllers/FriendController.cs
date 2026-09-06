@@ -1,4 +1,3 @@
-using backend.DTOs.Requests;
 using backend.DTOs.Responses;
 using backend.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +10,6 @@ namespace backend.Controllers
     [Authorize]
     public class FriendController(
         IFriendService _friendService,
-        ISocialReadService _socialReadService,
         ICurrentUserService _currentUser) : ControllerBase
     {
         [HttpPost("request/{receiverId}")]
@@ -60,33 +58,6 @@ namespace backend.Controllers
         {
             await _friendService.CancelRequestAsync(_currentUser.UserId, receiverId);
             return Ok(new ApiResponse<object>());
-        }
-        [HttpPost("friends")]
-        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetFriends([FromBody] UserFilterRequest filter)
-        {
-            var friends = await _socialReadService.GetFriendsAsync(_currentUser.UserId, filter);
-            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = friends });
-        }
-
-        [HttpGet("requests")]
-        public async Task<ActionResult<ApiResponse<List<FriendRequestReceivedResponse>>>> GetReceivedRequests()
-        {
-            var requests = await _socialReadService.GetReceivedRequestsAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<List<FriendRequestReceivedResponse>> { Data = requests });
-        }
-
-        [HttpGet("sent")]
-        public async Task<ActionResult<ApiResponse<List<FriendRequestSentResponse>>>> GetSentRequests()
-        {
-            var requests = await _socialReadService.GetSentRequestsAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<List<FriendRequestSentResponse>> { Data = requests });
-        }
-
-        [HttpGet("blocked")]
-        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetBlockedUsers()
-        {
-            var blocked = await _socialReadService.GetBlockedUsersAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = blocked });
         }
     }
 }

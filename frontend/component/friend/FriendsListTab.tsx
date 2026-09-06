@@ -1,19 +1,21 @@
 "use client";
 
-import { Loader2, MessageSquare, ShieldBan, UserMinus, Users, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { MessageSquare, ShieldBan, UserMinus, UserPlus, Users } from "lucide-react";
 
 import { GButton } from "@/component/common/GButton";
+import { GConfirmDialog } from "@/component/common/GConfirmDialog";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { useBusyAction } from "@/hooks/useBusyAction";
 
-import { FriendsList } from "../SocialPanel/FriendsList";
+import { FriendsList } from "../social/FriendsList";
+
 import type { IFriendsListTabProps } from "./def/FriendsTab";
 
 function FriendsListTab({ friends, onMessage, onBlock, onRemove, onAddFriend, t }: IFriendsListTabProps) {
-  const { run, isBusy, busyClass } = useBusyAction();
+  const [pending, setPending] = useState<{ id: string; action: "block" | "remove" } | null>(null);
 
   if (friends.length === 0) {
     return (
@@ -29,48 +31,35 @@ function FriendsListTab({ friends, onMessage, onBlock, onRemove, onAddFriend, t 
   }
 
   return (
-    <FriendsList
-      friends={friends}
-      actions={(friend) => {
-        const busy = isBusy(friend.id);
-        return (
+    <>
+      <FriendsList
+        friends={friends}
+        actions={(friend) => (
           <div className="flex gap-1">
-            <GIcon
-              icon={MessageSquare}
-              size={SizeEnum.md}
-              tile
-              hover
-              tileGradient="bg-primary/10"
-              tileColor={AccentColorEnum.Primary}
-              onClick={() => onMessage(friend.id)}
-              ariaLabel={t.message}
-            />
-            <GIcon
-              icon={busy ? Loader2 : ShieldBan}
-              size={SizeEnum.md}
-              tile
-              hover
-              tileGradient="bg-warning/10"
-              tileColor={AccentColorEnum.Warning}
-              className={busyClass(friend.id)}
-              onClick={() => run(friend.id, () => onBlock(friend.id))}
-              ariaLabel={t.actions.block}
-            />
-            <GIcon
-              icon={busy ? Loader2 : UserMinus}
-              size={SizeEnum.md}
-              tile
-              hover
-              tileGradient="bg-danger/10"
-              tileColor={AccentColorEnum.Danger}
-              className={busyClass(friend.id)}
-              onClick={() => run(friend.id, () => onRemove(friend.id))}
-              ariaLabel={t.actions.removeFriend}
-            />
+            <GButton icon={MessageSquare} label={t.message} tone="primary" onClick={() => onMessage(friend.id)} />
+            <GButton icon={ShieldBan} label={t.actions.block} tone="warning" onClick={() => setPending({ id: friend.id, action: "block" })} />
+            <GButton icon={UserMinus} label={t.actions.removeFriend} tone="danger" onClick={() => setPending({ id: friend.id, action: "remove" })} />
           </div>
-        );
-      }}
-    />
+        )}
+      />
+      <GConfirmDialog
+        open={!!pending}
+        icon={pending?.action === "block" ? ShieldBan : UserMinus}
+        iconColor={pending?.action === "block" ? AccentColorEnum.Warning : AccentColorEnum.Danger}
+        title={pending?.action === "block" ? t.confirm.blockTitle : t.confirm.removeTitle}
+        description={pending?.action === "block" ? t.confirm.blockDesc : t.confirm.removeDesc}
+        confirmLabel={t.confirm.confirm}
+        cancelLabel={t.confirm.cancel}
+        onClose={() => setPending(null)}
+        onConfirm={() => {
+          if (!pending) return;
+          const { id, action } = pending;
+          setPending(null);
+          if (action === "block") onBlock(id);
+          else onRemove(id);
+        }}
+      />
+    </>
   );
 }
 

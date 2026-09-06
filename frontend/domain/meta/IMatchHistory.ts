@@ -1,4 +1,4 @@
-import { MatchStatusEnum } from "../enum/MatchStatusEnum";
+import type { MatchStatusEnum } from "../enum/MatchStatusEnum";
 import type { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { IUserSummary } from "./IUserSummary";
 
