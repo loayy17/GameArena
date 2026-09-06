@@ -13,8 +13,6 @@ const emailApi = clientFactory(
       template: "/verify",
     },
   },
-  undefined,
-  (data) => data,
 );
 
 export { emailApi };

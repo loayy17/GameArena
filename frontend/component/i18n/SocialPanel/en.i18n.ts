@@ -34,7 +34,10 @@ const en = {
   noNotificationsTitle: "No notifications",
   noNotificationsDescription: "Notifications will appear here.",
   send: "Send",
-  viewAll: "View All"
+  viewAll: "View All",
+  viewProfile: "View profile",
+  actionFailed: "Something went wrong. Please try again.",
+  close: "Close"
 }
 ;
 

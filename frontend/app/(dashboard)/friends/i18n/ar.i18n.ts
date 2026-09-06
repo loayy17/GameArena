@@ -60,7 +60,11 @@ const ar: TFriendsTranslation = {
     confirm: "تأكيد",
     cancel: "إلغاء"
   },
-  offlineWarning: "أنت غير متصل — قد تكون البيانات قديمة. جارٍ إعادة الاتصال..."
+  offlineWarning: "أنت غير متصل — قد تكون البيانات قديمة. جارٍ إعادة الاتصال...",
+  error: {
+    title: "خطأ",
+    retry: "إعادة المحاولة"
+  }
 }
 ;
 

@@ -4,6 +4,7 @@ const en = {
   verify: "Verify",
   invalidCode: "Invalid code",
   resendCodeFailed: "Failed to resend code",
+  codeSent: "Code sent successfully",
   digitLabel: (n: number) => `Digit ${n} of 6`
 }
 ;

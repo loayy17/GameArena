@@ -4,6 +4,7 @@ const fr = {
     description: "Placez des marques stratégiques dans un duel classique 3x3",
     instruction: "Placez à tour de rôle un X ou un O. Alignez trois symboles pour gagner.",
     guide: "Touchez une cellule vide pour placer votre marque",
+    cellLabel: (n: number) => `Cellule ${n}`,
   },
   snake: {
     name: "Snake",
@@ -36,6 +37,7 @@ const fr = {
     description: "Lâchez des jetons et alignez-en quatre pour gagner",
     instruction: "Lâchez des jetons dans une colonne à votre tour. Alignez-en quatre pour gagner.",
     guide: "Choisissez une colonne pour lâcher votre jeton",
+    dropColumnLabel: (n: number) => `Lâcher dans la colonne ${n}`,
   },
   lobby: {
     searchingTitle: "Recherche d'un adversaire...",
@@ -49,6 +51,10 @@ const fr = {
     startVsAI: "Commencer la partie (contre l'IA)",
     inviteFriend: "Inviter un ami",
     cancelMatch: "Annuler le match",
+    cancelTitle: "Annuler ce match ?",
+    cancelDescription: "La recherche d'adversaire sera arrêtée et la salle fermée.",
+    cancelConfirm: "Oui, annuler",
+    cancelStay: "Continuer à jouer",
   },
   ready: {
     title: "ADVERSAIRE TROUVÉ !",
@@ -72,12 +78,22 @@ const fr = {
     firstTo: "Premier à {score}",
     howToPlay: "Comment jouer",
     backToGames: "Retour aux jeux",
+    disconnectedTitle: "Déconnecté",
+    disconnectedDesc: "Connexion perdue. Veuillez réessayer.",
+    opponentDisconnected: "Votre adversaire s'est déconnecté.",
+    leaveTitle: "Quitter cette partie ?",
+    leaveDescription: "Quitter maintenant compte comme un abandon et mettra fin à la partie.",
+    leaveConfirm: "Quitter la partie",
+    leaveStay: "Continuer à jouer",
   },
   invite: {
     title: "Inviter un ami",
     cancel: "Annuler",
     searchFriends: "Rechercher des amis...",
     noFriends: "Aucun ami trouvé",
+    receivedTitle: "Invitation à jouer",
+    receivedDescription: "{name} vous a invité à jouer à {game}",
+    fallbackName: "Quelqu'un",
   },
   result: {
     winShort: "VICTOIRE",
@@ -89,6 +105,7 @@ const fr = {
     accept: "Accepter",
     reject: "Refuser",
     playAgainRequest: "veut rejouer !",
+    playAgainTimeout: "Votre adversaire n'a pas répondu à temps. Vous pouvez réessayer.",
   },
 };
 export { fr };

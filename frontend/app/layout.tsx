@@ -1,13 +1,16 @@
 import "./globals.css";
-import type { Metadata } from "next";
-import { Cairo, Geist } from "next/font/google";
-import { AuthProvider } from "./providers/AuthProvider";
-import { getSettingFromCookie } from "@/lib/getLocaleFromCookie";
+import { Cairo, Chakra_Petch } from "next/font/google";
 
-const requireAuth = true;
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import { getSettingFromCookie } from "@/lib/getSettingFromCookie";
+
+import { AuthProvider } from "./providers/AuthProvider";
+
+import type { Metadata } from "next";
+
+const chakraPetch = Chakra_Petch({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -29,9 +32,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       dir={locale === "ar" ? "rtl" : "ltr"}
       data-theme={theme}
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${cairo.variable} antialiased h-full`}>
+      className={`${chakraPetch.variable} ${cairo.variable} antialiased h-full`}>
       <body className="min-h-full">
-        <AuthProvider requireAuth={requireAuth}>{children}</AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

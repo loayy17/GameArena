@@ -33,7 +33,8 @@ const fr = {
     filtered: "Aucun match trouvé pour ce filtre."
   },
   error: {
-    title: "Impossible de charger l'historique"
+    title: "Impossible de charger l'historique",
+    retry: "Réessayer"
   }
 }
 ;

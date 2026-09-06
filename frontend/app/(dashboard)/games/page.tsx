@@ -6,25 +6,28 @@ import { useState } from "react";
 
 import { useTranslation } from "@/hooks/useSetting";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
-import { en, type TGamesTranslation } from "./i18n/en.i18n";
 import { GameCard } from "@/component/games/common/GameCard";
 import { LeaveGameModal } from "@/component/games/common/LeaveGameModal";
 import { GamesList, translateGameInfo } from "@/domain/constant/games";
 import { useGame } from "@/app/providers/GameProvider";
 import { GBadge } from "@/component/common/GBadge";
 import { GIcon } from "@/component/common/GIcon";
-import { PageHeader } from "@/component/common/PageHeader";
+import { GPageHeader } from "@/component/common/GPageHeader";
 import { GPage } from "@/component/common/GPage";
-import type { TNullable } from "@/domain/type/TCommon";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+import { en } from "./i18n/en.i18n";
+
+import type { TGamesTranslation } from "./i18n/en.i18n";
+import type { TNullable } from "@/domain/type/TCommon";
 
 function GamesPage() {
   const router = useRouter();
   const { state, leaveGame } = useGame();
-  const t = useTranslation({ en, ar, fr }) as TGamesTranslation;
+  const t = useTranslation<TGamesTranslation>({ en, ar, fr });
   const gt = useGameTranslation();
   const [pendingPath, setPendingPath] = useState<TNullable<string>>(null);
 
@@ -44,11 +47,11 @@ function GamesPage() {
 
   return (
     <GPage size={SizeEnum.lg}>
-      <PageHeader
+      <GPageHeader
         icon={Gamepad2}
         title={t.games}
         subtitle={t.chooseGame}
-        className="md:d-block hidden"
+        className="hidden md:block"
         badge={
           <GBadge>
             <GIcon icon={Gamepad2} size={SizeEnum.xs} color={AccentColorEnum.Primary} />

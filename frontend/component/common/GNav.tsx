@@ -1,79 +1,69 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { forwardRef } from "react";
-import { GTooltip } from "./GTooltip";
+import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { NavOrientationEnum } from "@/domain/enum/NavOrientationEnum";
-import type { IGNavProps } from "./def/GNav";
+import { SizeEnum } from "@/domain/enum/SizeEnum";
 
-const navBase = {
-  itemIdle: "text-text-secondary hover:bg-surface-hover hover:text-text",
-  itemActive: "bg-primary-muted text-primary font-semibold",
+import { GButton } from "./GButton";
+
+import type { IGNavItem, IGNavProps } from "./def/GNav";
+
+const navItem = {
+  idle: "text-text-secondary hover:bg-surface-hover hover:text-text",
+  active: "bg-primary-muted text-primary ring-1 ring-inset ring-primary/15 font-semibold hover:bg-primary-muted hover:text-primary",
+  activeStacked: "text-primary font-semibold hover:bg-transparent hover:text-primary",
 };
 
-const GNav = forwardRef<HTMLDivElement, IGNavProps>(
-  ({ items, orientation = NavOrientationEnum.Vertical, collapsed = false, stacked = false, className, ...props }, ref) => {
-    const isVertical = orientation === NavOrientationEnum.Vertical;
+function GNav({ items, orientation = NavOrientationEnum.Vertical, collapsed = false, stacked = false, className, ...props }: IGNavProps) {
+  const isVertical = orientation === NavOrientationEnum.Vertical;
 
+  const renderItem = (item: IGNavItem) => {
+    const active = Boolean(item.active);
     return (
-      <div ref={ref} className={cn("flex", stacked ? "flex-row gap-1" : isVertical ? "flex-col gap-1" : "flex-row gap-1", className)}>
-        {items.map((item) => {
-          const active = Boolean(item.active);
-          const buttonEl = (
-            <button
-              key={item.id}
-              type="button"
-              disabled={item.disabled}
-              className={cn(
-                stacked
-                  ? "relative flex-1 flex flex-col items-center justify-center gap-1 px-1 py-2 min-h-11 min-w-0 text-2xs rounded-xl"
-                  : cn("flex items-center gap-3 px-3 h-11 text-sm min-w-0", isVertical ? "w-full" : "shrink-0"),
-                "relative font-medium text-start cursor-pointer disabled:cursor-not-allowed",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                "transition-colors",
-                active ? navBase.itemActive : navBase.itemIdle,
-                collapsed && "justify-center px-2",
-              )}
-              aria-current={active ? "page" : undefined}
-              onClick={item.onClick}
-              {...props}>
-              {active && !stacked && (
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute rounded-full bg-primary",
-                    isVertical ? "start-0.5 top-1/2 -translate-y-1/2 h-6 w-1" : "top-0.5 left-1/2 -translate-x-1/2 w-6 h-1",
-                  )}
-                />
-              )}
-              {item.icon && (
-                <span
-                  className={cn("relative inline-flex items-center justify-center shrink-0", stacked ? "size-6" : "size-5", collapsed && "mx-auto")}>
-                  {item.icon}
-                  {collapsed && item.badge && (
-                    <span aria-hidden className="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-danger border-2 border-bg-sidebar" />
-                  )}
-                  {stacked && item.badge && <span className="absolute -top-1.5 -end-2">{item.badge}</span>}
-                </span>
-              )}
-              {!collapsed && item.label && <span className="min-w-0 truncate leading-snug">{item.label}</span>}
-              {!collapsed && !stacked && item.badge && <span className="ms-auto shrink-0">{item.badge}</span>}
-            </button>
-          );
-          if (collapsed && item.label) {
-            return (
-              <GTooltip key={item.id} content={String(item.label)} side={isVertical ? "right" : "top"}>
-                {buttonEl}
-              </GTooltip>
-            );
-          }
-          return buttonEl;
-        })}
-      </div>
+      <GButton
+        key={item.id}
+        variant={ButtonVariantEnum.Subtle}
+        size={SizeEnum.None}
+        aria-current={active ? "page" : undefined}
+        title={collapsed && item.label ? String(item.label) : undefined}
+        tooltipPosition={collapsed ? (isVertical ? "end" : "top") : undefined}
+        onClick={item.onClick}
+        href={item.href}
+        className={cn(
+          "w-full justify-start relative min-h-11 min-w-0 gap-3 rounded-none p-0 font-medium",
+          stacked ? "flex-1 flex-col justify-center gap-1 px-1 py-2 text-2xs" : cn("h-11 px-3 py-0 text-start text-sm", isVertical && "w-full"),
+          active ? (stacked ? navItem.activeStacked : navItem.active) : navItem.idle,
+          collapsed && "justify-center px-2",
+        )}>
+        {active && (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute rounded-full bg-primary",
+              isVertical ? "start-0.5 top-1/2 h-6 w-1 -translate-y-1/2" : "top-0.5 left-1/2 h-1 w-6 -translate-x-1/2",
+            )}
+          />
+        )}
+        {item.icon && (
+          <span className={cn("relative inline-flex size-5 shrink-0 items-center justify-center", collapsed && !stacked && "mx-auto")}>
+            {item.icon}
+            {(collapsed || stacked) && item.badge && (
+              <span className="absolute -top-2 -end-2 rounded-full ring-2 ring-bg-sidebar">{item.badge}</span>
+            )}
+          </span>
+        )}
+        {!collapsed && item.label && <span className={cn("min-w-0 truncate leading-snug", !stacked && "flex-1")}>{item.label}</span>}
+        {!collapsed && !stacked && item.badge}
+      </GButton>
     );
-  },
-);
+  };
 
-GNav.displayName = "GNav";
+  return (
+    <nav {...props} className={cn("flex gap-1", stacked || !isVertical ? "flex-row" : "flex-col", className)}>
+      {items.map(renderItem)}
+    </nav>
+  );
+}
 
 export { GNav };

@@ -1,128 +1,127 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { GTextField } from "@/component/common/GTextField";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
-import { GIcon } from "@/component/common/GIcon";
+import { CheckCircle, KeyRound } from "lucide-react";
+
+import { AuthFrame } from "@/component/auth/AuthFrame";
+import { PasswordField } from "@/component/auth/PasswordField";
 import { OtpForm } from "@/component/auth/OtpForm";
+import { GAlert } from "@/component/common/GAlert";
+import { GButton } from "@/component/common/GButton";
+import { GIcon } from "@/component/common/GIcon";
 import { useTranslation } from "@/hooks/useSetting";
-import { en, type TResetPasswordTranslation } from "./i18n/en.i18n";
-import { ar } from "./i18n/ar.i18n";
-import { fr } from "./i18n/fr.i18n";
+import { useAuthAction } from "@/hooks/useAuthAction";
 import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { passwordValidator } from "@/lib/utils";
 import { authService } from "@/services/def/AuthService";
-import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
-import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import { ResetPasswordStepEnum } from "@/domain/enum/ResetPasswordStepEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+
+import { en } from "./i18n/en.i18n";
+import { ar } from "./i18n/ar.i18n";
+import { fr } from "./i18n/fr.i18n";
+
+import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
+import type { TResetPasswordTranslation } from "./i18n/en.i18n";
 
 function ResetPasswordPage() {
   const router = useRouter();
-  const t = useTranslation({
+  const t = useTranslation<TResetPasswordTranslation & GTextFieldTranslation>({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
     fr: { ...fr, ...FrTextField },
-  }) as TResetPasswordTranslation & GTextFieldTranslation;
-
-  const resolveError = useErrorMessage();
+  });
+  const { loading, apiError, run } = useAuthAction();
 
   const email = useSearchParams().get("email");
 
   const [step, setStep] = useState<ResetPasswordStepEnum>(ResetPasswordStepEnum.Otp);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ newPassword: "" });
-  const [apiError, setApiError] = useState("");
-  if (!email) {
-    if (typeof window !== "undefined") {
-      void import("next/navigation").then(({ redirect }) => {
-        try {
-          redirect("/forgot-password");
-        } catch {}
-      });
-    }
-    return null;
+  const [passwordError, setPasswordError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!email) router.replace("/forgot-password");
+  }, [email, router]);
+
+  if (!email) return null;
+
+  if (success) {
+    return (
+      <div className="w-full space-y-4 text-center">
+        <div className="flex justify-center">
+          <div className="flex size-16 items-center justify-center rounded-full bg-success-muted">
+            <GIcon icon={CheckCircle} size={SizeEnum.xl} color={AccentColorEnum.Success} />
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-text">{t.resetSuccessTitle}</h1>
+        <p className="text-sm text-text-muted">{t.resetSuccessDescription}</p>
+        <GButton className="w-full" onClick={() => router.replace("/login")}>
+          {t.goToLogin}
+        </GButton>
+      </div>
+    );
   }
 
-  const validate = (value: string) => ({
-    newPassword: passwordValidator(t)(value) || "",
-  });
-
-  const handlePasswordChange = (value: string) => {
-    setNewPassword(value);
-    setErrors((prev) => ({ ...prev, newPassword: "" }));
-  };
-
   const reset = async () => {
-    const nextErrors = validate(newPassword);
-    setErrors(nextErrors);
-    if (Object.values(nextErrors).some(Boolean) || !otp || loading) return;
+    const error = passwordValidator(t)(newPassword);
+    setPasswordError(error || "");
+    if (error || !otp) return;
 
-    try {
-      setLoading(true);
-      setApiError("");
+    await run(async () => {
       await authService.resetPassword({ email, otp, newPassword });
-      router.replace("/login");
-    } catch (e: unknown) {
-      setApiError(resolveError(toErrorCode(e), t.passwordResetError));
-    } finally {
-      setLoading(false);
-    }
+      setSuccess(true);
+    }, t.passwordResetError);
   };
 
-  return (
-    <>
-      {step === ResetPasswordStepEnum.Otp && (
+  if (step === ResetPasswordStepEnum.Otp) {
+    return (
+      <AuthFrame icon={KeyRound} title={t.resetPassword} description={t.otpDescription.replace("{email}", email)} backLabel={t.backToLogin}>
         <OtpForm
           email={email}
+          validateOnly
+          onResend={() => authService.forgotPassword({ email })}
           onSuccess={(resolvedOtp) => {
             setOtp(resolvedOtp);
             setStep(ResetPasswordStepEnum.Reset);
           }}
         />
-      )}
+      </AuthFrame>
+    );
+  }
 
-      {step === ResetPasswordStepEnum.Reset && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void reset();
+  return (
+    <AuthFrame icon={KeyRound} title={t.newPassword} backLabel={t.backToLogin}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void reset();
+        }}
+        className="space-y-5">
+        {apiError && <GAlert severity={AccentColorEnum.Danger}>{apiError}</GAlert>}
+        <PasswordField
+          label={t.newPassword}
+          placeholder={t.placeholder.newPassword}
+          value={newPassword}
+          error={passwordError}
+          hint={t.passwordHint}
+          required
+          className="w-full"
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            setPasswordError("");
           }}
-          className="w-full space-y-5">
-          {apiError && (
-            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-              {apiError}
-            </div>
-          )}
-          <GTextField
-            label={t.newPassword}
-            placeholder={t.placeholder.newPassword}
-            type="password"
-            value={newPassword}
-            required
-            error={errors.newPassword}
-            onChange={(e) => handlePasswordChange(e.target.value)}
-            className="w-full"
-          />
-          <GButtonAsync type="submit" busy={loading} loadingText={t.resetPassword} fullWidth>
-            {t.resetPassword}
-          </GButtonAsync>
-          <div className="pt-2 text-center">
-            <Link href="/login" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
-              <GIcon icon={ArrowLeft} size={SizeEnum.sm} flip />
-              {t.backToLogin}
-            </Link>
-          </div>
-        </form>
-      )}
-    </>
+        />
+        <GButton type="submit" loading={loading} className="w-full">
+          {t.resetPassword}
+        </GButton>
+      </form>
+    </AuthFrame>
   );
 }
 

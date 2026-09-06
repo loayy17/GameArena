@@ -31,6 +31,7 @@ const en = {
   error: {
     title: "Unable to load messages",
     send: "Unable to send message. Please try again.",
+    retry: "Retry",
   },
 };
 

@@ -1,6 +1,9 @@
-const fr = {
+import type { TEmailVerifyTranslation } from "./en.i18n";
+
+const fr: TEmailVerifyTranslation = {
   title: "Vérifier l'e-mail",
   description: "Entrez votre e-mail pour recevoir un code de vérification",
+  emailLabel: "E-mail",
   sendCode: "Envoyer le code",
   sending: "Envoi en cours...",
   enterEmail: "Entrez votre e-mail",

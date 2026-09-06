@@ -1,12 +1,20 @@
 import type { SizeEnum } from "@/domain/enum/SizeEnum";
 import type { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import type { TNullable } from "@/domain/type/TCommon";
+
+export interface IGAvatarUser {
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  avatarUrl?: string | null;
+  status?: UserStatusEnum | null;
+}
 
 export interface IGAvatarProps {
-  firstName?: TNullable<string>;
-  lastName?: TNullable<string>;
-  avatarUrl?: TNullable<string>;
+  user?: IGAvatarUser | null;
+  src?: string | null;
+  alt?: string;
+  fallback?: string;
   size?: SizeEnum;
-  status?: UserStatusEnum;
+  status?: UserStatusEnum | null;
   className?: string;
 }

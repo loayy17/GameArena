@@ -6,18 +6,20 @@ import { Play, UserPlus, X } from "lucide-react";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GButton } from "@/component/common/GButton";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GCard } from "@/component/common/GCard";
+import { GConfirmDialog } from "@/component/common/GConfirmDialog";
 import { GIcon } from "@/component/common/GIcon";
 import { InviteModal } from "@/component/games/common/InviteModal";
 import { translateGameInfo } from "@/domain/constant/games";
+import { filterUsersByTerm } from "@/domain/lib/userUtils";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
-import type { TNullable } from "@/domain/type/TCommon";
 
 import { GamePlayersHeader } from "./GameUI";
+
+import type { TNullable } from "@/domain/type/TCommon";
 import type { IGameLobbyProps } from "./def/GameLobby";
 
 function GameLobby({ gameType }: IGameLobbyProps) {
@@ -29,25 +31,14 @@ function GameLobby({ gameType }: IGameLobbyProps) {
 
   const [showInvitePicker, setShowInvitePicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [starting, setStarting] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [invitingId, setInvitingId] = useState<TNullable<string>>(null);
 
-  const filteredFriends = useMemo(() => {
-    const term = searchQuery.trim().toLowerCase();
-    if (!term) return friends;
-    return friends.filter((f) => `${f.firstName ?? ""} ${f.lastName ?? ""} ${f.userName ?? ""}`.toLowerCase().includes(term));
-  }, [friends, searchQuery]);
+  const filteredFriends = useMemo(() => filterUsersByTerm(friends, searchQuery), [friends, searchQuery]);
 
   if (!state) return null;
 
-  const handleStartVsAI = async () => {
-    setStarting(true);
-    try {
-      await startGame(null, gameType);
-    } finally {
-      setStarting(false);
-    }
-  };
+  const handleStartVsAI = () => startGame(null, gameType);
 
   const handleInviteToRoom = async (friendId: string) => {
     setInvitingId(friendId);
@@ -69,7 +60,7 @@ function GameLobby({ gameType }: IGameLobbyProps) {
 
         <GamePlayersHeader gameType={gameType} />
 
-        <GCard padding={SizeEnum.md} className="text-center">
+        <GCard className="text-center p-4">
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="relative flex size-3">
               <span className="relative inline-flex rounded-full size-3 bg-primary" />
@@ -80,25 +71,28 @@ function GameLobby({ gameType }: IGameLobbyProps) {
           <div className="flex flex-col gap-3 mt-4">
             {state.player1Id === user?.id && (
               <>
-                <GButtonAsync onClick={() => void handleStartVsAI()} fullWidth busy={starting} startIcon={<GIcon icon={Play} size={SizeEnum.md} />}>
-                  {t.waiting.startVsAI}
-                </GButtonAsync>
                 <GButton
+                  className="w-full"
+                  onClick={() => handleStartVsAI()}
+                  startIcon={<GIcon icon={Play} size={SizeEnum.md} />}>
+                  {t.waiting.startVsAI}
+                </GButton>
+                <GButton
+                  className="w-full"
                   onClick={() => setShowInvitePicker(true)}
-                  fullWidth
                   variant={ButtonVariantEnum.Secondary}
                   startIcon={<GIcon icon={UserPlus} size={SizeEnum.md} />}>
                   {t.waiting.inviteFriend}
                 </GButton>
               </>
             )}
-            <GButtonAsync
-              onClick={() => resetGame()}
+            <GButton
+              onClick={() => setConfirmCancel(true)}
               variant={ButtonVariantEnum.Secondary}
               size={SizeEnum.sm}
               startIcon={<GIcon icon={X} size={SizeEnum.md} />}>
               {t.waiting.cancelMatch}
-            </GButtonAsync>
+            </GButton>
           </div>
         </GCard>
 
@@ -115,6 +109,20 @@ function GameLobby({ gameType }: IGameLobbyProps) {
           searchPlaceholder={t.invite.searchFriends}
           noFriendsText={t.invite.noFriends}
           pendingId={invitingId}
+        />
+
+        <GConfirmDialog
+          open={confirmCancel}
+          icon={X}
+          title={t.waiting.cancelTitle}
+          description={t.waiting.cancelDescription}
+          confirmLabel={t.waiting.cancelConfirm}
+          cancelLabel={t.waiting.cancelStay}
+          onConfirm={() => {
+            setConfirmCancel(false);
+            resetGame();
+          }}
+          onClose={() => setConfirmCancel(false)}
         />
       </div>
     </div>

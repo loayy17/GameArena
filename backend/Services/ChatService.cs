@@ -20,6 +20,8 @@ namespace backend.Services
             if (unreadCount > 0)
                 await _notificationService.SendCountersAsync(userId);
 
+            await _notificationService.DeleteNotificationsByReferenceAsync(userId, NotificationType.NewMessage, friendId.ToString());
+
             var messages = await _context.Messages
                 .AsNoTracking()
                 .Where(m =>

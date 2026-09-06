@@ -1,5 +1,6 @@
 using backend.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Domain
 {
@@ -26,6 +27,9 @@ namespace backend.Domain
         [Required]
         [MaxLength(100)]
         public string LastName { get; set; } = string.Empty;
+
+        [NotMapped]
+        public string FullName => $"{FirstName} {LastName}".Trim();
         public string? Preferences { get; set; }
         public byte[]? Avatar { get; set; }
         public double? Rank { get; set; }

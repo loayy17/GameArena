@@ -1,19 +1,22 @@
 "use client";
 
-import { Check, Loader2, UserCheck, X } from "lucide-react";
+import { useState } from "react";
+import { Check, UserCheck, X } from "lucide-react";
 
+import { GConfirmDialog } from "@/component/common/GConfirmDialog";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
+import { GButton } from "@/component/common/GButton";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import type { IUserSummary } from "@/domain/meta/IUserSummary";
-import { useBusyAction } from "@/hooks/useBusyAction";
 
-import { FriendsList } from "../SocialPanel/FriendsList";
+import { FriendsList } from "../social/FriendsList";
+
+import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { IRequestsTabProps } from "./def/FriendsTab";
 
 function RequestsTab({ requests, onAccept, onDecline, t }: IRequestsTabProps) {
-  const { run, isBusy, busyClass } = useBusyAction();
+  const [pendingDecline, setPendingDecline] = useState<string | null>(null);
 
   if (requests.length === 0) {
     return (
@@ -30,42 +33,35 @@ function RequestsTab({ requests, onAccept, onDecline, t }: IRequestsTabProps) {
     firstName: r.senderFirstName,
     lastName: r.senderLastName,
     userName: r.senderUserName,
-    fullName: [r.senderFirstName, r.senderLastName].filter(Boolean).join(" ") || r.senderUserName || r.senderId,
+    fullName: r.senderFullName || [r.senderFirstName, r.senderLastName].filter(Boolean).join(" ") || r.senderUserName || r.senderId,
   }));
 
   return (
-    <FriendsList
-      friends={friends}
-      actions={(friend) => {
-        const busy = isBusy(friend.id);
-        return (
+    <>
+      <FriendsList
+        friends={friends}
+        actions={(friend) => (
           <div className="flex gap-1">
-            <GIcon
-              icon={busy ? Loader2 : Check}
-              size={SizeEnum.md}
-              tile
-              hover
-              tileGradient="bg-success/10"
-              tileColor={AccentColorEnum.Success}
-              className={busyClass(friend.id)}
-              onClick={() => run(friend.id, () => onAccept(friend.id))}
-              ariaLabel={t.requestsTab.accept}
-            />
-            <GIcon
-              icon={busy ? Loader2 : X}
-              size={SizeEnum.md}
-              tile
-              hover
-              tileGradient="bg-danger/10"
-              tileColor={AccentColorEnum.Danger}
-              className={busyClass(friend.id)}
-              onClick={() => run(friend.id, () => onDecline(friend.id))}
-              ariaLabel={t.requestsTab.decline}
-            />
+            <GButton icon={Check} label={t.requestsTab.accept} tone="success" onClick={() => onAccept(friend.id)} />
+            <GButton icon={X} label={t.requestsTab.decline} tone="danger" onClick={() => setPendingDecline(friend.id)} />
           </div>
-        );
-      }}
-    />
+        )}
+      />
+      <GConfirmDialog
+        open={!!pendingDecline}
+        icon={X}
+        iconColor={AccentColorEnum.Danger}
+        title={t.confirm.cancelTitle}
+        description={t.confirm.cancelDesc}
+        confirmLabel={t.confirm.confirm}
+        cancelLabel={t.confirm.cancel}
+        onClose={() => setPendingDecline(null)}
+        onConfirm={() => {
+          if (pendingDecline) onDecline(pendingDecline);
+          setPendingDecline(null);
+        }}
+      />
+    </>
   );
 }
 

@@ -1,20 +1,20 @@
 import type { SizeEnum } from "@/domain/enum/SizeEnum";
 import type { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+import type { TAccentTone } from "@/domain/constant/style-tokens";
 import type { LucideIcon } from "lucide-react";
-import type { MouseEvent } from "react";
-interface IGIconProps {
+
+export type GIconVariant = "inline" | "tile";
+
+export interface IGIconProps {
   icon: LucideIcon;
+  variant?: GIconVariant;
   size?: SizeEnum;
-  color?: AccentColorEnum;
+  color?: AccentColorEnum | string;
   flip?: boolean;
+  gradient?: string;
+  tone?: TAccentTone;
+  rounded?: SizeEnum;
   className?: string;
-  onClick?: (e: MouseEvent<HTMLButtonElement | HTMLDivElement>) => void;
-  ariaLabel?: string;
-  hover?: boolean;
-  tile?: boolean;
-  tileRounded?: SizeEnum;
-  tileGradient?: string;
-  tileColor?: AccentColorEnum;
-  tileClassName?: string;
 }
-export type { IGIconProps };
+
+export type { IGIconProps as IGIconTileProps };

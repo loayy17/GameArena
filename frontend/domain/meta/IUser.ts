@@ -1,4 +1,4 @@
-import { UserRoleEnum } from "../enum/UserRoleEnum";
+import type { UserRoleEnum } from "../enum/UserRoleEnum";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IUserSummary } from "./IUserSummary";
 

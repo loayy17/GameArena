@@ -24,6 +24,7 @@ const en = {
   },
   recentMatches: "Recent Matches",
   noMatches: "No matches played yet",
+  noMatchesDescription: "Matches you play will show up here.",
   versus: "vs",
   back: "Back",
   errorTitle: "Could not load profile",

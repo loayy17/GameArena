@@ -1,4 +1,4 @@
-import { UserStatusEnum } from "../enum/UserStatusEnum";
+import type { UserStatusEnum } from "../enum/UserStatusEnum";
 import type { TNullable } from "@/domain/type/TCommon";
 import type { IMatchHistory } from "./IMatchHistory";
 
@@ -7,6 +7,7 @@ interface IUserPublicProfile {
   userName: TNullable<string>;
   firstName: TNullable<string>;
   lastName: TNullable<string>;
+  fullName: TNullable<string>;
   avatarUrl?: TNullable<string>;
   rank?: TNullable<number>;
   status: UserStatusEnum;

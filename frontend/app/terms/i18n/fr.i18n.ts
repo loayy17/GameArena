@@ -19,13 +19,13 @@ const fr = {
   ],
   fairPlayTitle: "Jeux et fair-play",
   fairPlay:
-    "Tous les jeux proposés sur le Service sont destinés au divertissement. Vous acceptez de jouer équitablement et de ne pas utiliser de programmes externes, de scripts ou d'autres outils pour obtenir un avantage déloyal. Nous nous réservons le droit de disqualifier les résultats obtenus par tricherie et de suspendre les comptes qui enfreignent cette règle.",
+    "Tous les jeux proposés sur le Service (Tic-Tac-Toe, Ping-Pong, Snake, Pierre-Papier-Ciseaux, Puissance 4) sont destinés au divertissement. Les parties se jouent en temps réel contre d'autres utilisateurs ou des IA. Vous acceptez de jouer équitablement et de ne pas utiliser de programmes externes, de scripts ou d'autres outils pour obtenir un avantage déloyal. Nous nous réservons le droit de disqualifier les résultats obtenus par tricherie et de suspendre les comptes qui enfreignent cette règle.",
   userContentTitle: "Contenu utilisateur",
   userContent:
     "Vous êtes seul responsable des messages et de tout autre contenu que vous publiez via le Service. Vous nous accordez une licence non exclusive pour stocker, transmettre et afficher ce contenu uniquement dans le but d'exploiter le Service. Tout contenu illicite, diffamatoire ou portant atteinte aux droits peut être supprimé sans préavis.",
   terminationTitle: "Résiliation",
   termination:
-    "Vous pouvez supprimer votre compte à tout moment. Nous pouvons suspendre ou résilier votre accès au Service si vous enfreignez ces Conditions, sans préavis, à notre seule discrétion. À la résiliation, votre droit d'utiliser le Service cesse immédiatement.",
+    "Vous pouvez demander la suppression de votre compte à tout moment en nous contactant à hindiloay01@gmail.com. Nous pouvons suspendre ou résilier votre accès au Service si vous enfreignez ces Conditions, sans préavis, à notre seule discrétion. À la résiliation, votre droit d'utiliser le Service cesse immédiatement.",
   liabilityTitle: "Limitation de responsabilité",
   liability:
     "Le Service est fourni « tel quel », sans garanties d'aucune sorte, expresses ou implicites. Dans la mesure maximale permise par la loi, nous ne serons pas responsables des dommages indirects, accessoires ou consécutifs découlant de votre utilisation du Service, y compris la perte de progression de jeu, d'historique de matchs ou de données.",
@@ -34,7 +34,7 @@ const fr = {
     "Nous pouvons réviser ces Conditions de temps à autre. La version la plus récente sera toujours publiée sur cette page avec sa date de révision. L'utilisation continue du Service après l'entrée en vigueur des modifications constitue une acceptation des Conditions révisées.",
   contactTitle: "Contact",
   contact:
-    "Si vous avez des questions sur ces Conditions, contactez l'équipe à l'adresse e-mail indiquée sur votre profil.",
+    "Si vous avez des questions sur ces Conditions, contactez l'équipe à hindiloay01@gmail.com.",
   backToHome: "Retour à l'accueil",
   privacyLink: "Lire notre politique de confidentialité",
 };

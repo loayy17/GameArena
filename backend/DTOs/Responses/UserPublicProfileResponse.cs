@@ -8,6 +8,7 @@ namespace backend.DTOs.Responses
         public string UserName { get; init; } = string.Empty;
         public string FirstName { get; init; } = string.Empty;
         public string LastName { get; init; } = string.Empty;
+        public string FullName { get; init; } = string.Empty;
         public string? AvatarUrl { get; init; }
         public UserStatus Status { get; init; }
         public DateTime CreatedAt { get; init; }

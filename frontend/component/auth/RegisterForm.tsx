@@ -3,33 +3,39 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
+import Link from "next/link";
+
 import { GTextField } from "@/component/common/GTextField";
 import { GCheckbox } from "@/component/common/GCheckbox";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
-import { GIcon } from "@/component/common/GIcon";
+import { GButton } from "@/component/common/GButton";
+import { GAlert } from "@/component/common/GAlert";
 import { emailValidator, passwordValidator } from "@/lib/utils";
-import { en, type TRegisterTranslation } from "@/app/(auth)/register/i18n/en.i18n";
+import { en } from "@/app/(auth)/register/i18n/en.i18n";
 import { ar } from "@/app/(auth)/register/i18n/ar.i18n";
 import { fr } from "@/app/(auth)/register/i18n/fr.i18n";
-import { en as EnTextField, type GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
+import { en as EnTextField } from "@/component/i18n/GTextField/en.i18n";
 import { ar as ArTextField } from "@/component/i18n/GTextField/ar.i18n";
 import { fr as FrTextField } from "@/component/i18n/GTextField/fr.i18n";
 import { useTranslation } from "@/hooks/useSetting";
-import Link from "next/link";
 import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
 import { authService } from "@/services/def/AuthService";
 import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
 import { FieldRegisterEnum } from "@/domain/enum/FieldRegisterEnum";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+
+import { PasswordField } from "./PasswordField";
+import { AuthFrame } from "./AuthFrame";
+
+import type { TRegisterTranslation } from "@/app/(auth)/register/i18n/en.i18n";
+import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 
 function RegisterForm() {
   const router = useRouter();
-  const t = useTranslation({
+  const t = useTranslation<TRegisterTranslation & GTextFieldTranslation>({
     en: { ...en, ...EnTextField },
     ar: { ...ar, ...ArTextField },
     fr: { ...fr, ...FrTextField },
-  }) as TRegisterTranslation & GTextFieldTranslation;
+  });
   const [loading, setLoading] = useState(false);
   const resolveError = useErrorMessage();
 
@@ -116,15 +122,7 @@ function RegisterForm() {
 
   return (
     <div className="w-full max-w-xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="flex items-center justify-center size-12 rounded-xl bg-primary/15">
-          <GIcon icon={UserPlus} size={SizeEnum.xl} color={AccentColorEnum.Primary} />
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-text tracking-tight">{t.register}</h1>
-          <p className="text-sm text-text-muted mt-0.5">{t.createAccount}</p>
-        </div>
-      </div>
+      <AuthFrame icon={UserPlus} title={t.register} description={t.createAccount}>
       <form
         className="space-y-5"
         onSubmit={(e) => {
@@ -132,7 +130,7 @@ function RegisterForm() {
           register();
         }}>
         {apiError.message && (
-          <div role="alert" className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+          <GAlert severity={AccentColorEnum.Danger}>
             <p className="font-medium">{apiError.message}</p>
             {apiError.link && (
               <Link
@@ -141,7 +139,7 @@ function RegisterForm() {
                 {t.signIn}
               </Link>
             )}
-          </div>
+          </GAlert>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <GTextField
@@ -167,6 +165,7 @@ function RegisterForm() {
               value={email}
               error={errors.email}
               type="email"
+              autoComplete="email"
               required
               onChange={(e) => handleChange(FieldRegisterEnum.email, e.target.value)}
             />
@@ -183,24 +182,23 @@ function RegisterForm() {
             />
           </div>
           <div className="md:col-span-2">
-            <GTextField
+            <PasswordField
               label={t.password}
               placeholder={t.placeholder.password}
               value={password}
               error={errors.password}
-              type="password"
               autoComplete="new-password"
               required
+              hint={t.passwordHint}
               onChange={(e) => handleChange(FieldRegisterEnum.password, e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
-            <GTextField
+            <PasswordField
               label={t.confirmPassword}
               placeholder={t.placeholder.confirmPassword}
               value={confirmPassword}
               error={errors.confirmPassword}
-              type="password"
               autoComplete="new-password"
               required
               onChange={(e) => handleChange(FieldRegisterEnum.confirmPassword, e.target.value)}
@@ -211,28 +209,29 @@ function RegisterForm() {
           <GCheckbox error={errors.policyAndTerms} required checked={policyAndTerms} onChange={(e) => setPolicyAndTerms(e.target.checked)}>
             <span className="text-sm text-text-secondary">
               {t.acceptPolicyAndTerms}
-              <Link href="/privacy" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
+              <Link href="/privacy" className="text-primary hover:text-primary-hover font-semibold px-1">
                 {t.policy}
               </Link>
               {t.and}
-              <Link href="/terms" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
+              <Link href="/terms" className="text-primary hover:text-primary-hover font-semibold px-1">
                 {t.terms}
               </Link>
             </span>
           </GCheckbox>
         </div>
 
-        <GButtonAsync busy={loading} loadingText={t.createElipses} fullWidth type="submit">
+        <GButton loading={loading} type="submit" className="w-full">
           {t.create}
-        </GButtonAsync>
+        </GButton>
 
         <div className="text-sm text-center text-text-secondary pt-4 border-t border-border/40">
           {t.haveAccount}
-          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1 transition-colors">
+          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold px-1">
             {t.signIn}
           </Link>
         </div>
       </form>
+      </AuthFrame>
     </div>
   );
 }

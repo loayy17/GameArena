@@ -1,16 +1,16 @@
 "use client";
 
 import { HelpCircle } from "lucide-react";
+
+import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { translateGameInfo } from "@/domain/constant/games";
-import type { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
+
 import { GameVisualGuide } from "./common/GameVisualGuide";
 
-interface IGameInstructionProps {
-  gameType: GamesKindEnum;
-}
+import type { IGameInstructionProps } from "./def/GameInstruction";
 
 function GameInstruction({ gameType }: IGameInstructionProps) {
   const t = useGameTranslation();
@@ -20,7 +20,7 @@ function GameInstruction({ gameType }: IGameInstructionProps) {
   if (!instruction) return null;
 
   return (
-    <div className="w-full rounded-xl border border-border/60 bg-bg-card p-4 text-start">
+    <GCard className="w-full p-4 text-start">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-text">
         <GIcon icon={HelpCircle} size={SizeEnum.sm} />
         {t.game.howToPlay}
@@ -29,7 +29,7 @@ function GameInstruction({ gameType }: IGameInstructionProps) {
         <GameVisualGuide gameType={gameType} guide={guide} />
         <p className="text-sm text-text-secondary leading-relaxed">{instruction}</p>
       </div>
-    </div>
+    </GCard>
   );
 }
 

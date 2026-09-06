@@ -34,7 +34,10 @@ const ar = {
   noNotificationsTitle: "لا توجد إشعارات",
   noNotificationsDescription: "الإشعارات ستظهر هنا.",
   send: "إرسال",
-  viewAll: "عرض الكل"
+  viewAll: "عرض الكل",
+  viewProfile: "عرض الملف الشخصي",
+  actionFailed: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  close: "إغلاق"
 }
 ;
 

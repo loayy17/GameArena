@@ -1,4 +1,5 @@
 import { ErrorCodeEnum } from "@/domain/enum/ErrorCodeEnum";
+
 import type { THashMap } from "@/domain/type/TCommon";
 
 const ar: THashMap<string, number> = {

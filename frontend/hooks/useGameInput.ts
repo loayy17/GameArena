@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import { useGame } from "@/app/providers/GameProvider";
-import { PADDLE_KEYS, DIRECTIONS, type TGameAction } from "@/domain/constant/game-actions";
-import { SWIPE_THRESHOLD_PX } from "@/domain/constant/game-constants";
+import { PADDLE_KEYS, DIRECTIONS, SWIPE_THRESHOLD_PX } from "@/domain/constant/games";
+
+import type { TGameAction } from "@/domain/constant/games";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 
@@ -116,7 +118,6 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
       try {
         if (board.hasPointerCapture(pointerId)) board.releasePointerCapture(pointerId);
       } catch {
-        // capture already released
       }
     };
 
@@ -148,7 +149,6 @@ export function useGameInput<T extends HTMLElement>(config: GameInputConfig<T>) 
         try {
           board.setPointerCapture(e.pointerId);
         } catch {
-          // pointer already released
         }
       }
     };

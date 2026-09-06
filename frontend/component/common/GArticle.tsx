@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { IGArticleListProps, IGArticleSectionProps } from "./def/GArticle";
 
-function GArticleSection({ title, children }: { title: string; children: ReactNode }) {
+function GArticleSection({ title, children }: IGArticleSectionProps) {
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold text-text">{title}</h2>
@@ -9,7 +9,7 @@ function GArticleSection({ title, children }: { title: string; children: ReactNo
   );
 }
 
-function GArticleList({ items }: { items: string[] }) {
+function GArticleList({ items }: IGArticleListProps) {
   return (
     <ul className="list-disc space-y-2 ps-6 leading-relaxed text-text-secondary">
       {items.map((item, index) => (

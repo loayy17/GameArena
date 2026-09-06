@@ -28,11 +28,12 @@ namespace backend.Services
                 query = query.Where(u =>
                     EF.Functions.ILike(u.UserName, $"%{searchTerm}%") ||
                     EF.Functions.ILike(u.FirstName, $"%{searchTerm}%") ||
-                    EF.Functions.ILike(u.LastName, $"%{searchTerm}%"));
+                    EF.Functions.ILike(u.LastName, $"%{searchTerm}%") ||
+                    EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{searchTerm}%"));
             }
 
             var users = await query
-                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
+                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.FirstName + " " + u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
                 .ToListAsync();
 
             var result = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
@@ -54,6 +55,7 @@ namespace backend.Services
                     SenderId = fr.SenderId,
                     SenderFirstName = fr.Sender.FirstName,
                     SenderLastName = fr.Sender.LastName,
+                    SenderFullName = fr.Sender.FirstName + " " + fr.Sender.LastName,
                     SenderUserName = fr.Sender.UserName,
                     SenderAvatarUrl = MappingExtensions.AvatarUrl(fr.Sender.Id, fr.Sender.Avatar),
                     SentAt = fr.CreatedAt
@@ -73,6 +75,7 @@ namespace backend.Services
                     ReceiverId = fr.ReceiverId,
                     ReceiverFirstName = fr.Receiver.FirstName,
                     ReceiverLastName = fr.Receiver.LastName,
+                    ReceiverFullName = fr.Receiver.FirstName + " " + fr.Receiver.LastName,
                     ReceiverUserName = fr.Receiver.UserName,
                     ReceiverAvatarUrl = MappingExtensions.AvatarUrl(fr.Receiver.Id, fr.Receiver.Avatar),
                     SentAt = fr.CreatedAt
@@ -87,7 +90,7 @@ namespace backend.Services
             var blocked = await context.Blocks
                 .AsNoTracking()
                 .Where(b => b.BlockerId == userId)
-                .Select(b => new UserSummaryResponse(b.Blocked.Id, b.Blocked.UserName, b.Blocked.FirstName, b.Blocked.LastName, b.Blocked.Status, MappingExtensions.AvatarUrl(b.Blocked.Id, b.Blocked.Avatar)))
+                .Select(b => new UserSummaryResponse(b.Blocked.Id, b.Blocked.UserName, b.Blocked.FirstName, b.Blocked.LastName, b.Blocked.FirstName + " " + b.Blocked.LastName, b.Blocked.Status, MappingExtensions.AvatarUrl(b.Blocked.Id, b.Blocked.Avatar)))
                 .ToListAsync();
 
             return blocked.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();

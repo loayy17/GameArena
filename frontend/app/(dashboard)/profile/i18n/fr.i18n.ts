@@ -24,6 +24,7 @@ const fr = {
   },
   recentMatches: "Matchs récents",
   noMatches: "Aucun match joué pour le moment",
+  noMatchesDescription: "Les matchs que vous jouez apparaîtront ici.",
   versus: "contre",
   back: "Retour",
   errorTitle: "Impossible de charger le profil",

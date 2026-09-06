@@ -32,10 +32,6 @@ const userApi = clientFactory(
       verb: HttpVerbEnum.Put,
       template: "/preferences",
     },
-    uploadAvatar: {
-      verb: HttpVerbEnum.Post,
-      template: "/avatar",
-    },
     removeAvatar: {
       verb: HttpVerbEnum.Delete,
       template: "/avatar",

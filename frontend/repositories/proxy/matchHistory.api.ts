@@ -2,15 +2,13 @@ import { baseURL, clientFactory } from "@/app/network";
 import { HttpVerbEnum } from "@/domain/enum/HttpVerbEnum";
 
 const matchHistoryApi = clientFactory(
-  `${baseURL}/MatchHistory`,
+  `${baseURL}/matchhistory`,
   {
     getMatchHistory: {
       verb: HttpVerbEnum.Get,
       template: "",
     },
   },
-  undefined,
-  (data) => data,
 );
 
 export { matchHistoryApi };

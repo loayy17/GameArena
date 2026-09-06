@@ -1,50 +1,60 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, X } from "lucide-react";
 
+import { GAvatar } from "@/component/common/GAvatar";
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GButton } from "@/component/common/GButton";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
 import { GIcon } from "@/component/common/GIcon";
+import { GAlert } from "@/component/common/GAlert";
+import { cn } from "@/lib/cn";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
 import { NotificationTypeEnum } from "@/domain/enum/NotificationTypeEnum";
 import { GamesList } from "@/domain/constant/games";
-import type { TNullable } from "@/domain/type/TCommon";
+import { notificationTypeIcon } from "@/domain/constant/notificationIcons";
 import { useTranslation } from "@/hooks/useSetting";
 import { GCard } from "@/component/common/GCard";
-
 import { ar } from "@/app/(dashboard)/notifications/i18n/ar.i18n";
 import { fr } from "@/app/(dashboard)/notifications/i18n/fr.i18n";
-import { en, type TNotificationsTranslation } from "@/app/(dashboard)/notifications/i18n/en.i18n";
+import { en } from "@/app/(dashboard)/notifications/i18n/en.i18n";
+
+import type { TNotificationsTranslation } from "@/app/(dashboard)/notifications/i18n/en.i18n";
+import type { IUserPreferences } from "@/domain/meta/IUserPreferences";
+import type { TNullable } from "@/domain/type/TCommon";
+
+const TOAST_MS = 6000;
+
+const parseShowNotifications = (raw?: string): boolean => {
+  try {
+    return (JSON.parse(raw ?? "{}") as Partial<IUserPreferences>).showNotifications ?? true;
+  } catch {
+    return true;
+  }
+};
 
 function NotificationPopup() {
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslation({ en, ar, fr }) as TNotificationsTranslation;
-  const { liveNotifications, requests, gameInvites, acceptRequest, declineRequest, acceptGameInvite, dismissGameInvite } = useDashboardData();
+  const t = useTranslation<TNotificationsTranslation>({ en, ar, fr });
+  const { liveNotifications, friends, gameInvites, acceptRequest, declineRequest, acceptGameInvite, dismissGameInvite } = useDashboardData();
   const { user } = useAuth();
   const { state: gameState } = useGame();
   const [visible, setVisible] = useState(false);
+  const [actionError, setActionError] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-  const timerRef = useRef<TNullable<ReturnType<typeof setTimeout>>>(null);
   const lastIdRef = useRef<TNullable<string>>(null);
+  const timerRef = useRef<TNullable<ReturnType<typeof setTimeout>>>(null);
+  const remainingRef = useRef(TOAST_MS);
+  const startedRef = useRef(0);
 
-  const showNotifications = (() => {
-    if (!user?.preferences) return true;
-    try {
-      const p = JSON.parse(user.preferences) as { showNotifications?: boolean };
-      return p.showNotifications ?? true;
-    } catch {
-      return true;
-    }
-  })();
+  const showNotifications = useMemo(() => parseShowNotifications(user?.preferences), [user?.preferences]);
 
   const latest = liveNotifications.length > 0 ? (liveNotifications.find((n) => !dismissedIds.has(n.id)) ?? liveNotifications[0]) : null;
 
@@ -55,20 +65,46 @@ function NotificationPopup() {
 
     if (latest.id === lastIdRef.current) return;
     lastIdRef.current = latest.id;
-
+    setActionError(false);
     setVisible(true);
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setVisible(false);
-    }, 6000);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
   }, [latest, pathname, showNotifications]);
 
-  if (!visible || !latest || pathname === "/notifications" || !showNotifications) return null;
+  useEffect(() => {
+    if (!visible) return;
+    if (actionError) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+    remainingRef.current = TOAST_MS;
+    startedRef.current = Date.now();
+    timerRef.current = setTimeout(() => setVisible(false), TOAST_MS);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [visible, latest?.id, actionError]);
+
+  const pauseTimer = () => {
+    if (!timerRef.current) return;
+    clearTimeout(timerRef.current);
+    timerRef.current = null;
+    remainingRef.current = Math.max(0, remainingRef.current - (Date.now() - startedRef.current));
+  };
+
+  const resumeTimer = () => {
+    if (timerRef.current || !visible) return;
+    startedRef.current = Date.now();
+    timerRef.current = setTimeout(() => setVisible(false), remainingRef.current);
+  };
+
+  const timeLabel = latest ? new Date(latest.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+
+  if (!latest || !showNotifications) return null;
+
+  if (pathname === "/notifications") return null;
 
   const dismiss = () => {
     setDismissedIds((prev) => {
@@ -80,7 +116,18 @@ function NotificationPopup() {
       }
       return next;
     });
+    setActionError(false);
     setVisible(false);
+  };
+
+  const runAction = async (action: () => Promise<void>) => {
+    setActionError(false);
+    try {
+      await action();
+      dismiss();
+    } catch {
+      setActionError(true);
+    }
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -88,106 +135,144 @@ function NotificationPopup() {
     dismiss();
   };
 
-  const pendingRequest =
-    latest.type === NotificationTypeEnum.FriendRequest && latest.referenceId ? requests.find((r) => r.senderId === latest.referenceId) : undefined;
-  const pendingInvite =
-    latest.type === NotificationTypeEnum.GameInvite && latest.referenceId ? gameInvites.find((g) => g.roomId === latest.referenceId) : undefined;
-  const isMessage = latest.type === NotificationTypeEnum.NewMessage && Boolean(latest.referenceId);
+  const senderFriend =
+    latest.type === NotificationTypeEnum.NewMessage && latest.referenceId ? friends.find((f) => f.id === latest.referenceId) : undefined;
+  const senderName = senderFriend?.fullName ?? latest.title;
+  const TypeIcon = notificationTypeIcon[latest.type] ?? Bell;
+
+  const referenceId = latest.referenceId;
+  const isMessage = latest.type === NotificationTypeEnum.NewMessage && Boolean(referenceId);
+  const isFriendRequest = latest.type === NotificationTypeEnum.FriendRequest && Boolean(referenceId);
+  const isGameInvite = latest.type === NotificationTypeEnum.GameInvite && Boolean(referenceId);
+  const isProfileLink = latest.type === NotificationTypeEnum.FriendRequestAccepted && Boolean(referenceId);
+  const hasActions = isMessage || isFriendRequest || isGameInvite;
+
+  const inviteGamePath = isGameInvite
+    ? GamesList.find((g) => g.type === gameInvites.find((i) => i.roomId === referenceId)?.gameType)?.path
+    : undefined;
 
   const handleBodyClick = () => {
     setVisible(false);
-    if (isMessage) router.push(`/messages?friend=${latest.referenceId}`);
+    if (isMessage) router.push(`/messages?friend=${referenceId}`);
+    else if (isProfileLink) router.push(`/profile/${referenceId}`);
     else router.push("/notifications");
   };
 
   const handleAcceptInvite = async () => {
-    if (!pendingInvite) return;
+    if (!isGameInvite || !referenceId) return;
     if (gameState !== null) {
       dismiss();
       router.push("/notifications");
       return;
     }
-    const path = GamesList.find((g) => g.type === pendingInvite.gameType)?.path;
-    await acceptGameInvite(pendingInvite.roomId);
-    dismiss();
-    if (path) router.push(`/games/${path}`);
+    setActionError(false);
+    try {
+      await acceptGameInvite(referenceId);
+      dismiss();
+      if (inviteGamePath) router.push(`/games/${inviteGamePath}`);
+    } catch {
+      setActionError(true);
+    }
   };
 
   return (
-    <div className="fixed top-4 left-1/2 z-popover w-[calc(100%-2rem)] max-w-md -translate-x-1/2" role="status" aria-live="polite">
-      <GCard variant={CardVariantEnum.Elevated} padding={SizeEnum.md} className="shadow-xl shadow-black/10">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={handleBodyClick} className="flex min-w-0 flex-1 items-center gap-3 text-start">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-muted">
-              <GIcon icon={Bell} size={SizeEnum.sm} color={AccentColorEnum.Primary} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-text">{latest.title}</span>
-              <span className="block truncate text-xs text-text-secondary">{latest.body}</span>
-            </span>
-          </button>
-          <GButton
-            variant={ButtonVariantEnum.Subtle}
-            size={SizeEnum.icon}
-            rounded={SizeEnum.full}
-            onClick={handleDismiss}
-            aria-label={t.actions.dismiss}>
-            <GIcon icon={X} size={SizeEnum.sm} color={AccentColorEnum.Muted} />
-          </GButton>
-        </div>
+    <div className="pointer-events-none fixed top-[4.25rem] end-4 z-popover w-[calc(100%-2rem)] max-w-sm sm:top-[4.5rem] sm:end-6" role="status" aria-live="polite">
+      {!visible ? null : (
+        <GCard
+          variant={CardVariantEnum.Elevated}
+          className="pointer-events-auto group overflow-hidden p-0 shadow-xl"
+          onMouseEnter={pauseTimer}
+          onMouseLeave={resumeTimer}>
+          <div className="flex items-start gap-3 p-4">
+            {senderFriend ? (
+              <GAvatar user={senderFriend} size={SizeEnum.sm} className="shrink-0" />
+            ) : (
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-muted">
+                <GIcon icon={TypeIcon} size={SizeEnum.sm} color={AccentColorEnum.Primary} />
+              </span>
+            )}
 
-        {(pendingRequest || pendingInvite || isMessage) && (
-          <div className="mt-3 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
-            {pendingRequest && (
-              <>
-                <GButtonAsync
-                  size={SizeEnum.sm}
-                  onClick={async () => {
-                    await acceptRequest(pendingRequest.senderId);
-                    dismiss();
-                  }}>
-                  {t.actions.accept}
-                </GButtonAsync>
-                <GButtonAsync
-                  size={SizeEnum.sm}
-                  variant={ButtonVariantEnum.Secondary}
-                  onClick={async () => {
-                    await declineRequest(pendingRequest.senderId);
-                    dismiss();
-                  }}>
-                  {t.actions.decline}
-                </GButtonAsync>
-              </>
-            )}
-            {pendingInvite && (
-              <>
-                <GButtonAsync size={SizeEnum.sm} onClick={handleAcceptInvite}>
-                  {t.actions.accept}
-                </GButtonAsync>
-                <GButtonAsync
-                  size={SizeEnum.sm}
-                  variant={ButtonVariantEnum.Secondary}
-                  onClick={async () => {
-                    dismissGameInvite(pendingInvite.roomId);
-                    dismiss();
-                  }}>
-                  {t.actions.decline}
-                </GButtonAsync>
-              </>
-            )}
-            {isMessage && (
-              <GButtonAsync
-                size={SizeEnum.sm}
-                onClick={async () => {
-                  dismiss();
-                  router.push(`/messages?friend=${latest.referenceId}`);
-                }}>
-                {t.actions.reply}
-              </GButtonAsync>
-            )}
+            <GButton
+              type="button"
+              variant={ButtonVariantEnum.Subtle}
+              size={SizeEnum.None}
+              onClick={handleBodyClick}
+              className="min-w-0 flex-1 rounded-none p-0 text-start font-normal justify-start">
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="block truncate text-sm font-semibold text-text">{senderName}</span>
+                <span className="block truncate text-xs font-normal text-text-secondary">{latest.body}</span>
+              </span>
+            </GButton>
+
+            <GButton
+              icon={X}
+              label={t.actions.dismiss}
+              variant={ButtonVariantEnum.Subtle}
+              size={SizeEnum.icon}
+              onClick={handleDismiss}
+              className="rounded-full"
+            />
           </div>
-        )}
-      </GCard>
+
+          {hasActions && (
+            <div className="space-y-2 border-t border-border/60 px-4 py-2">
+              {actionError && <GAlert severity={AccentColorEnum.Danger}>{t.actions.error}</GAlert>}
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  {isFriendRequest && (
+                    <>
+                      <GButton size={SizeEnum.sm} onClick={() => runAction(() => acceptRequest(referenceId ?? ""))}>
+                        {t.actions.accept}
+                      </GButton>
+                      <GButton
+                        size={SizeEnum.sm}
+                        variant={ButtonVariantEnum.Secondary}
+                        onClick={() => runAction(() => declineRequest(referenceId ?? ""))}>
+                        {t.actions.decline}
+                      </GButton>
+                    </>
+                  )}
+                  {isGameInvite && (
+                    <>
+                      <GButton size={SizeEnum.sm} onClick={handleAcceptInvite}>
+                        {t.actions.accept}
+                      </GButton>
+                      <GButton
+                        size={SizeEnum.sm}
+                        variant={ButtonVariantEnum.Secondary}
+                        onClick={() => {
+                          if (referenceId) dismissGameInvite(referenceId);
+                          dismiss();
+                        }}>
+                        {t.actions.decline}
+                      </GButton>
+                    </>
+                  )}
+                  {isMessage && (
+                    <GButton
+                      size={SizeEnum.sm}
+                      onClick={() => {
+                        dismiss();
+                        router.push(`/messages?friend=${referenceId}`);
+                      }}>
+                      {t.actions.reply}
+                    </GButton>
+                  )}
+                </div>
+                <span className="shrink-0 text-2xs text-text-muted">{timeLabel}</span>
+              </div>
+            </div>
+          )}
+
+          <div
+            aria-hidden
+            className={cn(
+              "h-1 origin-left bg-primary/70 animate-toast-progress",
+              actionError ? "[animation-play-state:paused]" : "group-hover:[animation-play-state:paused]",
+            )}
+          />
+        </GCard>
+      )}
     </div>
   );
 }

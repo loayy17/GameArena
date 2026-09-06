@@ -1,4 +1,5 @@
 import { emailApi } from "@/repositories/proxy/email.api";
+
 import type { ISendOtpRequest } from "@/domain/meta/ISendOtpRequest";
 import type { IVerifyOtpRequest } from "@/domain/meta/IVerifyOtpRequest";
 import type { TPromise } from "@/domain/type/TCommon";

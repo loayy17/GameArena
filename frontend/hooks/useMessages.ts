@@ -2,17 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+
 import { chatService } from "@/services/def/ChatService";
 import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useConnections } from "@/app/providers/ConnectionProvider";
+import { ar as messagesAr } from "@/app/(dashboard)/messages/i18n/ar.i18n";
+import { fr as messagesFr } from "@/app/(dashboard)/messages/i18n/fr.i18n";
+import { en as messagesEn } from "@/app/(dashboard)/messages/i18n/en.i18n";
+
+import { useTranslation } from "./useSetting";
+
+import type { TMessagesTranslation } from "@/app/(dashboard)/messages/i18n/en.i18n";
 import type { IMessage } from "@/domain/meta/IMessage";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { TNullable } from "@/domain/type/TCommon";
-import { useTranslation } from "./useSetting";
-import { ar as messagesAr } from "@/app/(dashboard)/messages/i18n/ar.i18n";
-import { fr as messagesFr } from "@/app/(dashboard)/messages/i18n/fr.i18n";
-import { en as messagesEn, type TMessagesTranslation } from "@/app/(dashboard)/messages/i18n/en.i18n";
 
 const normalizeHistoryMessage = (message: IMessage): IMessage => ({
   ...message,
@@ -28,9 +32,10 @@ const areSameMessage = (left: IMessage, right: IMessage): boolean =>
 export function useMessages(initialFriendId?: TNullable<string>) {
   const { isSocialConnected: isConnected } = useConnections();
   const { user } = useAuth();
-  const t = useTranslation({ en: messagesEn, ar: messagesAr, fr: messagesFr }) as TMessagesTranslation;
+  const t = useTranslation<TMessagesTranslation>({ en: messagesEn, ar: messagesAr, fr: messagesFr });
   const { friends, loading: friendsLoading } = useDashboardData();
   const [selectedFriendId, setSelectedFriendId] = useState<TNullable<string>>(initialFriendId ?? null);
+  const [reloadKey, setReloadKey] = useState(0);
   const prevInitialRef = useRef(initialFriendId);
   const loadGenRef = useRef(0);
   const controllerRef = useRef<TNullable<AbortController>>(null);
@@ -99,7 +104,7 @@ export function useMessages(initialFriendId?: TNullable<string>) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [selectedFriendId, t]);
+  }, [selectedFriendId, reloadKey, t]);
 
   const messages = useMemo(() => {
     const combined = [...apiMessages, ...localMessages];
@@ -146,6 +151,8 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     selectFriend(next);
   }, [initialFriendId, selectFriend]);
 
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
   const sendMessage = useCallback(async () => {
     const content = draft.trim();
     if (!selectedFriendId || !content || !user) return;
@@ -191,5 +198,6 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     notifyTyping,
     selectFriend,
     sendMessage,
+    reload,
   };
 }

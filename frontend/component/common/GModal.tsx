@@ -1,14 +1,15 @@
 "use client";
 
-import type React from "react";
+import { useEffect, useRef } from "react";
+
 import { cn } from "@/lib/cn";
-import { useCallback, useEffect, useRef } from "react";
+import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { modalSize } from "@/domain/constant/style-tokens";
+
 import { GBackdrop } from "./GBackdrop";
 import { GCard } from "./GCard";
-import type { IGModalProps, GModalSide } from "./def/GModal";
-import type { TNullable } from "@/domain/type/TCommon";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { modalSize } from "@/domain/constant/size-classes";
+
+import type { GModalSide, IGModalProps } from "./def/GModal";
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -23,97 +24,71 @@ function GModal({
   open,
   onClose,
   children,
-  closeOnBackdrop = true,
-  closeOnEscape = true,
   size = SizeEnum.md,
-  cardPadding = SizeEnum.lg,
   side = "center",
+  className,
   panelClassName,
   role = "dialog",
   ariaLabel,
-  ariaDescription,
-  className,
   ...props
 }: IGModalProps) {
-  const modalRef = useRef<TNullable<HTMLDivElement>>(null);
-  const previousFocusRef = useRef<TNullable<HTMLElement>>(null);
-
-  const isSheet = side !== "center";
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (closeOnEscape && e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (isSheet || !modalRef.current) return;
-
-      if (e.key !== "Tab") return;
-
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    },
-    [closeOnEscape, isSheet, onClose],
-  );
-
-  const handleBackdropClick = useCallback(() => {
-    if (!closeOnBackdrop) return;
-    onClose();
-  }, [closeOnBackdrop, onClose]);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
-    document.addEventListener("keydown", handleKeyDown);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const panel = panelRef.current;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !panel) return;
 
+      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     previousFocusRef.current = document.activeElement as HTMLElement;
-    const timer = requestAnimationFrame(() => {
-      if (modalRef.current) {
-        const focusable = modalRef.current.querySelector<HTMLElement>(FOCUSABLE);
-        focusable?.focus();
-      }
-    });
+    const frame = requestAnimationFrame(() => panelRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus());
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
-      cancelAnimationFrame(timer);
+      cancelAnimationFrame(frame);
       previousFocusRef.current?.focus();
       previousFocusRef.current = null;
     };
-  }, [open, handleKeyDown]);
+  }, [open, onClose]);
 
-  if (isSheet) {
+  const dialogAria = {
+    role,
+    "aria-modal": true,
+    "aria-label": ariaLabel,
+    ...props,
+  } as React.HTMLAttributes<HTMLElement>;
+
+  if (side !== "center") {
     return (
       <div className={className}>
         {open && (
           <>
-            <GBackdrop onClick={handleBackdropClick} />
-            <aside
-              ref={modalRef}
-              role={role}
-              aria-modal="true"
-              aria-label={ariaLabel}
-              className={cn("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], panelClassName)}>
+            <GBackdrop onClick={onClose} />
+            <aside ref={panelRef} {...dialogAria} className={cn("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], panelClassName)}>
               {children}
             </aside>
           </>
@@ -125,26 +100,17 @@ function GModal({
   if (!open) return null;
 
   return (
-    <div
-      ref={modalRef}
-      className={cn("fixed inset-0 z-modal flex items-center justify-center p-4", className)}
-      role={role}
-      aria-modal="true"
-      aria-label={ariaLabel}
-      aria-describedby={ariaDescription ? "modal-description" : undefined}
-      {...props}>
-      <GBackdrop onClick={handleBackdropClick} />
-      <GCard
-        padding={cardPadding}
-        className={cn("relative z-modal mx-auto w-full max-h-full overflow-y-auto custom-scrollbar animate-scale-in", "shadow-xl", modalSize[size])}
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-        {ariaDescription && (
-          <p id="modal-description" className="sr-only">
-            {ariaDescription}
-          </p>
-        )}
-        {children}
-      </GCard>
+    <div className={cn("fixed inset-0 z-modal", className)}>
+      <GBackdrop onClick={onClose} />
+      <div className="fixed inset-0 z-modal flex items-center justify-center p-4" onClick={onClose}>
+        <GCard
+          ref={panelRef}
+          {...dialogAria}
+          className={cn("relative mx-auto max-h-full w-full overflow-y-auto p-6 shadow-xl custom-scrollbar animate-scale-in", modalSize[size], panelClassName)}
+          onClick={(event: React.MouseEvent) => event.stopPropagation()}>
+          {children}
+        </GCard>
+      </div>
     </div>
   );
 }

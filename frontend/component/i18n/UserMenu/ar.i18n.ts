@@ -1,5 +1,6 @@
 const ar = {
   profile: "الملف الشخصي",
+  notifications: "الإشعارات",
   theme: "السمة",
   language: "اللغة",
   logout: "تسجيل الخروج",

@@ -1,4 +1,4 @@
-import { Gamepad2, Home, MessageSquare, Settings, Users, History, Bell } from "lucide-react";
+import { Bell, Gamepad2, History, Home, MessageSquare, Settings, Users } from "lucide-react";
 
 const sidebarNav = [
   { id: "home", labelKey: "home", icon: Home, mobile: true },

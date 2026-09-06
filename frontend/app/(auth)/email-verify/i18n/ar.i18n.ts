@@ -1,6 +1,9 @@
-const ar = {
+import type { TEmailVerifyTranslation } from "./en.i18n";
+
+const ar: TEmailVerifyTranslation = {
   title: "تأكيد البريد الإلكتروني",
   description: "أدخل بريدك الإلكتروني لاستلام رمز التحقق",
+  emailLabel: "البريد الإلكتروني",
   sendCode: "إرسال الرمز",
   sending: "جارٍ الإرسال...",
   enterEmail: "أدخل بريدك الإلكتروني",

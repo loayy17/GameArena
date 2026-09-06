@@ -1,10 +1,11 @@
-import { SignalRServiceBase } from "../lib/SignalRServiceBase";
+import { SignalRServiceBase } from "../lib/SignalR";
+
 import type { HubConnection } from "@microsoft/signalr";
 import type { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import type { IGameInvite } from "@/domain/meta/INotification";
 import type { IGameState } from "@/app/providers/def/IGameState";
 import type { TNullable } from "@/domain/type/TCommon";
-import type { Handler } from "../lib/signalRUtils";
+import type { Handler } from "../lib/SignalR";
 
 class GameService extends SignalRServiceBase {
   private _connectionReady: Promise<void>;

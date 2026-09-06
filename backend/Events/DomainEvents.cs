@@ -69,3 +69,8 @@ public sealed record GameInviteSentEvent(
     string InviterName,
     GamesKind GameType
 ) : DomainEvent;
+
+public sealed record GameInviteCancelledEvent(
+    string ReceiverId,
+    string RoomId
+) : DomainEvent;

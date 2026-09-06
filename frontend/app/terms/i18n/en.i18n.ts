@@ -19,13 +19,13 @@ const en = {
   ],
   fairPlayTitle: "Games and Fair Play",
   fairPlay:
-    "All games offered on the Service are intended for entertainment. You agree to play fairly and not to use external programs, scripts, or other tools to gain an unfair advantage. We reserve the right to disqualify results obtained through cheating and to suspend accounts that violate this rule.",
+    "All games offered on the Service (Tic-Tac-Toe, Ping-Pong, Snake, Rock-Paper-Scissors, Connect Four) are intended for entertainment. Games are played in real-time against other users or AI opponents. You agree to play fairly and not to use external programs, scripts, or other tools to gain an unfair advantage. We reserve the right to disqualify results obtained through cheating and to suspend accounts that violate this rule.",
   userContentTitle: "User Content",
   userContent:
     "You are solely responsible for the messages and any other content you post through the Service. You grant us a non-exclusive license to store, transmit, and display this content solely for the purpose of operating the Service. Content that is unlawful, defamatory, or infringing may be removed without notice.",
   terminationTitle: "Termination",
   termination:
-    "You may delete your account at any time. We may suspend or terminate your access to the Service if you violate these Terms, without prior notice, at our sole discretion. Upon termination, your right to use the Service ceases immediately.",
+    "You may request deletion of your account at any time by contacting us at hindiloay01@gmail.com. We may suspend or terminate your access to the Service if you violate these Terms, without prior notice, at our sole discretion. Upon termination, your right to use the Service ceases immediately.",
   liabilityTitle: "Limitation of Liability",
   liability:
     "The Service is provided \"as is\" without warranties of any kind, express or implied. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service, including loss of game progress, match history, or data.",
@@ -34,7 +34,7 @@ const en = {
     "We may revise these Terms from time to time. The latest version will always be published on this page with its revision date. Continued use of the Service after changes take effect constitutes acceptance of the revised Terms.",
   contactTitle: "Contact",
   contact:
-    "If you have questions about these Terms, contact the team at the email address provided on your profile.",
+    "If you have questions about these Terms, contact the team at hindiloay01@gmail.com.",
   backToHome: "Back to home",
   privacyLink: "Read our Privacy Policy",
 };

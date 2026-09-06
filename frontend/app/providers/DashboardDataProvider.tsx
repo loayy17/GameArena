@@ -1,14 +1,20 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useConnections } from "./ConnectionProvider";
-import { useAuth } from "./AuthProvider";
+
 import { notificationService } from "@/services/def/NotificationService";
 import { gameService } from "@/services/def/GameService";
 import { friendService } from "@/services/def/FriendService";
+import { translateGameInfo } from "@/domain/constant/games";
+import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { NotificationTypeEnum } from "@/domain/enum/NotificationTypeEnum";
+
+import { useConnections } from "./ConnectionProvider";
+import { useAuth } from "./AuthProvider";
+
+import type { IDashboardDataProviderProps } from "./def/IProviders";
 import type { IDashboardDataContext } from "./def/IDashboardDataContext";
 import type { IGameInvite, INotificationItem } from "@/domain/meta/INotification";
 import type { IUserPreferences } from "@/domain/meta/IUserPreferences";
@@ -19,7 +25,7 @@ import type { TNullable, TOptional } from "@/domain/type/TCommon";
 
 const DashboardDataContext = createContext<TOptional<IDashboardDataContext>>(undefined);
 
-const NOTIFICATION_TYPES = [
+const NOTIFICATION_TYPES: NotificationTypeEnum[] = [
   NotificationTypeEnum.FriendRequest,
   NotificationTypeEnum.FriendRequestAccepted,
   NotificationTypeEnum.GameInvite,
@@ -32,11 +38,12 @@ const normalizeNotification = (n: INotificationItem): INotificationItem => {
   return type ? { ...n, type } : n;
 };
 
-export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
+export function DashboardDataProvider({ children }: IDashboardDataProviderProps) {
   const { isSocialConnected, isSocialConnecting, socialReconnectKey } = useConnections();
   const { user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const gameT = useGameTranslation();
 
   const [friends, setFriends] = useState<IUserSummary[]>([]);
   const [requests, setRequests] = useState<IFriendRequestReceived[]>([]);
@@ -49,7 +56,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [gameInvites, setGameInvites] = useState<IGameInvite[]>([]);
   const [notifications, setNotifications] = useState<INotificationItem[]>([]);
-  const [liveNotifications, setLiveNotifications] = useState<INotificationItem[]>([]);
+  const [liveNotificationsRaw, setLiveNotifications] = useState<INotificationItem[]>([]);
 
   const pathnameRef = useRef(pathname);
   const searchParamsRef = useRef(searchParams);
@@ -88,6 +95,11 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     audioRef.current.play().catch(() => {});
   };
 
+  const isActiveConversation = useCallback((senderId: TNullable<string>) => {
+    if (!senderId) return false;
+    return pathnameRef.current === "/messages" && searchParamsRef.current.get("friend") === senderId;
+  }, []);
+
   useEffect(() => {
     const offList = friendService.onFriendListUpdate((data) => {
       setFriends(data);
@@ -119,18 +131,24 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       setUnreadMessageCount(c.unreadMessages ?? 0);
     });
     const off2 = notificationService.onChatNotification((p) => {
-      const selected = searchParamsRef.current.get("friend");
-      if (pathnameRef.current !== "/messages" || selected !== p.senderId) setUnreadMessageCount((n) => n + 1);
+      if (!isActiveConversation(p.senderId)) setUnreadMessageCount((n) => n + 1);
       playNotificationSound();
     });
     const off3 = notificationService.onNewNotification((incoming) => {
       const n = normalizeNotification(incoming);
+
+      if (n.type === NotificationTypeEnum.NewMessage && isActiveConversation(n.referenceId)) {
+        notificationService.deleteNotification(n.id).catch(() => {});
+        return;
+      }
+
       setNotifications((prev) => {
         if (prev.some((x) => x.id === n.id)) {
           return prev.map((x) => (x.id === n.id ? n : x));
         }
         return [n, ...prev];
       });
+
       setLiveNotifications((prev) => {
         if (prev.some((x) => x.id === n.id)) return prev;
         return [n, ...prev].slice(0, 20);
@@ -151,24 +169,53 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       off3();
       off4();
     };
-  }, []);
+  }, [isActiveConversation]);
 
   useEffect(() => {
     const off = gameService.onGameInvite((p) => {
       setGameInvites((prev) => (prev.some((i) => i.roomId === p.roomId) ? prev : [...prev, p]));
+
+      const name = p.inviterName ?? gameT.invite.fallbackName;
+      let gameLabel = gameT.invite.fallbackName;
+      try {
+        gameLabel = translateGameInfo(gameT, p.gameType).name;
+      } catch {}
+      setLiveNotifications((prev) => {
+        const id = `invite-${p.roomId}`;
+        if (prev.some((n) => n.id === id)) return prev;
+        const item: INotificationItem = {
+          id,
+          type: NotificationTypeEnum.GameInvite,
+          title: name,
+          body: gameT.invite.receivedDescription.replace("{name}", name).replace("{game}", gameLabel),
+          referenceId: p.roomId,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        };
+        return [item, ...prev].slice(0, 20);
+      });
       playNotificationSound();
     });
     return () => off();
-  }, []);
+  }, [gameT]);
 
-  useEffect(() => {
-    if (!isSocialConnected) return;
+  const liveNotifications = useMemo(
+    () => liveNotificationsRaw.filter((n) => n.type !== NotificationTypeEnum.GameInvite || gameInvites.some((g) => g.roomId === n.referenceId)),
+    [liveNotificationsRaw, gameInvites],
+  );
+
+  const syncSocial = useCallback(() => {
     friendService.invokeFriends().catch(() => {});
     friendService.invokeFriendRequests().catch(() => {});
     friendService.invokeBlocked().catch(() => {});
     notificationService.requestCounters().catch(() => {});
     notificationService.requestNotificationList().catch(() => {});
-  }, [isSocialConnected, socialReconnectKey]);
+  }, []);
+
+  useEffect(() => {
+    if (!isSocialConnected) return;
+    syncSocial();
+  }, [isSocialConnected, socialReconnectKey, syncSocial]);
 
   const markNotificationRead = useCallback((notificationId: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)));
@@ -191,6 +238,20 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     setNotifications((prev) => prev.filter((n) => !(n.type === type && n.referenceId === referenceId)));
     matches.forEach((n) => notificationService.deleteNotification(n.id).catch(() => {}));
   }, []);
+
+  useEffect(() => {
+    if (pathname !== "/messages") return;
+    const friendId = searchParams.get("friend");
+    if (friendId) resolveNotificationsByReference(NotificationTypeEnum.NewMessage, friendId);
+  }, [pathname, searchParams, resolveNotificationsByReference]);
+
+  useEffect(() => {
+    if (!requestsReceived) return;
+    const pendingIds = new Set(requests.map((r) => r.senderId));
+    notifications
+      .filter((n) => n.type === NotificationTypeEnum.FriendRequest && n.referenceId != null && !pendingIds.has(n.referenceId))
+      .forEach((n) => deleteNotification(n.id));
+  }, [requestsReceived, requests, notifications, deleteNotification]);
 
   const sendRequest = useCallback(async (friendId: string) => {
     await friendService.sendFriendRequest(friendId);
@@ -251,13 +312,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     [resolveNotificationsByReference],
   );
 
-  const reload = useCallback(() => {
-    friendService.invokeFriends().catch(() => {});
-    friendService.invokeFriendRequests().catch(() => {});
-    friendService.invokeBlocked().catch(() => {});
-    notificationService.requestCounters().catch(() => {});
-    notificationService.requestNotificationList().catch(() => {});
-  }, []);
+  const reload = syncSocial;
 
   const friendsLoading = isSocialConnecting || (isSocialConnected && !friendsReceived);
   const requestsLoading = isSocialConnecting || (isSocialConnected && !requestsReceived);
