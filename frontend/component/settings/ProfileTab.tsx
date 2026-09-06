@@ -2,30 +2,27 @@
 
 import { useRef, useState } from "react";
 import { Camera, Save, Trash2 } from "lucide-react";
+
 import { GAvatar } from "@/component/common/GAvatar";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
+import { GButton } from "@/component/common/GButton";
+import { GAlert } from "@/component/common/GAlert";
 import { GTextField } from "@/component/common/GTextField";
 import { GIcon } from "@/component/common/GIcon";
 import { GAsync } from "@/component/common/GAsync";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
+import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
 import { userService } from "@/services/def/UserService";
+
 import type { TNullable } from "@/domain/type/TCommon";
+import type { IProfileTabProps } from "./def/SettingsTabs";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
-export function ProfileTab({
-  user,
-  showMessage,
-  t,
-}: {
-  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
-  showMessage: (msg: string) => void;
-  t: any;
-}) {
+export function ProfileTab({ user, showMessage, t }: IProfileTabProps) {
   const resolveError = useErrorMessage();
   const { refreshUser } = useAuth();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -55,9 +52,9 @@ export function ProfileTab({
     try {
       await userService.updateProfile({ firstName, lastName, userName, email: user.email, password: null });
       await refreshUser();
-      showMessage(t.settings.profile.saved);
+      showMessage(t.settings.profile.saved, "success");
     } catch (e: unknown) {
-      showMessage(resolveError(toErrorCode(e), t.settings.profile.saveFailed));
+      showMessage(resolveError(toErrorCode(e), t.settings.profile.saveFailed), "danger");
     }
     setSaving(false);
   };
@@ -71,7 +68,7 @@ export function ProfileTab({
     try {
       await userService.uploadAvatar(file);
       await refreshUser();
-      showMessage(t.settings.profile.avatarSaved);
+      showMessage(t.settings.profile.avatarSaved, "success");
     } catch (e: unknown) {
       setAvatarError(resolveError(toErrorCode(e), t.settings.profile.avatarSaveFailed));
     }
@@ -84,7 +81,7 @@ export function ProfileTab({
     try {
       await userService.removeAvatar();
       await refreshUser();
-      showMessage(t.settings.profile.avatarRemoved);
+      showMessage(t.settings.profile.avatarRemoved, "success");
     } catch (e: unknown) {
       setAvatarError(resolveError(toErrorCode(e), t.settings.profile.avatarRemoveFailed));
     }
@@ -101,7 +98,7 @@ export function ProfileTab({
       <GAsync loading={!user} spinnerSize={SizeEnum.md} className="py-10">
         <>
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-            <GAvatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatarUrl} status={user?.status} size={SizeEnum.xl} />
+            <GAvatar user={user ?? {}} size={SizeEnum.xl} />
             <div className="flex flex-col sm:flex-row gap-2">
               <input
                 ref={avatarInputRef}
@@ -115,32 +112,25 @@ export function ProfileTab({
                   e.target.value = "";
                 }}
               />
-              <GButtonAsync
+              <GButton
                 type="button"
                 variant={ButtonVariantEnum.Secondary}
-                rounded={SizeEnum.sm}
-                busy={avatarUploading}
-                loadingText={t.settings.profile.avatarUploading}
-                startIcon={<GIcon icon={Camera} size={SizeEnum.sm} />}
+                loading={avatarUploading}
+                startIcon={<GIcon icon={Camera} size={SizeEnum.sm} className="rounded-md" />}
                 onClick={() => avatarInputRef.current?.click()}>
                 {t.settings.profile.avatarUpload}
-              </GButtonAsync>
+              </GButton>
               {user?.avatarUrl && (
-                <GButtonAsync
+                <GButton
                   type="button"
                   variant={ButtonVariantEnum.Secondary}
-                  rounded={SizeEnum.sm}
                   disabled={avatarUploading}
-                  startIcon={<GIcon icon={Trash2} size={SizeEnum.sm} />}
+                  startIcon={<GIcon icon={Trash2} size={SizeEnum.sm} className="rounded-md" />}
                   onClick={() => handleAvatarRemove()}>
                   {t.settings.profile.avatarRemove}
-                </GButtonAsync>
+                </GButton>
               )}
-              {avatarError && (
-                <p className="text-xs text-danger" role="alert">
-                  {avatarError}
-                </p>
-              )}
+              {avatarError && <GAlert severity={AccentColorEnum.Danger}>{avatarError}</GAlert>}
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -169,14 +159,13 @@ export function ProfileTab({
             </div>
           </div>
           <div className="flex justify-end">
-            <GButtonAsync
+            <GButton
               type="submit"
-              busy={saving}
+              loading={saving}
               disabled={!isDirty}
-              loadingText={t.settings.profile.save}
               startIcon={<GIcon icon={Save} size={SizeEnum.sm} />}>
               {t.settings.profile.save}
-            </GButtonAsync>
+            </GButton>
           </div>
         </>
       </GAsync>

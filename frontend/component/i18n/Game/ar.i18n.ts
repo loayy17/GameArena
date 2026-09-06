@@ -4,6 +4,7 @@ const ar = {
     description: "نشر علامات استراتيجية في مبارزة كلاسيكية 3×3",
     instruction: "تناوبا على وضع X أو O. احصل على ثلاثة في صف واحد للفوز.",
     guide: "اضغط على خلية فارغة لوضع علامتك",
+    cellLabel: (n: number) => `الخلية ${n}`,
   },
   snake: {
     name: "الأفعى",
@@ -35,6 +36,7 @@ const ar = {
     description: "أسقط الأقراص واربط أربعة في صف للفوز",
     instruction: "أسقط قرصًا في عمود عند دورك. اربط أربعة في صف واحد للفوز.",
     guide: "اختر عمودًا لإسقاط قرصك",
+    dropColumnLabel: (n: number) => `إسقاط في العمود ${n}`,
   },
   lobby: {
     searchingTitle: "البحث عن خصم...",
@@ -48,6 +50,10 @@ const ar = {
     startVsAI: "ابدأ اللعبة (ضد الذكاء الاصطناعي)",
     inviteFriend: "دعوة صديق",
     cancelMatch: "إلغاء المباراة",
+    cancelTitle: "إلغاء هذه المباراة؟",
+    cancelDescription: "سيتم إيقاف البحث عن خصم وإغلاق الغرفة.",
+    cancelConfirm: "نعم، إلغاء",
+    cancelStay: "متابعة اللعب",
   },
   ready: {
     title: "تم العثور على الخصم!",
@@ -71,12 +77,22 @@ const ar = {
     firstTo: "الأول إلى {score}",
     howToPlay: "طريقة اللعب",
     backToGames: "العودة إلى الألعاب",
+    disconnectedTitle: "انقطع الاتصال",
+    disconnectedDesc: "تم فقدان الاتصال. يرجى المحاولة مرة أخرى.",
+    opponentDisconnected: "انقطع اتصال الخصم.",
+    leaveTitle: "مغادرة هذه اللعبة؟",
+    leaveDescription: "المغادرة الآن تُحتسب انسحابًا وستنتهي اللعبة.",
+    leaveConfirm: "مغادرة اللعبة",
+    leaveStay: "متابعة اللعب",
   },
   invite: {
     title: "دعوة صديق",
     cancel: "إلغاء",
     searchFriends: "ابحث عن الأصدقاء...",
     noFriends: "لم يتم العثور على أصدقاء",
+    receivedTitle: "دعوة لعبة",
+    receivedDescription: "{name} دعاك للعب {game}",
+    fallbackName: "شخص ما",
   },
   result: {
     winShort: "فوز",
@@ -88,6 +104,7 @@ const ar = {
     accept: "قبول",
     reject: "رفض",
     playAgainRequest: "يريد اللعب مرة أخرى!",
+    playAgainTimeout: "لم يستجب الخصم في الوقت المحدد. يمكنك المحاولة مرة أخرى.",
   },
 };
 export { ar };

@@ -24,6 +24,7 @@ const ar = {
   },
   recentMatches: "أحدث المباريات",
   noMatches: "لم يلعب أي مباريات بعد",
+  noMatchesDescription: "ستظهر المباريات التي تلعبها هنا.",
   versus: "ضد",
   back: "رجوع",
   errorTitle: "تعذر تحميل الملف الشخصي",

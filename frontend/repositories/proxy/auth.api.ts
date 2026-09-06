@@ -29,8 +29,6 @@ const authProxy = clientFactory(
       template: "/reset-password",
     },
   },
-  undefined,
-  (data) => data,
 );
 
 export { authProxy };

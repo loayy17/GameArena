@@ -1,6 +1,8 @@
 import { userApi } from "@/repositories/proxy/user.api";
 import { api } from "@/app/network";
 import { withFullName } from "@/domain/lib/userUtils";
+
+import type { AxiosRequestConfig } from "axios";
 import type { IUser } from "@/domain/meta/IUser";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { IUserPublicProfile } from "@/domain/meta/IUserPublicProfile";
@@ -18,8 +20,8 @@ class UserService {
     return result;
   }
 
-  async list(data: IUserFilterRequest): TPromise<IUserSummary[]> {
-    const result = await this.api.search<IUserSummary[]>(data);
+  async list(data: IUserFilterRequest, config?: AxiosRequestConfig): TPromise<IUserSummary[]> {
+    const result = await this.api.search<IUserSummary[]>(data, config);
     if (result.data) result.data = result.data.map(withFullName);
     return result;
   }

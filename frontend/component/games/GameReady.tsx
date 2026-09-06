@@ -4,7 +4,7 @@ import { Play } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
+import { GButton } from "@/component/common/GButton";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
 import { getGameConfig } from "@/domain/constant/games";
@@ -24,8 +24,8 @@ function GameReady({ gameType }: IGameReadyProps) {
   const gameInfo = getGameConfig(gameType);
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <GCard padding={SizeEnum.lg} className="w-full max-w-lg text-center">
+    <div className="flex justify-center p-4">
+      <GCard className="w-full max-w-lg text-center p-6">
         <h2 className="text-2xl font-bold text-text mb-6">{t.ready.title}</h2>
 
         <div className="flex items-center justify-center gap-6 mb-10">
@@ -41,7 +41,7 @@ function GameReady({ gameType }: IGameReadyProps) {
           <div className="text-text-muted font-bold italic text-xl">{t.game.vs}</div>
 
           <div className="flex flex-col items-center">
-            <div className="size-20 rounded-2xl flex items-center justify-center border-2 border-warning bg-warning-bg">
+            <div className="size-20 rounded-2xl flex items-center justify-center border-2 border-warning bg-warning-muted">
               <span className="text-3xl font-bold text-warning">{gameInfo.symbol2}</span>
             </div>
             <span className="text-sm font-bold mt-3 text-text truncate max-w-28">
@@ -50,14 +50,14 @@ function GameReady({ gameType }: IGameReadyProps) {
           </div>
         </div>
 
-        <GButtonAsync
+        <GButton
+          className="w-full"
           disabled={!isHost}
           onClick={() => startGame(state.player2Id ?? null, gameType)}
-          fullWidth
           size={SizeEnum.lg}
           startIcon={<GIcon icon={Play} size={SizeEnum.lg} />}>
           {isHost ? t.ready.startGame : t.ready.waitingForStart}
-        </GButtonAsync>
+        </GButton>
       </GCard>
     </div>
   );

@@ -1,17 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { Users, Bell } from "lucide-react";
+import { Bell, Users } from "lucide-react";
+
 import { GTabs } from "@/component/common/GTabs";
 import { GIcon } from "@/component/common/GIcon";
-import type { IGTabItem } from "@/component/common/def/GTabs";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { SocialTabIdEnum as SocialTabId } from "@/domain/enum/SocialTabIdEnum";
 
-enum SocialTabId {
-  Friends = "friends",
-  Notifications = "notifications",
-}
-
+import type { IGTabItem } from "@/component/common/def/GTabs";
 import type { ISocialTabsProps } from "./def/SocialTabs";
 
 function SocialTabs({ value, onChange, labels, badges }: ISocialTabsProps) {
@@ -33,7 +30,7 @@ function SocialTabs({ value, onChange, labels, badges }: ISocialTabsProps) {
     [labels, badges],
   );
 
-  return <GTabs tabs={tabs} value={value} onChange={(id) => onChange(id as SocialTabId)} fullWidth />;
+  return <GTabs tabs={tabs} value={value} onChange={(id) => onChange(id as SocialTabId)} tabClassName="w-full md:flex-1 md:justify-center" />;
 }
 
 export { SocialTabs, SocialTabId };

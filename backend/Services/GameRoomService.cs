@@ -116,6 +116,8 @@ namespace backend.Services
             _playAgainRequests.TryRemove(roomId, out _);
             if (_rooms.TryRemove(roomId, out var room))
             {
+                PublishInviteCancelledIfPending(room, roomId);
+
                 if (room.Player1Id != null)
                 {
                     _playerToRoom.TryRemove(room.Player1Id, out _);
@@ -127,6 +129,12 @@ namespace backend.Services
                     CancelDisconnectGrace(room.Player2Id);
                 }
             }
+        }
+
+        private void PublishInviteCancelledIfPending(BaseGameRoom room, string roomId)
+        {
+            if (room.InvitedPlayerId is { } invitedId)
+                _ = _eventBus.PublishAsync(new GameInviteCancelledEvent(invitedId, roomId));
         }
 
         public void RegisterConnection(string playerId, string connectionId)
@@ -463,6 +471,7 @@ namespace backend.Services
             {
                 if (room.Player2Id is { } player2Id && player2Id != "__BOT__")
                 {
+                    PublishInviteCancelledIfPending(room, roomId);
                     room.Player1Id = player2Id;
                     room.Player1Username = room.Player2Username;
                     room.Player2Id = null;
@@ -480,6 +489,7 @@ namespace backend.Services
 
             if (room.Player2Id == playerId)
             {
+                PublishInviteCancelledIfPending(room, roomId);
                 room.Player2Id = null;
                 room.Player2Username = null;
                 room.IsFull = false;

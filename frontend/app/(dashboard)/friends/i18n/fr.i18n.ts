@@ -58,7 +58,11 @@ const fr = {
     confirm: "Confirmer",
     cancel: "Annuler"
   },
-  offlineWarning: "Vous êtes hors ligne — les données peuvent être obsolètes. Reconnexion..."
+  offlineWarning: "Vous êtes hors ligne — les données peuvent être obsolètes. Reconnexion...",
+  error: {
+    title: "Erreur",
+    retry: "Réessayer"
+  }
 }
 ;
 

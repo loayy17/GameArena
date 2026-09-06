@@ -1,21 +1,22 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useConnections } from "@/app/providers/ConnectionProvider";
 import { gameService } from "@/services/def/GameService";
-import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
-import { GAMES_BY_TYPE } from "@/domain/constant/games";
-import { PLAY_AGAIN_TIMEOUT_MS } from "@/domain/constant/game-constants";
-import type { TNullable } from "@/domain/type/TCommon";
+import { GAMES_BY_TYPE, PLAY_AGAIN_TIMEOUT_MS } from "@/domain/constant/games";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
+
+import type { IGameProviderProps } from "./def/IProviders";
+import type { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
+import type { TNullable } from "@/domain/type/TCommon";
 import type { IGameState } from "./def/IGameState";
 import type { IGameContext } from "./def/IGameContext";
 
 const GameContext = createContext<TNullable<IGameContext>>(null);
 
-export function GameProvider({ children }: { children: ReactNode }) {
+export function GameProvider({ children }: IGameProviderProps) {
   const { isGameConnected } = useConnections();
   const t = useGameTranslation();
   const [state, setState] = useState<TNullable<IGameState>>(null);
@@ -26,6 +27,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastGameType, setLastGameType] = useState<TNullable<GamesKindEnum>>(null);
   const [pendingPlayAgainRequest, setPendingPlayAgainRequest] = useState<TNullable<{ requesterId: string; requesterUsername: string }>>(null);
   const [requestedPlayAgain, setRequestedPlayAgain] = useState(false);
+  const [playAgainTimedOut, setPlayAgainTimedOut] = useState(false);
   const router = useRouter();
 
   const clearFlags = useCallback(() => {
@@ -35,6 +37,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setOpponentDisconnected(false);
     setPendingPlayAgainRequest(null);
     setRequestedPlayAgain(false);
+    setPlayAgainTimedOut(false);
   }, []);
 
   const goToLobby = useCallback(() => {
@@ -128,6 +131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const requestPlayAgain = useCallback(async () => {
     setRequestedPlayAgain(true);
+    setPlayAgainTimedOut(false);
     try {
       await gameService.requestPlayAgain();
     } catch {
@@ -139,6 +143,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (!requestedPlayAgain) return;
     const timer = setTimeout(() => {
       setRequestedPlayAgain(false);
+      setPlayAgainTimedOut(true);
     }, PLAY_AGAIN_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [requestedPlayAgain]);
@@ -190,6 +195,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastGameType,
       pendingPlayAgainRequest,
       requestedPlayAgain,
+      playAgainTimedOut,
       findMatch,
       startGame,
       inviteFriend,
@@ -209,6 +215,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       opponentDisconnected,
       pendingPlayAgainRequest,
       requestedPlayAgain,
+      playAgainTimedOut,
       lastGameType,
       findMatch,
       startGame,

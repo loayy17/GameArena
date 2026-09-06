@@ -1,21 +1,17 @@
-import { SignalRServiceBase } from "../lib/SignalRServiceBase";
 import { friendsApi } from "@/repositories/proxy/friends.api";
-import type { HubConnection } from "@microsoft/signalr";
+import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
+import { withFullName } from "@/domain/lib/userUtils";
+
+import { SignalRServiceBase } from "../lib/SignalR";
+
 import type { TPromise } from "@/domain/type/TCommon";
 import type { IFriendRequestReceived } from "@/domain/meta/IFriendRequestReceived";
 import type { IFriendRequestSent } from "@/domain/meta/IFriendRequestSent";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
-import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
-import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { withFullName } from "@/domain/lib/userUtils";
-import type { Handler } from "../lib/signalRUtils";
+import type { Handler } from "../lib/SignalR";
 
 class FriendService extends SignalRServiceBase {
   private api = friendsApi.api;
-
-  setConnection(connection: HubConnection): void {
-    super.setConnection(connection);
-  }
 
   protected registerHandlers(): void {
     this.addHandler("social:all", (data: unknown) => {
@@ -74,20 +70,6 @@ class FriendService extends SignalRServiceBase {
     return this.api.sendFriendRequest<void>({ receiverId });
   }
 
-  getReceivedFriendRequests(): TPromise<IFriendRequestReceived[]> {
-    return this.api.getReceivedFriendRequests<IFriendRequestReceived[]>();
-  }
-
-  getSentFriendRequests(): TPromise<IFriendRequestSent[]> {
-    return this.api.getSentFriendRequests<IFriendRequestSent[]>();
-  }
-
-  async getFriends(data: IUserFilterRequest): TPromise<IUserSummary[]> {
-    const result = await this.api.getFriends<IUserSummary[]>(data);
-    if (result.data) result.data = result.data.map(withFullName);
-    return result;
-  }
-
   acceptFriendRequest(senderId: string): TPromise<void> {
     return this.api.acceptFriendRequest<void>({ senderId });
   }
@@ -110,10 +92,6 @@ class FriendService extends SignalRServiceBase {
 
   unblockUser(blockedId: string): TPromise<void> {
     return this.api.unblockUser<void>({ blockedId });
-  }
-
-  getBlockedUsers(): TPromise<IUserSummary[]> {
-    return this.api.getBlockedUsers<IUserSummary[]>();
   }
 
   onFriendListUpdate(handler: (friends: IUserSummary[]) => void): () => void {

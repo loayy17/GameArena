@@ -1,90 +1,87 @@
 "use client";
 
+import { useId } from "react";
+
 import { cn } from "@/lib/cn";
-import { GBadge } from "./GBadge";
-import type { IGTabsProps } from "./def/GTabs";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
-import { GButton } from "./GButton";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
+import { SizeEnum } from "@/domain/enum/SizeEnum";
 
-function renderTabBadge<T extends string | number>(tab: { id: T; badge?: number }, renderBadge: IGTabsProps<T>["renderBadge"], active: boolean) {
-  if (renderBadge) {
-    return renderBadge(tab, active);
-  }
+import { GBadge } from "./GBadge";
+import { GButton } from "./GButton";
 
-  if (tab.badge == null || tab.badge <= 0) {
-    return null;
-  }
+import type { KeyboardEvent } from "react";
+import type { IGTabItem, IGTabsProps } from "./def/GTabs";
+
+function GTabs<T extends string | number>({ tabs, value, onChange, responsive = true, className, tabClassName, panelId, children }: IGTabsProps<T>) {
+  const baseId = useId();
+
+  const moveFocus = (event: KeyboardEvent<HTMLButtonElement>, tab: IGTabItem<T>) => {
+    const selectable = tabs.filter((t) => !t.disabled);
+    if (!selectable.length) return;
+    const currentIndex = selectable.findIndex((t) => t.id === tab.id);
+    let nextIndex = currentIndex;
+    switch (event.key) {
+      case "ArrowRight":
+        nextIndex = (currentIndex + 1) % selectable.length;
+        break;
+      case "ArrowLeft":
+        nextIndex = (currentIndex - 1 + selectable.length) % selectable.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = selectable.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    document.getElementById(`${baseId}-tab-${selectable[nextIndex].id}`)?.focus();
+  };
+
+  const activeTab = tabs.find((tab) => tab.id === value);
 
   return (
-    <GBadge
-      variant={AccentColorEnum.Danger}
-      size={SizeEnum.sm}
-      className={active ? "ms-auto min-w-5 justify-center bg-on-primary text-primary" : "ms-auto min-w-5 justify-center"}>
-      {tab.badge}
-    </GBadge>
-  );
-}
-
-function GTabs<T extends string | number>({
-  tabs,
-  value,
-  onChange,
-  renderLabel,
-  renderIcon,
-  renderBadge,
-  responsive = true,
-  className,
-  tabClassName,
-  fullWidth,
-  children,
-}: IGTabsProps<T>) {
-  return (
-    <div className={responsive ? "w-full mb-3" : undefined}>
-      <nav
+    <div className={cn(responsive && "w-full mb-3", className)}>
+      <div
         role="tablist"
-        aria-orientation={responsive ? undefined : "horizontal"}
-        className={cn(
-          "flex border border-border/60 shadow-md rounded-xl overflow-hidden bg-surface/50",
-          responsive ? "flex-col md:flex-row md:flex-wrap" : cn("flex-row", fullWidth ? "flex-nowrap" : "flex-wrap"),
-          fullWidth && !responsive && "w-full",
-          className,
-        )}>
+        aria-orientation="horizontal"
+        className={cn("flex overflow-hidden rounded-xl border border-border/60 bg-surface/50 shadow-md", responsive && "flex-col md:flex-row md:flex-wrap")}>
         {tabs.map((tab) => {
           const active = value === tab.id;
-
           return (
             <GButton
               key={tab.id}
               role="tab"
+              id={`${baseId}-tab-${tab.id}`}
               aria-selected={active}
-              id={`tab-${tab.id}`}
-              aria-controls={`tabpanel-${value}`}
+              aria-controls={children ? `${baseId}-panel-${tab.id}` : panelId}
+              tabIndex={active ? 0 : -1}
               variant={active ? ButtonVariantEnum.Primary : ButtonVariantEnum.Subtle}
-              rounded={SizeEnum.None}
+              disabled={tab.disabled}
+              onKeyDown={(event) => moveFocus(event, tab)}
               onClick={() => onChange(tab.id)}
-              className={cn(
-                fullWidth && !responsive && "flex-1 justify-center",
-                fullWidth && responsive && "w-full md:flex-1 md:justify-center",
-                tabClassName,
-              )}>
-              {renderIcon ? renderIcon(tab, active) : tab.icon}
+              className={cn("rounded-none", tabClassName)}>
+              {tab.icon}
               <span
                 className={cn(
                   "min-w-0 truncate leading-snug",
-                  responsive ? "flex-1 text-start whitespace-normal md:flex-none md:text-center" : "whitespace-nowrap",
+                  responsive ? "flex-1 whitespace-normal text-start md:flex-none md:text-center" : "whitespace-nowrap",
                 )}>
-                {renderLabel ? renderLabel(tab, active) : tab.label}
+                {tab.label}
               </span>
-              {renderTabBadge(tab, renderBadge, active)}
+              {tab.badge != null && (
+                <GBadge count={tab.badge} variant={tab.badgeTone ?? AccentColorEnum.Primary} size={SizeEnum.sm} className={cn("ms-auto", active && "bg-on-primary text-primary")} />
+              )}
             </GButton>
           );
         })}
-      </nav>
+      </div>
 
-      {children && (
-        <div role="tabpanel" id={`tabpanel-${String(value)}`} aria-labelledby={`tab-${String(value)}`} className="pt-4">
+      {children && activeTab && (
+        <div role="tabpanel" id={`${baseId}-panel-${value}`} aria-labelledby={`${baseId}-tab-${value}`} tabIndex={0} className="pt-4">
           {children}
         </div>
       )}

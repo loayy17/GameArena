@@ -1,5 +1,6 @@
 import { PasswordValidationEnum } from "@/domain/enum/PasswordValidationEnum";
-import type { TNullable, THashMap } from "@/domain/type/TCommon";
+
+import type { THashMap, TNullable } from "@/domain/type/TCommon";
 
 type TEmailValidationText = {
   email: string;

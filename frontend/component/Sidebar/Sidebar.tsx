@@ -1,123 +1,136 @@
 "use client";
 
 import { useMemo } from "react";
-import { PanelLeft } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { cn } from "@/lib/cn";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { useAside } from "@/hooks/useAside";
-import { useNavigation } from "@/hooks/useNavigation";
-import { useNavBadges } from "@/hooks/useNavBadges";
-import { GIcon } from "@/component/common/GIcon";
-import { GBadge } from "@/component/common/GBadge";
+import { useNavItems } from "@/hooks/useNavItems";
+import { GAside } from "@/component/common/GAside";
 import { GNav } from "@/component/common/GNav";
-import type { IGNavItem } from "@/component/common/def/GNav";
 import { GModal } from "@/component/common/GModal";
-import { BrandMark } from "@/component/common/BrandMark";
-import { AsideWrapper } from "@/component/aside/AsideWrapper";
-import { AsideHeader } from "@/component/aside/AsideHeader";
-import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
+import { GButton } from "@/component/common/GButton";
+import { GBrandMark } from "@/component/common/GBrandMark";
+import { GAvatar } from "@/component/common/GAvatar";
+import { GUserRow } from "@/component/user/GUserRow";
+import { LangTheme } from "@/component/LangTheme/LangTheme";
+import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { NavOrientationEnum } from "@/domain/enum/NavOrientationEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import { SidebarFooter } from "./SidebarFooter";
-import type { IAsideConfig } from "@/component/aside/AsideTypes";
-import type { ISidebarProps } from "./def/Sidebar";
 
-function SidebarNavSections({
-  primaryItems,
-  secondaryItems,
-  collapsed,
-}: {
-  primaryItems: IGNavItem[];
-  secondaryItems: IGNavItem[];
-  collapsed?: boolean;
-}) {
+import type { IGNavItem } from "@/component/common/def/GNav";
+import type { ISidebarFooterProps, ISidebarNavSectionsProps, ISidebarProps } from "./def/Sidebar";
+
+function SidebarFooter({ collapsed, closeMobile, t }: ISidebarFooterProps) {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const logout = () => {
+    router.push("/logout");
+    closeMobile();
+  };
+
+  return (
+    <div className={cn("flex flex-col gap-1.5 p-2 pb-safe", collapsed && "items-center")}>
+      <LangTheme collapsed={collapsed} variant={collapsed ? "compact" : "equal"} align="top" />
+
+      {collapsed ? (
+        <div className="flex flex-col items-center gap-2">
+          {user && (
+            <GButton
+              variant={ButtonVariantEnum.Subtle}
+              size={SizeEnum.icon}
+              aria-label={t.profile}
+              title={t.profile}
+              tooltipPosition="end"
+              onClick={() => {
+                router.push(`/profile/${user.id}`);
+                closeMobile();
+              }}>
+              <GAvatar user={user} size={SizeEnum.xs} />
+            </GButton>
+          )}
+          <GButton icon={LogOut} label={t.logout} variant={ButtonVariantEnum.Subtle} size={SizeEnum.icon} tooltipSide="end" onClick={logout} />
+        </div>
+      ) : (
+        user && (
+          <GUserRow
+            user={user}
+            size={SizeEnum.xs}
+            className="p-2"
+            trailing={
+              <GButton icon={LogOut} label={t.logout} variant={ButtonVariantEnum.Subtle} size={SizeEnum.icon} className="rounded-2xl" tooltipSide="top" onClick={logout} />
+            }
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+function SidebarNavSections({ items, collapsed }: ISidebarNavSectionsProps) {
+  const primary = items.filter((item) => item.mobile !== false);
+  const secondary = items.filter((item) => item.mobile === false);
+
   return (
     <div className="flex flex-col gap-5">
-      <GNav items={primaryItems} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} />
-      <GNav items={secondaryItems} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} className="border-t border-border/40 pt-4" />
+      <GNav items={primary} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} />
+      <GNav items={secondary} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} className="border-t border-border/40 pt-4" />
     </div>
   );
 }
 
 function Sidebar({ aside: asideProp }: ISidebarProps) {
-  const router = useRouter();
-  const { activeId, t, sidebarNav } = useNavigation();
+  const { t, navItems } = useNavItems();
   const asideDefault = useAside(true);
   const aside = asideProp ?? asideDefault;
-  const { collapsed, open, closeMobile, expand, collapse } = aside;
-  const navBadges = useNavBadges();
+  const { open, closeMobile, collapsed } = aside;
 
-  const navItems = useMemo<IGNavItem[]>(
+  const items = useMemo<IGNavItem[]>(
     () =>
-      sidebarNav.map(({ id, labelKey, icon: Icon, badge }) => {
-        const count = badge ? navBadges[badge as keyof typeof navBadges] : 0;
-        const active = activeId === id;
-        return {
-          id,
-          icon: <GIcon icon={Icon} size={SizeEnum.md} />,
-          label: t[labelKey as keyof typeof t],
-          active,
-          onClick: () => {
-            router.push(`/${id}`);
-            closeMobile();
-          },
-          badge:
-            count > 0 ? (
-              <GBadge
-                variant={AccentColorEnum.Danger}
-                size={SizeEnum.sm}
-                className={active ? "min-w-5 justify-center bg-primary text-primary-muted" : "min-w-5 justify-center"}>
-                {count}
-              </GBadge>
-            ) : undefined,
-        };
-      }),
-    [t, activeId, router, closeMobile, navBadges, sidebarNav],
+      navItems.map((item) => ({
+        ...item,
+        onClick: () => {
+          closeMobile();
+        },
+      })),
+    [navItems, closeMobile],
   );
 
-  const { primaryItems, secondaryItems } = useMemo(() => {
-    const primary: IGNavItem[] = [];
-    const secondary: IGNavItem[] = [];
-    navItems.forEach((item, index) => {
-      (sidebarNav[index]?.mobile === false ? secondary : primary).push(item);
-    });
-    return { primaryItems: primary, secondaryItems: secondary };
-  }, [navItems, sidebarNav]);
-
-  const asideConfig: IAsideConfig = {
-    expandedWidth: "w-64",
-    collapsedWidth: "w-16",
-    label: t.mainNavigation,
-  };
-
-  const brand = <BrandMark name={t.brand} />;
+  const label = t.mainNavigation;
+  const footer = <SidebarFooter collapsed={collapsed} closeMobile={closeMobile} t={t} />;
 
   return (
     <>
-      {/* Laptop (xl+): real layout column */}
       <div className="hidden xl:flex">
-        <AsideWrapper config={asideConfig} collapsed={collapsed} footer={<SidebarFooter collapsed={collapsed} closeMobile={closeMobile} />}>
-          <div className="px-3 py-4">
-            <SidebarNavSections primaryItems={primaryItems} secondaryItems={secondaryItems} collapsed={collapsed} />
+        <GAside label={label} className={cn("h-full border-border/50", collapsed ? "w-16" : "w-64")}>
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+            <SidebarNavSections items={items} collapsed={collapsed} />
           </div>
-        </AsideWrapper>
+          <footer className="shrink-0 border-t border-border/60">{footer}</footer>
+        </GAside>
       </div>
 
-      <GModal className="hidden md:block xl:hidden" open={open} onClose={closeMobile} side="start" ariaLabel={t.mainNavigation}>
-        <AsideHeader
-          overlay
-          collapsed={collapsed}
-          expand={expand}
-          collapse={collapse}
-          closeMobile={closeMobile}
-          label={t.mainNavigation}
-          collapsedIcon={<GIcon icon={PanelLeft} size={SizeEnum.md} />}
-          brand={brand}
-        />
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar px-3 py-4">
-          <SidebarNavSections primaryItems={primaryItems} secondaryItems={secondaryItems} />
+      <GModal className="hidden md:block xl:hidden" open={open} onClose={closeMobile} side="start" ariaLabel={label}>
+        <header className="flex min-h-16 w-full shrink-0 items-center gap-2 border-b border-border px-3">
+          <div className="min-w-0 flex-1">
+            <GBrandMark name={t.brand} />
+          </div>
+          <GButton
+            icon={X}
+            label={`${t.close} ${label}`}
+            variant={ButtonVariantEnum.Subtle}
+            size={SizeEnum.icon}
+            onClick={closeMobile}
+            className="overflow-visible rounded-full"
+          />
+        </header>
+        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+          <SidebarNavSections items={items} />
         </div>
-        <SidebarFooter collapsed={false} closeMobile={closeMobile} />
+        <SidebarFooter collapsed={false} closeMobile={closeMobile} t={t} />
       </GModal>
     </>
   );

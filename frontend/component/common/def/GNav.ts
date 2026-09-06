@@ -8,10 +8,12 @@ interface IGNavItem {
   badge?: ReactNode;
   active?: boolean;
   disabled?: boolean;
+  mobile?: boolean;
+  href?: string;
   onClick?: () => void;
 }
 
-interface IGNavProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> {
+interface IGNavProps extends Omit<ButtonHTMLAttributes<HTMLElement>, "onClick" | "type"> {
   items: IGNavItem[];
   orientation?: NavOrientationEnum;
   collapsed?: boolean;

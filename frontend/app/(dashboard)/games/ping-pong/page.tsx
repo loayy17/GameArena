@@ -2,21 +2,37 @@
 
 import { useState } from "react";
 
-import type { IPingPongGameState } from "@/app/providers/def/IGameState";
+import { cn } from "@/lib/cn";
+import { isPingPongState } from "@/app/providers/def/IGameState";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
 import { GCard } from "@/component/common/GCard";
 import { GameLayoutWrapper } from "@/component/games/GameLayoutWrapper";
 import { ScoreBoard } from "@/component/games/common/ScoreBoard";
-import { DirectionValues, GameActionTypes, PADDLE_KEYS } from "@/domain/constant/game-actions";
-import { INPUT_THROTTLE_MS } from "@/domain/constant/game-constants";
+import { DirectionValues, GameActionTypes, PADDLE_KEYS, INPUT_THROTTLE_MS } from "@/domain/constant/games";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
-import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useGameInput } from "@/hooks/useGameInput";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
-import { TNullable } from "@/domain/type/TCommon";
+
+import type { TNullable } from "@/domain/type/TCommon";
+import type { IPaddleProps } from "./def/PingPongBoard";
 
 const calculatePercentage = (value: number, total: number) => `${(value / total) * 100}%`;
+
+function Paddle({ paddle, paddleWidth, boardWidth, boardHeight, tickMs, colorClass }: IPaddleProps) {
+  return (
+    <div
+      className={cn("absolute rounded-md shadow-md transition-[top,left] ease-linear will-change-[top,left]", colorClass)}
+      style={{
+        transitionDuration: `${tickMs}ms`,
+        width: calculatePercentage(paddleWidth, boardWidth),
+        height: calculatePercentage(paddle.height, boardHeight),
+        left: calculatePercentage(paddle.x, boardWidth),
+        top: calculatePercentage(paddle.y, boardHeight),
+      }}
+    />
+  );
+}
 
 function PingPongPage() {
   const { state } = useGame();
@@ -24,7 +40,7 @@ function PingPongPage() {
   const t = useGameTranslation();
   const [board, setBoard] = useState<TNullable<HTMLDivElement>>(null);
 
-  const isActive = !!state && "ball" in state && !state.isFinished;
+  const isActive = isPingPongState(state) && !state.isFinished;
 
   const resolveDirection = (keys: Set<string>): "UP" | "DOWN" | "LEFT" | "RIGHT" | null => {
     const up = PADDLE_KEYS.UP.intersection(keys).size > 0;
@@ -45,56 +61,36 @@ function PingPongPage() {
     boardElement: board,
     pointerMode: "drag",
     getCurrentPosition: () => {
-      if (!state || !("ball" in state)) return null;
-      const pongState = state as IPingPongGameState;
-      const isPlayer1 = pongState.player1Id === user?.id;
-      const paddle = isPlayer1 ? pongState.player1Paddle : pongState.player2Paddle;
-      return { y: paddle.y / pongState.boardHeight, height: paddle.height / pongState.boardHeight };
+      if (!isPingPongState(state)) return null;
+      const isPlayer1 = state.player1Id === user?.id;
+      const paddle = isPlayer1 ? state.player1Paddle : state.player2Paddle;
+      return { y: paddle.y / state.boardHeight, height: paddle.height / state.boardHeight };
     },
   });
 
-  if (!state || !("ball" in state)) {
+  if (!isPingPongState(state)) {
     return <GameLayoutWrapper gameType={GamesKindEnum.PingPong}>{null}</GameLayoutWrapper>;
   }
 
-  const pongState = state as IPingPongGameState;
-  const { boardWidth, boardHeight, ball, ballSize, player1Paddle, player2Paddle, paddleWidth, score, winScore, isFinished, tickRateHz } = pongState;
+  const { boardWidth, boardHeight, ball, ballSize, player1Paddle, player2Paddle, paddleWidth, score, winScore, isFinished, tickRateHz } = state;
   const tickMs = Math.round(1000 / (tickRateHz || 20));
 
   return (
     <GameLayoutWrapper gameType={GamesKindEnum.PingPong}>
-      <GCard padding={SizeEnum.md}>
+      <GCard className="p-4">
         <ScoreBoard
           className="mb-4"
           winScore={winScore}
-          left={{ score: score[0], label: pongState.player1Username || t.game.player1, colorClass: "text-accent" }}
-          right={{ score: score[1], label: pongState.player2Username || t.game.player2, colorClass: "text-warning" }}
+          left={{ score: score[0], label: state.player1Username || t.game.player1, colorClass: "text-accent" }}
+          right={{ score: score[1], label: state.player2Username || t.game.player2, colorClass: "text-warning" }}
         />
         <div
           ref={setBoard}
           className="relative mx-auto w-full overflow-hidden rounded-2xl border border-game-board-border bg-game-board shadow-inner touch-none select-none"
           style={{ aspectRatio: boardWidth / boardHeight }}>
           <div className="absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-game-board-border/60" />
-          <div
-            className="absolute rounded-md bg-accent shadow-md transition-[top,left] ease-linear will-change-[top,left]"
-            style={{
-              transitionDuration: `${tickMs}ms`,
-              width: calculatePercentage(paddleWidth, boardWidth),
-              height: calculatePercentage(player1Paddle.height, boardHeight),
-              left: calculatePercentage(player1Paddle.x, boardWidth),
-              top: calculatePercentage(player1Paddle.y, boardHeight),
-            }}
-          />
-          <div
-            className="absolute rounded-md bg-warning shadow-md transition-[top,left] ease-linear will-change-[top,left]"
-            style={{
-              transitionDuration: `${tickMs}ms`,
-              width: calculatePercentage(paddleWidth, boardWidth),
-              height: calculatePercentage(player2Paddle.height, boardHeight),
-              left: calculatePercentage(player2Paddle.x, boardWidth),
-              top: calculatePercentage(player2Paddle.y, boardHeight),
-            }}
-          />
+          <Paddle paddle={player1Paddle} paddleWidth={paddleWidth} boardWidth={boardWidth} boardHeight={boardHeight} tickMs={tickMs} colorClass="bg-accent" />
+          <Paddle paddle={player2Paddle} paddleWidth={paddleWidth} boardWidth={boardWidth} boardHeight={boardHeight} tickMs={tickMs} colorClass="bg-warning" />
           <div
             className="absolute rounded-full bg-primary shadow-lg shadow-primary/20 transition-[top,left] ease-linear will-change-[top,left]"
             style={{

@@ -1,4 +1,4 @@
-import { NotificationTypeEnum } from "@/domain/enum/NotificationTypeEnum";
+import type { NotificationTypeEnum } from "@/domain/enum/NotificationTypeEnum";
 import type { TNullable } from "@/domain/type/TCommon";
 
 interface INotificationItem {

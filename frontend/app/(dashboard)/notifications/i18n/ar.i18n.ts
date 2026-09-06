@@ -16,11 +16,6 @@ export const ar = {
   error: {
     title: "تعذر تحميل الطلبات",
   },
-  gameInvite: {
-    title: "دعوة لعبة",
-    description: "{name} دعاك للعب {game}",
-    fallbackName: "شخص ما",
-  },
   friendRequest: {
     title: "طلب صداقة",
     description: "{name} يريد أن يكون صديقك",
@@ -31,6 +26,7 @@ export const ar = {
     decline: "رفض",
     reply: "رد",
     markRead: "تحديد كمقروء",
+    error: "فشل الإجراء. يرجى المحاولة مرة أخرى.",
   },
   time: {
     justNow: "الآن",

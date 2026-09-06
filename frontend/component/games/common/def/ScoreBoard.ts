@@ -4,6 +4,11 @@ interface IScoreSide {
   colorClass?: string;
 }
 
+interface IScoreColumnProps {
+  side: IScoreSide;
+  compact: boolean;
+}
+
 interface IScoreBoardProps {
   left: IScoreSide;
   right: IScoreSide;
@@ -12,4 +17,4 @@ interface IScoreBoardProps {
   className?: string;
 }
 
-export type { IScoreBoardProps, IScoreSide };
+export type { IScoreBoardProps, IScoreSide, IScoreColumnProps };

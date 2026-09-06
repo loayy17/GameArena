@@ -24,16 +24,32 @@ namespace backend.Services
                 throw new AppException(ErrorCode.AlreadyFriends);
 
             var existingRequest = await _context.FriendRequests
-                .Where(fr => fr.Status == FriendRequestStatus.Pending &&
-                             ((fr.SenderId == senderId && fr.ReceiverId == receiverId) ||
-                              (fr.SenderId == receiverId && fr.ReceiverId == senderId)))
-                .Select(fr => fr.SenderId == senderId ? 1 : 2)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(fr => (fr.SenderId == senderId && fr.ReceiverId == receiverId) ||
+                                           (fr.SenderId == receiverId && fr.ReceiverId == senderId));
 
-            if (existingRequest == 1)
-                throw new AppException(ErrorCode.RequestAlreadyExists);
-            if (existingRequest == 2)
+            if (existingRequest != null && existingRequest.Status == FriendRequestStatus.Pending)
+            {
+                if (existingRequest.SenderId == senderId)
+                    throw new AppException(ErrorCode.RequestAlreadyExists);
                 throw new AppException(ErrorCode.ReceiverHasAlreadySentRequest);
+            }
+
+            if (existingRequest != null)
+            {
+                existingRequest.SenderId = senderId;
+                existingRequest.ReceiverId = receiverId;
+                existingRequest.Status = FriendRequestStatus.Pending;
+                existingRequest.CreatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                var reactivatedSender = await _context.Users
+                    .Where(u => u.Id == senderId)
+                    .Select(u => new { u.UserName })
+                    .FirstAsync();
+
+                await _eventBus.PublishAsync(new FriendRequestSentEvent(senderId, receiverId, reactivatedSender.UserName!));
+                return;
+            }
 
             _context.FriendRequests.Add(new FriendRequest
             {

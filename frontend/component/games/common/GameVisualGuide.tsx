@@ -1,12 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronsUpDown } from "lucide-react";
 
 import { GIcon } from "@/component/common/GIcon";
-import { RPS_CHOICES, RPS_CHOICE_EMOJI } from "@/domain/constant/game-constants";
+import { cn } from "@/lib/cn";
+import { RPS_CHOICE_EMOJI, RPS_CHOICES } from "@/domain/constant/games";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+
+import type { ReactNode } from "react";
+import type { IGameVisualGuideProps } from "./def/GameVisualGuide";
 
 const keyChip = "flex items-center justify-center size-7 rounded-md bg-surface border border-border-light text-text-secondary";
 
@@ -84,7 +87,7 @@ function ConnectFourVisual() {
         <span />
         <span />
         {["bg-accent", "bg-surface", "bg-surface", "bg-surface", "bg-warning", "bg-accent", "bg-surface", "bg-surface"].map((fill, i) => (
-          <span key={i} className={`size-5 rounded-full border border-border-light ${fill}`} />
+          <span key={i} className={cn("size-5 rounded-full border border-border-light", fill)} />
         ))}
       </div>
     </div>
@@ -99,7 +102,7 @@ const visuals: Record<GamesKindEnum, () => ReactNode> = {
   [GamesKindEnum.ConnectFour]: ConnectFourVisual,
 };
 
-function GameVisualGuide({ gameType, guide }: { gameType: GamesKindEnum; guide: string }) {
+function GameVisualGuide({ gameType, guide }: IGameVisualGuideProps) {
   const Visual = visuals[gameType];
   if (!Visual || !guide) return null;
 

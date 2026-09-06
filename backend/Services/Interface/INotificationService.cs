@@ -1,4 +1,5 @@
 ﻿using backend.DTOs.Responses;
+using backend.Enums;
 
 namespace backend.Services.Interface
 {
@@ -16,5 +17,7 @@ namespace backend.Services.Interface
         Task MarkNotificationAsReadAsync(Guid userId, Guid notificationId);
         Task MarkAllNotificationsAsReadAsync(Guid userId);
         Task DeleteNotificationAsync(Guid userId, Guid notificationId);
+        Task DeleteNotificationsByReferenceAsync(Guid userId, NotificationType type, string referenceId);
+        Task ReplaceUnreadNewMessageAsync(Guid userId, string title, string body, string referenceId);
     }
 }

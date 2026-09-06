@@ -1,10 +1,10 @@
 import axios, { type AxiosRequestConfig } from "axios";
+
 import type { TEndpoint, TEndpointsMap, THashMap, TPromise, TProxy } from "@/domain/type/TCommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
-// Todo remove the https://gamearena-ppnc.onrender.com it is for the cloudflare issue
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://gamearena-ppnc.onrender.com";
-const apiBase = API_BASE;
-const baseURL = `${API_BASE}/api`;
+
+const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const baseURL = `${apiBase}/api`;
 let isRefreshing = false;
 let queue: Array<{
   resolve: () => void;
@@ -29,12 +29,6 @@ const isAuthEndpoint = (url?: string) => {
   return ["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout", "/auth/forgot-password", "/auth/reset-password"].some((endpoint) =>
     url.includes(endpoint),
   );
-};
-
-const redirectToLogin = () => {
-  if (typeof window === "undefined") return;
-  const authPages = ["/login", "/register", "/forgot-password", "/reset-password", "/email-verify"];
-  if (!authPages.includes(window.location.pathname)) window.location.replace("/login");
 };
 
 api.interceptors.response.use(
@@ -65,7 +59,6 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (err) {
       flushQueue(err);
-      redirectToLogin();
       return Promise.reject(err);
     } finally {
       isRefreshing = false;

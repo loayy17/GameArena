@@ -1,10 +1,12 @@
-import { SignalRServiceBase } from "../lib/SignalRServiceBase";
 import { chatApi } from "@/repositories/proxy/chat.api";
+
+import { SignalRServiceBase } from "../lib/SignalR";
+
 import type { IMessage } from "@/domain/meta/IMessage";
 import type { IPrivateMessagePayload } from "@/domain/meta/IPrivateMessagePayload";
 import type { TPromise } from "@/domain/type/TCommon";
 import type { IPerFriendUnreadCount } from "@/domain/meta/IPerFriendUnreadCount";
-import type { Handler } from "../lib/signalRUtils";
+import type { Handler } from "../lib/SignalR";
 
 const normalizeMessage = (payload: IPrivateMessagePayload): IMessage => ({
   senderId: payload.senderId,

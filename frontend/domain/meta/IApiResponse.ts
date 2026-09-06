@@ -1,4 +1,4 @@
-import { ErrorCodeEnum } from "../enum/ErrorCodeEnum";
+import type { ErrorCodeEnum } from "../enum/ErrorCodeEnum";
 import type { TNullable } from "../type/TCommon";
 
 interface IApiResponse<T> {

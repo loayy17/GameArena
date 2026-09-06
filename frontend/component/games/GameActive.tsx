@@ -1,17 +1,22 @@
 "use client";
 
-import { Home } from "lucide-react";
+import { useState } from "react";
+import { Home, X } from "lucide-react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useGame } from "@/app/providers/GameProvider";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
+import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
+import { GAlert } from "@/component/common/GAlert";
+import { GConfirmDialog } from "@/component/common/GConfirmDialog";
+import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
-import type { TNullable, TOptional } from "@/domain/type/TCommon";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 
 import { GamePlayersHeader, GameTurnIndicator } from "./GameUI";
+
+import type { TNullable, TOptional } from "@/domain/type/TCommon";
 import type { IGameActiveProps } from "./def/GameActive";
 
 function getResultKind(winnerPlayerId: TOptional<string>, userId: TOptional<string>, opponentDisconnected: boolean): TNullable<string> {
@@ -24,8 +29,18 @@ function getResultKind(winnerPlayerId: TOptional<string>, userId: TOptional<stri
 
 function GameActive({ children, gameType }: IGameActiveProps) {
   const { user } = useAuth();
-  const { state, leaveGame, requestedPlayAgain, requestPlayAgain, respondPlayAgain, pendingPlayAgainRequest, opponentDisconnected } = useGame();
+  const {
+    state,
+    leaveGame,
+    requestedPlayAgain,
+    playAgainTimedOut,
+    requestPlayAgain,
+    respondPlayAgain,
+    pendingPlayAgainRequest,
+    opponentDisconnected,
+  } = useGame();
   const t = useGameTranslation();
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   if (!state) return null;
 
@@ -40,19 +55,21 @@ function GameActive({ children, gameType }: IGameActiveProps) {
       : state.player1Username || t.game.opponent;
 
   const backToLobbyButton = (
-    <GButtonAsync
+    <GButton
       onClick={() => leaveGame()}
       variant={ButtonVariantEnum.Secondary}
       className="flex-1"
       startIcon={<GIcon icon={Home} size={SizeEnum.sm} />}>
       {t.result.backToLobby}
-    </GButtonAsync>
+    </GButton>
   );
 
   return (
     <div className="flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-xl space-y-4 sm:space-y-6">
         <GamePlayersHeader gameType={gameType} />
+
+        {opponentDisconnected && <GAlert severity={AccentColorEnum.Warning}>{t.game.opponentDisconnected}</GAlert>}
 
         {!isOver && (
           <GameTurnIndicator
@@ -65,9 +82,9 @@ function GameActive({ children, gameType }: IGameActiveProps) {
         <div>{children}</div>
         {!isOver ? (
           <div className="flex justify-center">
-            <GButtonAsync onClick={() => leaveGame()} variant={ButtonVariantEnum.Danger} size={SizeEnum.sm}>
+            <GButton onClick={() => setConfirmLeave(true)} variant={ButtonVariantEnum.Danger} size={SizeEnum.sm}>
               {t.game.leaveGame}
-            </GButtonAsync>
+            </GButton>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 mt-8">
@@ -76,31 +93,44 @@ function GameActive({ children, gameType }: IGameActiveProps) {
                 {pendingPlayAgainRequest.requesterUsername} {t.result.playAgainRequest}
               </p>
             )}
+            {playAgainTimedOut && !pendingPlayAgainRequest && <p className="text-sm text-text-muted">{t.result.playAgainTimeout}</p>}
             <div className="flex gap-4 w-full max-w-xs">
               {pendingPlayAgainRequest ? (
                 <>
-                  <GButtonAsync onClick={() => respondPlayAgain(true)} className="flex-1">
+                  <GButton onClick={() => respondPlayAgain(true)} className="flex-1">
                     {t.result.accept}
-                  </GButtonAsync>
-                  <GButtonAsync onClick={() => respondPlayAgain(false)} variant={ButtonVariantEnum.Danger} className="flex-1">
+                  </GButton>
+                  <GButton onClick={() => respondPlayAgain(false)} variant={ButtonVariantEnum.Danger} className="flex-1">
                     {t.result.reject}
-                  </GButtonAsync>
+                  </GButton>
                 </>
               ) : sessionEnded ? (
                 backToLobbyButton
               ) : requestedPlayAgain ? (
-                <GButtonAsync busy loadingText={t.result.waiting} className="flex-1">
-                  {t.result.waiting}
-                </GButtonAsync>
+                <GButton loading aria-label={t.result.waiting} className="flex-1" />
               ) : (
-                <GButtonAsync onClick={() => requestPlayAgain()} className="flex-1">
+                <GButton onClick={() => requestPlayAgain()} className="flex-1">
                   {t.result.playAgain}
-                </GButtonAsync>
+                </GButton>
               )}
               {!sessionEnded && !pendingPlayAgainRequest && backToLobbyButton}
             </div>
           </div>
         )}
+
+        <GConfirmDialog
+          open={confirmLeave}
+          icon={X}
+          title={t.game.leaveTitle}
+          description={t.game.leaveDescription}
+          confirmLabel={t.game.leaveConfirm}
+          cancelLabel={t.game.leaveStay}
+          onConfirm={() => {
+            setConfirmLeave(false);
+            leaveGame();
+          }}
+          onClose={() => setConfirmLeave(false)}
+        />
       </div>
     </div>
   );

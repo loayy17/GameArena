@@ -1,4 +1,4 @@
-import { UserStatusEnum } from "../enum/UserStatusEnum";
+import type { UserStatusEnum } from "../enum/UserStatusEnum";
 import type { TNullable } from "@/domain/type/TCommon";
 
 interface IUserSummary {
@@ -7,7 +7,7 @@ interface IUserSummary {
   firstName: TNullable<string>;
   lastName: TNullable<string>;
   status?: UserStatusEnum;
-  fullName?: TNullable<string>;
+  fullName: TNullable<string>;
   avatarUrl?: TNullable<string>;
 }
 export type { IUserSummary };

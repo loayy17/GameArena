@@ -33,7 +33,8 @@ const en = {
     filtered: "No matches found for this filter."
   },
   error: {
-    title: "Unable to load history"
+    title: "Unable to load history",
+    retry: "Retry"
   }
 }
 ;

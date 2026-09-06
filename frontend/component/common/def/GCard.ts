@@ -1,12 +1,10 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, ReactNode, Ref } from "react";
 import type { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
-import type { SizeEnum } from "@/domain/enum/SizeEnum";
 
 interface IGCardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariantEnum;
-  padding?: SizeEnum;
-  rounded?: SizeEnum;
-  children: ReactNode;
+  children?: ReactNode;
+  ref?: Ref<HTMLDivElement>;
 }
 
 export type { IGCardProps };

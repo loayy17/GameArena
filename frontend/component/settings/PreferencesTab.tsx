@@ -1,54 +1,59 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Activity, Bell, Gamepad2, List, Languages, Moon, Save, Volume2 } from "lucide-react";
-import { GButtonAsync } from "@/component/common/GButtonAsync";
+import { Activity, Bell, Gamepad2, Languages, List, Moon, Save, Volume2 } from "lucide-react";
+
+import { GButton } from "@/component/common/GButton";
 import { GSwitch } from "@/component/common/GSwitch";
 import { GSelect } from "@/component/common/GSelect";
 import { GIcon } from "@/component/common/GIcon";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useErrorMessage, toErrorCode } from "@/hooks/useErrorMessage";
-import { useTheme, useLocale } from "@/hooks/useSetting";
+import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
+import { useLocale, useTheme } from "@/hooks/useSetting";
 import { userService } from "@/services/def/UserService";
-import { DEFAULT_USER_PREFERENCES, type IUserPreferences } from "@/domain/meta/IUserPreferences";
+import { DEFAULT_USER_PREFERENCES } from "@/domain/meta/IUserPreferences";
 import { ThemeEnum } from "@/domain/enum/ThemeEnum";
 import { LocaleEnum } from "@/domain/enum/LocaleEnum";
 
-export function PreferencesTab({
-  user,
-  showMessage,
-  t,
-}: {
-  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
-  showMessage: (msg: string) => void;
-  t: any;
-}) {
+import type { IUserPreferences } from "@/domain/meta/IUserPreferences";
+import type { IPrefRowProps, IPreferencesTabProps } from "./def/SettingsTabs";
+
+const parsePreferences = (raw?: string): IUserPreferences => {
+  try {
+    const parsed = JSON.parse(raw ?? "{}") as IUserPreferences;
+    return { ...DEFAULT_USER_PREFERENCES, ...parsed };
+  } catch {
+    return DEFAULT_USER_PREFERENCES;
+  }
+};
+
+function PrefRow({ icon, label, control }: IPrefRowProps) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-border">
+      <div className="flex items-center gap-3">
+        {icon}
+        <span className="text-sm text-text">{label}</span>
+      </div>
+      {control}
+    </div>
+  );
+}
+
+export function PreferencesTab({ user, showMessage, t }: IPreferencesTabProps) {
   const resolveError = useErrorMessage();
   const { updatePreferences } = useAuth();
   const [theme, setTheme] = useTheme();
   const [locale, setLocale] = useLocale();
   const [prefSaving, setPrefSaving] = useState(false);
-  const [preferences, setPreferences] = useState<IUserPreferences>(() => {
-    try {
-      const parsed = JSON.parse(user.preferences ?? "{}") as IUserPreferences;
-      return { ...DEFAULT_USER_PREFERENCES, ...parsed } as IUserPreferences;
-    } catch {
-      return DEFAULT_USER_PREFERENCES;
-    }
-  });
+  const [preferences, setPreferences] = useState<IUserPreferences>(() => parsePreferences(user.preferences));
 
   const isDirty = useMemo(() => {
-    try {
-      const parsed = JSON.parse(user.preferences ?? "{}") as IUserPreferences;
-      const merged = { ...DEFAULT_USER_PREFERENCES, ...parsed } as IUserPreferences;
-      if (theme !== String(merged.theme)) return true;
-      if (locale !== String(merged.locale)) return true;
-      for (const k of Object.keys(preferences) as Array<keyof IUserPreferences>) if (preferences[k] !== merged[k]) return true;
-      return false;
-    } catch {
-      return true;
-    }
+    const merged = parsePreferences(user.preferences);
+    if (theme !== String(merged.theme)) return true;
+    if (locale !== String(merged.locale)) return true;
+    for (const k of Object.keys(preferences) as Array<keyof IUserPreferences>) if (preferences[k] !== merged[k]) return true;
+    return false;
   }, [preferences, theme, locale, user]);
 
   const handleSave = async () => {
@@ -57,9 +62,9 @@ export function PreferencesTab({
       const toPersist: IUserPreferences = { ...preferences, theme: theme as IUserPreferences["theme"], locale: locale as IUserPreferences["locale"] };
       await userService.updatePreferences({ preferences: JSON.stringify(toPersist) });
       updatePreferences(toPersist);
-      showMessage(t.settings.preferences.saved);
+      showMessage(t.settings.preferences.saved, "success");
     } catch (e: unknown) {
-      showMessage(resolveError(toErrorCode(e), t.settings.preferences.saveFailed));
+      showMessage(resolveError(toErrorCode(e), t.settings.preferences.saveFailed), "danger");
     }
     setPrefSaving(false);
   };
@@ -80,65 +85,63 @@ export function PreferencesTab({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between py-3 border-b border-border">
-        <div className="flex items-center gap-3">
-          <GIcon icon={Moon} size={SizeEnum.sm} />
-          <span className="text-sm text-text">{t.settings.preferences.darkMode}</span>
-        </div>
-        <GSwitch
-          aria-label={t.settings.preferences.darkMode}
-          checked={theme === ThemeEnum.Dark}
-          onChange={(e) => setTheme(e.target.checked ? ThemeEnum.Dark : ThemeEnum.Light)}
-        />
-      </div>
-      <div className="flex items-center justify-between py-3 border-b border-border">
-        <div className="flex items-center gap-3">
-          <GIcon icon={Languages} size={SizeEnum.sm} />
-          <span className="text-sm text-text">{t.settings.preferences.language}</span>
-        </div>
-        <GSelect
-          className="w-36"
-          aria-label={t.settings.preferences.language}
-          value={locale}
-          options={[
-            { value: LocaleEnum.En, label: "English" },
-            { value: LocaleEnum.Ar, label: "العربية" },
-            { value: LocaleEnum.Fr, label: "Français" },
-          ]}
-          onChange={(e) => setLocale(e.target.value as LocaleEnum)}
-        />
-      </div>
+      <PrefRow
+        icon={<GIcon icon={Moon} size={SizeEnum.sm} />}
+        label={t.settings.preferences.darkMode}
+        control={
+          <GSwitch
+            aria-label={t.settings.preferences.darkMode}
+            checked={theme === ThemeEnum.Dark}
+            onChange={(e) => setTheme(e.target.checked ? ThemeEnum.Dark : ThemeEnum.Light)}
+          />
+        }
+      />
+      <PrefRow
+        icon={<GIcon icon={Languages} size={SizeEnum.sm} />}
+        label={t.settings.preferences.language}
+        control={
+          <GSelect
+            className="w-36"
+            aria-label={t.settings.preferences.language}
+            value={locale}
+            options={[
+              { value: LocaleEnum.En, label: "English" },
+              { value: LocaleEnum.Ar, label: "العربية" },
+              { value: LocaleEnum.Fr, label: "Français" },
+            ]}
+            onChange={(e) => setLocale(e.target.value as LocaleEnum)}
+          />
+        }
+      />
       {prefItems.map((item) => (
-        <div key={item.key} className="flex items-center justify-between py-3 border-b border-border">
-          <div className="flex items-center gap-3">
-            {item.icon}
-            <span className="text-sm text-text">{item.label}</span>
-          </div>
-          <GSwitch aria-label={item.label} checked={preferences[item.key] as boolean} onChange={() => togglePref(item.key)} />
-        </div>
-      ))}
-      <div className="flex items-center justify-between py-3 border-b border-border">
-        <div className="flex items-center gap-3">
-          <GIcon icon={List} size={SizeEnum.sm} />
-          <span className="text-sm text-text">{t.settings.preferences.recordsPerPage}</span>
-        </div>
-        <GSelect
-          className="w-20"
-          aria-label={t.settings.preferences.recordsPerPage}
-          value={preferences.pageSize}
-          options={pageSizeOptions.map((n) => ({ value: n, label: `${n}` }))}
-          onChange={(e) => setPreferences((prev) => ({ ...prev, pageSize: +e.target.value }))}
+        <PrefRow
+          key={item.key}
+          icon={item.icon}
+          label={item.label}
+          control={<GSwitch aria-label={item.label} checked={preferences[item.key] as boolean} onChange={() => togglePref(item.key)} />}
         />
-      </div>
+      ))}
+      <PrefRow
+        icon={<GIcon icon={List} size={SizeEnum.sm} />}
+        label={t.settings.preferences.recordsPerPage}
+        control={
+          <GSelect
+            className="w-20"
+            aria-label={t.settings.preferences.recordsPerPage}
+            value={preferences.pageSize}
+            options={pageSizeOptions.map((n) => ({ value: n, label: `${n}` }))}
+            onChange={(e) => setPreferences((prev) => ({ ...prev, pageSize: +e.target.value }))}
+          />
+        }
+      />
       <div className="flex justify-end pt-4">
-        <GButtonAsync
-          busy={prefSaving}
+        <GButton
+          loading={prefSaving}
           disabled={!isDirty}
-          loadingText={t.settings.preferences.save}
           startIcon={<GIcon icon={Save} size={SizeEnum.sm} />}
           onClick={() => void handleSave()}>
           {t.settings.preferences.save}
-        </GButtonAsync>
+        </GButton>
       </div>
     </div>
   );

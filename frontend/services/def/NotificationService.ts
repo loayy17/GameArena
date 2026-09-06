@@ -1,14 +1,9 @@
-import { SignalRServiceBase } from "../lib/SignalRServiceBase";
-import type { HubConnection } from "@microsoft/signalr";
-import type { INotificationCounters } from "@/domain/meta/INotification";
-import type { INotificationItem } from "@/domain/meta/INotification";
-import type { Handler } from "../lib/signalRUtils";
+import { SignalRServiceBase } from "../lib/SignalR";
+
+import type { INotificationCounters, INotificationItem } from "@/domain/meta/INotification";
+import type { Handler } from "../lib/SignalR";
 
 class NotificationService extends SignalRServiceBase {
-  setConnection(connection: HubConnection): void {
-    super.setConnection(connection);
-  }
-
   protected registerHandlers(): void {
     this.addHandler("notification:update", (data: unknown) => this.subs.dispatch("notification:update", data));
     this.addHandler("chat:notification", (data: unknown) => this.subs.dispatch("chat:notification", data));
