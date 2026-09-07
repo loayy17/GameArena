@@ -36,6 +36,7 @@ namespace backend.Domain
         public string? AvatarContentType { get; set; }
 
         public UserRole Role { get; set; } = UserRole.User;
+        public bool IsBanned { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsVerified { get; set; }
         public UserStatus Status { get; set; } = UserStatus.Offline;

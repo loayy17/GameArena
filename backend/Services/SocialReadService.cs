@@ -33,7 +33,7 @@ namespace backend.Services
             }
 
             var users = await query
-                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.FirstName + " " + u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
+                .Select(MappingExtensions.ToSummaryResponse)
                 .ToListAsync();
 
             var result = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
@@ -90,7 +90,8 @@ namespace backend.Services
             var blocked = await context.Blocks
                 .AsNoTracking()
                 .Where(b => b.BlockerId == userId)
-                .Select(b => new UserSummaryResponse(b.Blocked.Id, b.Blocked.UserName, b.Blocked.FirstName, b.Blocked.LastName, b.Blocked.FirstName + " " + b.Blocked.LastName, b.Blocked.Status, MappingExtensions.AvatarUrl(b.Blocked.Id, b.Blocked.Avatar)))
+                .Select(b => b.Blocked)
+                .Select(MappingExtensions.ToSummaryResponse)
                 .ToListAsync();
 
             return blocked.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();

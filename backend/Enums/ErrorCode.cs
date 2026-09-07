@@ -10,6 +10,8 @@
         TokenExpired = 1003,
         EmailNotVerified = 1004,
         RefreshTokenInvalid = 1005,
+        UserBanned = 1006,
+        Forbidden = 1007,
 
 
         OtpInvalid = 2001,

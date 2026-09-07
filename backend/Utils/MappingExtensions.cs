@@ -2,6 +2,7 @@ using backend.Domain;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Services.Interface;
+using System.Linq.Expressions;
 
 namespace backend.Utils;
 
@@ -9,6 +10,27 @@ public static class MappingExtensions
 {
     public static string? AvatarUrl(Guid id, byte[]? avatar)
         => avatar == null ? null : $"/api/user/{id}/avatar";
+
+    public static readonly Expression<Func<User, UserSummaryResponse>> ToSummaryResponse = u => new(
+        u.Id,
+        u.UserName,
+        u.FirstName,
+        u.LastName,
+        u.FirstName + " " + u.LastName,
+        u.Status,
+        AvatarUrl(u.Id, u.Avatar));
+
+    public static readonly Expression<Func<User, AdminUserResponse>> ToAdminResponse = u => new(
+        u.Id,
+        u.UserName,
+        u.FirstName,
+        u.LastName,
+        u.FirstName + " " + u.LastName,
+        u.Email,
+        u.Role,
+        u.IsBanned,
+        u.Status,
+        AvatarUrl(u.Id, u.Avatar));
 
     public static UserResponse ToDto(this User user, IUserPresenceService presence) => new()
     {
@@ -26,9 +48,6 @@ public static class MappingExtensions
         Rank = user.Rank,
         AvatarUrl = AvatarUrl(user.Id, user.Avatar)
     };
-
-    public static UserSummaryResponse ToSummaryResponse(this User user)
-        => new(user.Id, user.UserName, user.FirstName, user.LastName, user.FullName, user.Status, AvatarUrl(user.Id, user.Avatar));
 
     public static MessageResponse ToResponse(this Message message) => new()
     {

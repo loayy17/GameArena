@@ -34,36 +34,6 @@ namespace backend.Services
             };
         }
 
-        private async Task<int> CountReceivedRequestsAsync(Guid userId)
-        {
-            await using var context = await contextFactory.CreateDbContextAsync();
-            return await context.FriendRequests
-                .CountAsync(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending);
-        }
-
-        private async Task<int> CountSentRequestsAsync(Guid userId)
-        {
-            await using var context = await contextFactory.CreateDbContextAsync();
-            return await context.FriendRequests
-                .CountAsync(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending);
-        }
-
-        private async Task<int> CountFriendsAsync(Guid userId)
-        {
-            await using var context = await contextFactory.CreateDbContextAsync();
-            return await context.UserFriends
-                .CountAsync(uf => uf.UserId == userId && !context.Blocks.Any(b =>
-                    (b.BlockerId == userId && b.BlockedId == uf.FriendId) ||
-                    (b.BlockedId == userId && b.BlockerId == uf.FriendId)));
-        }
-
-        private async Task<int> CountUnreadMessagesAsync(Guid userId)
-        {
-            await using var context = await contextFactory.CreateDbContextAsync();
-            return await context.Messages
-                .CountAsync(m => m.ReceiverId == userId && !m.IsRead);
-        }
-
         public async Task SendCountersAsync(Guid userId)
         {
             var counters = await GetCountersAsync(userId);
@@ -222,6 +192,36 @@ namespace backend.Services
                 .ExecuteDeleteAsync();
 
             await CreateNotificationAsync(userId, nameof(NotificationType.NewMessage), title, body, referenceId);
+        }
+
+        private async Task<int> CountReceivedRequestsAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            return await context.FriendRequests
+                .CountAsync(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending);
+        }
+
+        private async Task<int> CountSentRequestsAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            return await context.FriendRequests
+                .CountAsync(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending);
+        }
+
+        private async Task<int> CountFriendsAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            return await context.UserFriends
+                .CountAsync(uf => uf.UserId == userId && !context.Blocks.Any(b =>
+                    (b.BlockerId == userId && b.BlockedId == uf.FriendId) ||
+                    (b.BlockedId == userId && b.BlockerId == uf.FriendId)));
+        }
+
+        private async Task<int> CountUnreadMessagesAsync(Guid userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            return await context.Messages
+                .CountAsync(m => m.ReceiverId == userId && !m.IsRead);
         }
 
         private async Task SendNotificationListAsync(Guid userId)

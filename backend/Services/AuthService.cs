@@ -20,6 +20,9 @@ namespace backend.Services
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email) ?? throw new AppException(ErrorCode.InvalidCredentials);
 
+            if (user.IsBanned)
+                throw new AppException(ErrorCode.UserBanned);
+
             if (!user.IsVerified)
                 throw new AppException(ErrorCode.EmailNotVerified);
 
@@ -35,6 +38,8 @@ namespace backend.Services
                 throw new AppException(ErrorCode.ValidationError);
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email)
                 ?? throw new AppException(ErrorCode.InvalidCredentials);
+            if (user.IsBanned)
+                throw new AppException(ErrorCode.UserBanned);
             if (!user.IsVerified)
                 throw new AppException(ErrorCode.EmailNotVerified);
             return await IssueAuthResponseAsync(user);

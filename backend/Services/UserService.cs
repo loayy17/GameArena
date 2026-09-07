@@ -11,15 +11,6 @@ namespace backend.Services
 {
     public class UserService(AppDbContext _context, IUserPresenceService _presence) : IUserService
     {
-        private const int MaxAvatarBytes = 2 * 1024 * 1024;
-        private static readonly HashSet<string> AllowedAvatarTypes =
-        [
-            "image/png",
-            "image/jpeg",
-            "image/webp",
-            "image/gif"
-        ];
-
         public async Task<UserResponse> GetUserByIdAsync(Guid userId)
         {
             var user = await _context.Users
@@ -78,28 +69,94 @@ namespace backend.Services
 
         public async Task<List<UserSummaryResponse>> GetUsersAsync(Guid currentUserId, UserFilterRequest? filter)
         {
-            if (string.IsNullOrWhiteSpace(filter?.Name)) return [];
+            if (string.IsNullOrWhiteSpace(filter?.Name))
+                return [];
 
-            var name = filter.Name.Trim().ToLower();
-
-            var users = await _context.Users
-                .AsNoTracking()
-                .Where(u => u.Id != currentUserId)
-                .Where(u => !_context.Blocks.Any(b =>
-                    (b.BlockerId == currentUserId && b.BlockedId == u.Id) ||
-                    (b.BlockedId == currentUserId && b.BlockerId == u.Id)))
-                .Where(u => EF.Functions.ILike(u.UserName, $"%{name}%") ||
-                            EF.Functions.ILike(u.FirstName, $"%{name}%") ||
-                            EF.Functions.ILike(u.LastName, $"%{name}%") ||
-                            EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{name}%"))
-                .Take(20)
-                .Select(u => new UserSummaryResponse(u.Id, u.UserName, u.FirstName, u.LastName, u.FirstName + " " + u.LastName, u.Status, MappingExtensions.AvatarUrl(u.Id, u.Avatar)))
+            var users = await GetUserSearchQuery(currentUserId, filter)
+                .Select(MappingExtensions.ToSummaryResponse)
                 .ToListAsync();
 
-            var results = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) });
+            var results = users.Select(u =>
+                u with { Status = _presence.GetStatus(u.Id.ToString()) });
+
             if (filter.UserStatus != UserStatus.All)
-                results = results.Where(dto => dto.Status == filter.UserStatus);
+                results = results.Where(u => u.Status == filter.UserStatus);
+
             return [.. results];
+        }
+
+        public async Task<List<AdminUserResponse>> GetUsersByAdminAsync(UserFilterRequest? filter)
+        {
+            var name = filter?.Name?.Trim() ?? string.Empty;
+            var role = filter?.UserRole ?? UserRole.All;
+            var status = filter?.UserStatus ?? UserStatus.All;
+
+            var query = _context.Users.AsNoTracking().AsQueryable();
+
+            if (name.Length > 0)
+            {
+                query = query.Where(u =>
+                    EF.Functions.ILike(u.UserName, $"%{name}%") ||
+                    EF.Functions.ILike(u.FirstName, $"%{name}%") ||
+                    EF.Functions.ILike(u.LastName, $"%{name}%") ||
+                    EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{name}%"));
+            }
+
+            if (role != UserRole.All)
+                query = query.Where(u => u.Role == role);
+
+            var users = await query
+                .OrderBy(u => u.UserName)
+                .Take(50)
+                .Select(MappingExtensions.ToAdminResponse)
+                .ToListAsync();
+
+            var results = users.Select(u =>
+                u with { Status = _presence.GetStatus(u.Id.ToString()) });
+
+            if (status != UserStatus.All)
+                results = results.Where(u => u.Status == status);
+
+            return [.. results];
+        }
+
+        public async Task<AdminStatsResponse> GetStatsAsync()
+        {
+            var ids = await _context.Users.AsNoTracking().Select(u => u.Id).ToListAsync();
+            var banned = await _context.Users.AsNoTracking().CountAsync(u => u.IsBanned);
+
+            var online = 0;
+            var inGame = 0;
+            foreach (var id in ids)
+            {
+                var status = _presence.GetStatus(id.ToString());
+                if (status == UserStatus.Online) online++;
+                else if (status == UserStatus.InGame) inGame++;
+            }
+
+            return new AdminStatsResponse
+            {
+                TotalUsers = ids.Count,
+                OnlineUsers = online,
+                InGameUsers = inGame,
+                BannedUsers = banned
+            };
+        }
+
+        public async Task<string?> GetPreferencesAsync(Guid userId)
+            => await _context.Users.Where(u => u.Id == userId).Select(u => u.Preferences).FirstOrDefaultAsync()
+               ?? throw new AppException(ErrorCode.UserNotFound);
+
+        public async Task<(byte[] Bytes, string ContentType)?> GetAvatarAsync(Guid userId)
+        {
+            var avatar = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.Avatar, u.AvatarContentType })
+                .FirstOrDefaultAsync();
+            if (avatar?.Avatar == null || string.IsNullOrEmpty(avatar.AvatarContentType))
+                return null;
+
+            return (avatar.Avatar, avatar.AvatarContentType);
         }
 
         public async Task<UserResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
@@ -115,20 +172,16 @@ namespace backend.Services
 
         public async Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-
-            var user = await GetUserForUpdateAsync(userId);
-            if (!AuthHelper.VerifyPassword(user, user.PasswordHash, oldPassword))
-                throw new AppException(ErrorCode.InvalidCredentials);
-            user.PasswordHash = AuthHelper.HashPassword(user, newPassword);
-            await _context.SaveChangesAsync();
-            await _context.RefreshTokens.Where(t => t.UserId == userId).ExecuteDeleteAsync();
-            await transaction.CommitAsync();
+            await TransactionHelper.ExecuteAsync(_context, async () =>
+            {
+                var user = await GetUserForUpdateAsync(userId);
+                if (!AuthHelper.VerifyPassword(user, user.PasswordHash, oldPassword))
+                    throw new AppException(ErrorCode.InvalidCredentials);
+                user.PasswordHash = AuthHelper.HashPassword(user, newPassword);
+                await _context.SaveChangesAsync();
+                await _context.RefreshTokens.Where(t => t.UserId == userId).ExecuteDeleteAsync();
+            });
         }
-
-        public async Task<string?> GetPreferencesAsync(Guid userId)
-            => await _context.Users.Where(u => u.Id == userId).Select(u => u.Preferences).FirstOrDefaultAsync()
-               ?? throw new AppException(ErrorCode.UserNotFound);
 
         public async Task UpdatePreferencesAsync(Guid userId, string preferencesJson)
         {
@@ -139,7 +192,7 @@ namespace backend.Services
 
         public async Task<UserResponse> UpdateAvatarAsync(Guid userId, IFormFile file)
         {
-            if (file.Length <= 0 || file.Length > MaxAvatarBytes || !AllowedAvatarTypes.Contains(file.ContentType))
+            if (file.Length <= 0 || file.Length > ValidationRules.AvatarMaxBytes || !ValidationRules.AllowedAvatarTypes.Contains(file.ContentType))
                 throw new AppException(ErrorCode.InvalidAvatar);
 
             var user = await GetUserForUpdateAsync(userId);
@@ -160,18 +213,6 @@ namespace backend.Services
             return user.ToDto(_presence);
         }
 
-        public async Task<(byte[] Bytes, string ContentType)?> GetAvatarAsync(Guid userId)
-        {
-            var avatar = await _context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.Avatar, u.AvatarContentType })
-                .FirstOrDefaultAsync();
-            if (avatar?.Avatar == null || string.IsNullOrEmpty(avatar.AvatarContentType))
-                return null;
-
-            return (avatar.Avatar, avatar.AvatarContentType);
-        }
-
         public async Task UpdateRanksAsync(Guid player1Id, Guid player2Id, int player1Score, int player2Score)
         {
             var p1Delta = player1Score > player2Score ? 0.5 : player1Score < player2Score ? 0.1 : 0.25;
@@ -182,9 +223,131 @@ namespace backend.Services
                 .ExecuteUpdateAsync(s => s.SetProperty(u => u.Rank, u => (u.Rank ?? 0) + p2Delta));
         }
 
+        public async Task BanUserAsync(Guid actorId, Guid userId)
+        {
+            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: false);
+            target.IsBanned = true;
+            await RevokeTokensAsync(target.Id);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UnbanUserAsync(Guid actorId, Guid userId)
+        {
+            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: false);
+            target.IsBanned = false;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SetRoleAsync(Guid actorId, Guid userId, UserRole role)
+        {
+            if (!Enum.IsDefined(role) || role == UserRole.All)
+                throw new AppException(ErrorCode.ValidationError);
+
+            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: true);
+            target.Role = role;
+            await RevokeTokensAsync(target.Id);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAccountAsync(Guid actorId, Guid targetId)
+        {
+            if (actorId != targetId)
+            {
+                var actorRole = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => u.Id == actorId)
+                    .Select(u => (UserRole?)u.Role)
+                    .FirstOrDefaultAsync();
+                if (actorRole != UserRole.Admin)
+                    throw new AppException(ErrorCode.Forbidden);
+            }
+
+            await TransactionHelper.ExecuteAsync(_context, async () =>
+            {
+                await _context.Messages
+                    .Where(m => m.SenderId == targetId || m.ReceiverId == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.UserFriends
+                    .Where(f => f.UserId == targetId || f.FriendId == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.FriendRequests
+                    .Where(f => f.SenderId == targetId || f.ReceiverId == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.Blocks
+                    .Where(b => b.BlockerId == targetId || b.BlockedId == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.MatchHistories
+                    .Where(m => m.Player1Id == targetId || m.Player2Id == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.EmailVerifications
+                    .Where(e => e.UserId == targetId)
+                    .ExecuteDeleteAsync();
+                await _context.RefreshTokens
+                    .Where(t => t.UserId == targetId)
+                    .ExecuteDeleteAsync();
+
+                var removed = await _context.Users
+                    .Where(u => u.Id == targetId)
+                    .ExecuteDeleteAsync();
+                if (removed == 0)
+                    throw new AppException(ErrorCode.UserNotFound);
+            });
+        }
+
         private async Task<User> GetUserForUpdateAsync(Guid userId)
             => await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
                ?? throw new AppException(ErrorCode.UserNotFound);
+
+        private async Task<User> GetModifiableUserAsync(Guid actorId, Guid userId, bool requireAdmin)
+        {
+            var actor = await _context.Users.FirstOrDefaultAsync(u => u.Id == actorId)
+                ?? throw new AppException(ErrorCode.UserNotFound);
+
+            var allowed = requireAdmin
+                ? actor.Role == UserRole.Admin
+                : actor.Role is UserRole.Admin or UserRole.Moderator;
+            if (!allowed)
+                throw new AppException(ErrorCode.Forbidden);
+
+            if (actorId == userId)
+                throw new AppException(ErrorCode.Forbidden);
+
+            var target = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new AppException(ErrorCode.UserNotFound);
+
+            if (target.Role == UserRole.Admin)
+                throw new AppException(ErrorCode.Forbidden);
+
+            return target;
+        }
+
+        private async Task RevokeTokensAsync(Guid userId)
+        {
+            await _context.RefreshTokens.Where(t => t.UserId == userId).ExecuteDeleteAsync();
+        }
+
+        private IQueryable<User> GetUserSearchQuery(Guid currentUserId, UserFilterRequest filter)
+        {
+            var name = filter.Name!.Trim();
+
+            var query = _context.Users
+                .AsNoTracking()
+                .Where(u => u.Id != currentUserId)
+                .Where(u => !u.IsBanned)
+                .Where(u => !_context.Blocks.Any(b =>
+                    (b.BlockerId == currentUserId && b.BlockedId == u.Id) ||
+                    (b.BlockedId == currentUserId && b.BlockerId == u.Id)))
+                .Where(u =>
+                    EF.Functions.ILike(u.UserName, $"%{name}%") ||
+                    EF.Functions.ILike(u.FirstName, $"%{name}%") ||
+                    EF.Functions.ILike(u.LastName, $"%{name}%") ||
+                    EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{name}%"));
+
+            if (filter.UserRole != UserRole.All)
+                query = query.Where(u => u.Role == filter.UserRole);
+
+            return query.Take(20);
+        }
 
         private async Task<(int Total, int Wins, int Losses, int Draws)> GetMatchStatsAsync(Guid userId)
         {

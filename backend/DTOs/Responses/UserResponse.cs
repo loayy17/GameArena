@@ -17,5 +17,6 @@ namespace backend.DTOs.Responses
         public string? Preferences { get; init; }
         public double? Rank { get; init; }
         public string? AvatarUrl { get; init; }
+        public bool IsBanned { get; init; }
     }
 }
