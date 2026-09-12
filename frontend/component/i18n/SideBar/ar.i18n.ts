@@ -10,6 +10,7 @@ const ar: TSidebarTranslation = {
   historyShort: "السجل",
   notifications: "الإشعارات",
   settings: "الإعدادات",
+  admin: "الإدارة",
   profile: "الملف الشخصي",
   logout: "تسجيل الخروج",
   user: "مستخدم",

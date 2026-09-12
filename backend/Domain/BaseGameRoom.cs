@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Threading;
 using backend.Enums;
 using backend.Utils;
 
@@ -7,12 +6,16 @@ namespace backend.Domain
 {
     public abstract class BaseGameRoom(GamesKind _gameType)
     {
+        private readonly Lock _sync = new();
+
         public string RoomId { get; set; } = Guid.NewGuid().ToString();
         public GamesKind GameType { get; } = _gameType;
         public string? Player1Id { get; set; }
         public string? Player1Username { get; set; }
         public string? Player2Id { get; set; }
         public string? Player2Username { get; set; }
+        public string? HumanPlayer1Id { get; set; }
+        public string? HumanPlayer2Id { get; set; }
         public bool IsFull { get; set; }
         public bool IsFinished { get; set; }
         public bool IsPrivate { get; set; }
@@ -29,21 +32,80 @@ namespace backend.Domain
         public bool TryMarkRoundResultPersisted() =>
             Interlocked.CompareExchange(ref _roundResultPersisted, 1, 0) == 0;
 
-        public static BaseGameRoom Create(GamesKind gameType)
+        public object GetStatePayload()
         {
-            return gameType switch
-            {
-                GamesKind.TicTacToe => new TicTacToeRoom(),
-                GamesKind.PingPong => new PingPongRoom(),
-                GamesKind.Snake => new SnakeRoom(),
-                GamesKind.RockPaperScissors => new RockPaperScissors(),
-                GamesKind.ConnectFour => new ConnectFourRoom(),
-                _ => throw new AppException(ErrorCode.InvalidGameType)
-            };
+            lock (_sync) return GetStatePayloadCore();
         }
 
-        public abstract object GetStatePayload();
+        public void HandleAction(string playerId, JsonElement action)
+        {
+            lock (_sync) HandleActionCore(playerId, action);
+        }
+
+        public void MakeBotMove()
+        {
+            lock (_sync) MakeBotMoveCore();
+        }
+
+        public void Tick()
+        {
+            lock (_sync) TickCore();
+        }
+
+        public void ResetForNewRound()
+        {
+            lock (_sync) ResetForNewRoundCore();
+        }
+
+        public void ReplacePlayerWithBot(string playerId)
+        {
+            lock (_sync) ReplacePlayerWithBotCore(playerId);
+        }
+
+        public void OnPlayerDisconnected(string disconnectedPlayerId)
+        {
+            lock (_sync) OnPlayerDisconnectedCore(disconnectedPlayerId);
+        }
+
+
+        protected abstract object GetStatePayloadCore();
+        protected abstract void HandleActionCore(string playerId, JsonElement action);
+        protected virtual void MakeBotMoveCore() { }
+        protected virtual void TickCore() { }
+
+        protected virtual void ResetForNewRoundCore()
+        {
+            Interlocked.Exchange(ref _roundResultPersisted, 0);
+            WinnerPlayerId = null;
+            WinnerSymbol = null;
+            WinningCells = [];
+            IsFinished = false;
+            HasStarted = true;
+            CurrentTurnPlayerId = Player1Id;
+        }
+
+        protected virtual void ReplacePlayerWithBotCore(string playerId)
+        {
+            IsBotGame = true;
+            if (Player1Id == playerId)
+            {
+                Player1Id = "__BOT__";
+                Player1Username = "AI Bot";
+            }
+            else
+            {
+                Player2Id = "__BOT__";
+                Player2Username = "AI Bot";
+            }
+        }
+
+        protected virtual void OnPlayerDisconnectedCore(string disconnectedPlayerId)
+        {
+            WinnerPlayerId = disconnectedPlayerId == Player1Id ? Player2Id : Player1Id;
+        }
         public virtual int BotMoveDelayMs => 1000;
+        public virtual bool NeedsGameLoop => false;
+        public virtual int TickIntervalMs => 50;
 
         protected Dictionary<string, object?> GetBasePayload() => new()
         {
@@ -75,20 +137,6 @@ namespace backend.Domain
         protected string? GetBotId() =>
             Player1Id == "__BOT__" ? Player1Id : Player2Id == "__BOT__" ? Player2Id : null;
 
-        public abstract void HandleAction(string playerId, JsonElement action);
-        public abstract void MakeBotMove();
-
-        public virtual void ResetForNewRound()
-        {
-            Interlocked.Exchange(ref _roundResultPersisted, 0);
-            WinnerPlayerId = null;
-            WinnerSymbol = null;
-            WinningCells = [];
-            IsFinished = false;
-            HasStarted = true;
-            CurrentTurnPlayerId = Player1Id;
-        }
-
         protected void CompleteRound(string? winnerPlayerId)
         {
             WinnerPlayerId = winnerPlayerId;
@@ -99,27 +147,17 @@ namespace backend.Domain
             else if (winnerPlayerId == Player2Id) Score[1]++;
         }
 
-        public virtual bool NeedsGameLoop => false;
-        public virtual int TickIntervalMs => 50;
-        public virtual void Tick() { }
-        public void ReplacePlayerWithBot(string playerId)
+        public static BaseGameRoom Create(GamesKind gameType)
         {
-            IsBotGame = true;
-            if (Player1Id == playerId)
+            return gameType switch
             {
-                Player1Id = "__BOT__";
-                Player1Username = "AI Bot";
-            }
-            else
-            {
-                Player2Id = "__BOT__";
-                Player2Username = "AI Bot";
-            }
-        }
-
-        public virtual void OnPlayerDisconnected(string disconnectedPlayerId)
-        {
-            WinnerPlayerId = disconnectedPlayerId == Player1Id ? Player2Id : Player1Id;
+                GamesKind.TicTacToe => new TicTacToeRoom(),
+                GamesKind.PingPong => new PingPongRoom(),
+                GamesKind.Snake => new SnakeRoom(),
+                GamesKind.RockPaperScissors => new RockPaperScissors(),
+                GamesKind.ConnectFour => new ConnectFourRoom(),
+                _ => throw new AppException(ErrorCode.InvalidGameType)
+            };
         }
     }
 }

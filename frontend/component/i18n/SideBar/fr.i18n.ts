@@ -10,6 +10,7 @@ const fr: TSidebarTranslation = {
   historyShort: "Historique",
   notifications: "Notifications",
   settings: "Paramètres",
+  admin: "Administration",
   profile: "Profil",
   logout: "Déconnexion",
   user: "Utilisateur",

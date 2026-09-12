@@ -41,7 +41,7 @@ function GNav({ items, orientation = NavOrientationEnum.Vertical, collapsed = fa
             aria-hidden="true"
             className={cn(
               "absolute rounded-full bg-primary",
-              isVertical ? "start-0.5 top-1/2 h-6 w-1 -translate-y-1/2" : "top-0.5 left-1/2 h-1 w-6 -translate-x-1/2",
+              isVertical ? "start-0.5 top-1/2 h-6 w-1 -translate-y-1/2" : "bottom-0.5 left-1/2 h-1 w-6 -translate-x-1/2",
             )}
           />
         )}

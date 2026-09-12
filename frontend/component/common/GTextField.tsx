@@ -36,7 +36,7 @@ function GTextField({ label, error, hint, startIcon, endIcon, endAction, require
           aria-describedby={field.describedBy}
           aria-invalid={field.invalid}
           {...props}
-          className={cn(fieldBase, fieldSize[size], hasStartIcon && "ps-10", hasEnd && "pe-10", error && fieldError)}
+          className={cn(fieldBase, fieldSize[size], hasStartIcon && "ps-10", hasEnd && "pe-10", !error && "hover:border-text-muted/50", error && fieldError)}
         />
         {endAction ? (
           <span className="absolute end-1.5 top-1/2 -translate-y-1/2">{endAction}</span>

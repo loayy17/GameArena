@@ -32,9 +32,17 @@ function updateThemeDOM(theme: ThemeEnum) {
   document.documentElement.dataset.theme = theme;
 }
 
+function readCookieValue(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 if (typeof window !== "undefined") {
-  currentLocale = (localStorage.getItem("locale") as LocaleEnum) ?? LocaleEnum.En;
-  currentTheme = (localStorage.getItem("theme") as ThemeEnum) ?? ThemeEnum.Dark;
+  const cookieLocale = readCookieValue("locale") as LocaleEnum | null;
+  const cookieTheme = readCookieValue("theme") as ThemeEnum | null;
+  currentLocale = cookieLocale ?? (localStorage.getItem("locale") as LocaleEnum) ?? LocaleEnum.En;
+  currentTheme = cookieTheme ?? (localStorage.getItem("theme") as ThemeEnum) ?? ThemeEnum.Dark;
 }
 
 function getLocale(): LocaleEnum {

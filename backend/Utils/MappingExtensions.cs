@@ -17,7 +17,7 @@ public static class MappingExtensions
         u.FirstName,
         u.LastName,
         u.FirstName + " " + u.LastName,
-        u.Status,
+        UserStatus.Offline,
         AvatarUrl(u.Id, u.Avatar));
 
     public static readonly Expression<Func<User, AdminUserResponse>> ToAdminResponse = u => new(
@@ -29,7 +29,7 @@ public static class MappingExtensions
         u.Email,
         u.Role,
         u.IsBanned,
-        u.Status,
+        UserStatus.Offline,
         AvatarUrl(u.Id, u.Avatar));
 
     public static UserResponse ToDto(this User user, IUserPresenceService presence) => new()
@@ -51,6 +51,7 @@ public static class MappingExtensions
 
     public static MessageResponse ToResponse(this Message message) => new()
     {
+        Id = message.Id,
         SenderId = message.SenderId,
         ReceiverId = message.ReceiverId,
         Content = message.Content,

@@ -5,15 +5,13 @@ namespace backend.Domain
 {
     public sealed class ConnectFourRoom : BaseGameRoom
     {
-        private readonly Lock _lock = new();
-
         public const int Cols = 7;
         public const int Rows = 6;
         public int[][] Board { get; set; } = Enumerable.Range(0, Cols).Select(_ => new int[Rows]).ToArray();
 
         public ConnectFourRoom() : base(GamesKind.ConnectFour) { }
 
-        public override object GetStatePayload()
+        protected override object GetStatePayloadCore()
         {
             var p = GetBasePayload();
             p["board"] = Board;
@@ -24,9 +22,9 @@ namespace backend.Domain
             return p;
         }
 
-        public override void ResetForNewRound()
+        protected override void ResetForNewRoundCore()
         {
-            base.ResetForNewRound();
+            base.ResetForNewRoundCore();
             Board = Enumerable.Range(0, Cols).Select(_ => new int[Rows]).ToArray();
         }
 
@@ -80,83 +78,77 @@ namespace backend.Domain
             return true;
         }
 
-        public override void HandleAction(string playerId, JsonElement action)
+        protected override void HandleActionCore(string playerId, JsonElement action)
         {
-            lock (_lock)
+            if (WinnerPlayerId != null
+                || !IsFull
+                || playerId != CurrentTurnPlayerId
+                || (playerId != Player1Id && playerId != Player2Id)
+                || !TryParseAction(action, out int col)
+                || !TryGetAvailableRow(col, out int row))
+                return;
+
+            int piece = playerId == Player1Id ? 1 : 2;
+            Board[col][row] = piece;
+
+            var winLine = FindWinLine(col, row, piece);
+            if (winLine != null)
             {
-                if (WinnerPlayerId != null
-                    || !IsFull
-                    || playerId != CurrentTurnPlayerId
-                    || (playerId != Player1Id && playerId != Player2Id)
-                    || !TryParseAction(action, out int col)
-                    || !TryGetAvailableRow(col, out int row))
-                    return;
-
-                int piece = playerId == Player1Id ? 1 : 2;
-                Board[col][row] = piece;
-
-                var winLine = FindWinLine(col, row, piece);
-                if (winLine != null)
-                {
-                    WinningCells = winLine;
-                    WinnerSymbol = piece == 1 ? "🔴" : "🟡";
-                    CompleteRound(playerId);
-                    return;
-                }
-
-                if (IsBoardFull())
-                {
-                    CompleteRound("");
-                    return;
-                }
-
-                SwitchTurn();
+                WinningCells = winLine;
+                WinnerSymbol = piece == 1 ? "🔴" : "🟡";
+                CompleteRound(playerId);
+                return;
             }
+
+            if (IsBoardFull())
+            {
+                CompleteRound("");
+                return;
+            }
+
+            SwitchTurn();
         }
 
-        public override void MakeBotMove()
+        protected override void MakeBotMoveCore()
         {
-            lock (_lock)
+            if (!IsBotGame || WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
+            var botId = GetBotId();
+            if (botId == null || CurrentTurnPlayerId != botId) return;
+            int piece = botId == Player1Id ? 1 : 2;
+
+            List<int> availableColumns = [];
+            for (int col = 0; col < Cols; col++)
+                if (Board[col][0] == 0)
+                    availableColumns.Add(col);
+
+            if (availableColumns.Count == 0) return;
+            int randomCol = availableColumns[Random.Shared.Next(availableColumns.Count)];
+            if (!TryGetAvailableRow(randomCol, out int row))
+                return;
+
+            Board[randomCol][row] = piece;
+
+            var winLine = FindWinLine(randomCol, row, piece);
+            if (winLine != null)
             {
-                if (!IsBotGame || WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
-                var botId = GetBotId();
-                if (botId == null || CurrentTurnPlayerId != botId) return;
-                int piece = botId == Player1Id ? 1 : 2;
-
-                List<int> availableColumns = [];
-                for (int col = 0; col < Cols; col++)
-                    if (Board[col][0] == 0)
-                        availableColumns.Add(col);
-
-                if (availableColumns.Count == 0) return;
-                int randomCol = availableColumns[Random.Shared.Next(availableColumns.Count)];
-                if (!TryGetAvailableRow(randomCol, out int row))
-                    return;
-
-                Board[randomCol][row] = piece;
-
-                var winLine = FindWinLine(randomCol, row, piece);
-                if (winLine != null)
-                {
-                    WinningCells = winLine;
-                    WinnerSymbol = piece == 1 ? "🔴" : "🟡";
-                    CompleteRound(botId);
-                    return;
-                }
-
-                if (IsBoardFull())
-                {
-                    CompleteRound("");
-                    return;
-                }
-
-                SwitchTurn();
+                WinningCells = winLine;
+                WinnerSymbol = piece == 1 ? "🔴" : "🟡";
+                CompleteRound(botId);
+                return;
             }
+
+            if (IsBoardFull())
+            {
+                CompleteRound("");
+                return;
+            }
+
+            SwitchTurn();
         }
 
-        public override void OnPlayerDisconnected(string disconnectedPlayerId)
+        protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
         {
-            base.OnPlayerDisconnected(disconnectedPlayerId);
+            base.OnPlayerDisconnectedCore(disconnectedPlayerId);
             WinnerSymbol = WinnerPlayerId == Player1Id ? "🔴" : "🟡";
         }
     }

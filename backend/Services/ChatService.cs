@@ -27,18 +27,14 @@ namespace backend.Services
                 .Where(m =>
                     (m.SenderId == userId && m.ReceiverId == friendId) ||
                     (m.SenderId == friendId && m.ReceiverId == userId))
-                .OrderBy(m => m.SentAt)
-                .Select(m => new MessageResponse
-                {
-                    SenderId = m.SenderId,
-                    ReceiverId = m.ReceiverId,
-                    Content = m.Content,
-                    SentAt = m.SentAt,
-                    IsRead = m.IsRead
-                })
+                .OrderByDescending(m => m.SentAt)
+                .Take(500)
                 .ToListAsync();
 
-            return messages;
+            return messages
+                .OrderBy(m => m.SentAt)
+                .Select(m => m.ToResponse())
+                .ToList();
         }
 
         public async Task<MessageResponse> CreatePrivateMessageAsync(Guid senderId, Guid receiverId, string message)
@@ -49,18 +45,20 @@ namespace backend.Services
             if (!await SocialQueryHelper.AreFriendsAsync(_context, senderId, receiverId))
                 throw new AppException(ErrorCode.IsNotFriend);
 
+            var trimmed = message.Trim();
+            if (trimmed.Length == 0 || trimmed.Length > 4000) throw new AppException(ErrorCode.ValidationError);
             var msg = new Message
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Content = message,
+                Content = trimmed,
                 SentAt = DateTime.UtcNow
             };
 
             _context.Messages.Add(msg);
             await _context.SaveChangesAsync();
 
-            await _eventBus.PublishAsync(new ChatMessageSentEvent(senderId, receiverId, message, msg.SentAt));
+            await _eventBus.PublishAsync(new ChatMessageSentEvent(senderId, receiverId, trimmed, msg.SentAt));
 
             return msg.ToResponse();
         }

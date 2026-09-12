@@ -95,7 +95,7 @@ namespace backend.Controllers
         }
 
         // Admin and Moderator roles)
-        [Authorize(Roles = "Admin,Moderator")]
+        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
         [HttpGet("admin/stats")]
         public async Task<ActionResult<ApiResponse<AdminStatsResponse>>> GetStats()
         {
@@ -103,7 +103,7 @@ namespace backend.Controllers
             return Ok(new ApiResponse<AdminStatsResponse> { Data = stats });
         }
 
-        [Authorize(Roles = "Admin,Moderator")]
+        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
         [HttpGet("admin/users")]
         public async Task<ActionResult<ApiResponse<List<AdminUserResponse>>>> GetUsersByAdmin([FromQuery] UserFilterRequest? filter)
         {
@@ -111,7 +111,7 @@ namespace backend.Controllers
             return Ok(new ApiResponse<List<AdminUserResponse>> { Data = users });
         }
 
-        [Authorize(Roles = "Admin,Moderator")]
+        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
         [HttpPost("admin/users/{id}/ban")]
         public async Task<ActionResult<ApiResponse<object>>> BanUser(Guid id)
         {
@@ -119,7 +119,7 @@ namespace backend.Controllers
             return Ok(new ApiResponse<object>());
         }
 
-        [Authorize(Roles = "Admin,Moderator")]
+        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
         [HttpPost("admin/users/{id}/unban")]
         public async Task<ActionResult<ApiResponse<object>>> UnbanUser(Guid id)
         {
@@ -127,7 +127,7 @@ namespace backend.Controllers
             return Ok(new ApiResponse<object>());
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         [HttpPut("admin/users/role")]
         public async Task<ActionResult<ApiResponse<object>>> SetRole([FromBody] SetRoleRequest request)
         {
@@ -135,7 +135,7 @@ namespace backend.Controllers
             return Ok(new ApiResponse<object>());
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         [HttpDelete("admin/users/{id}")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteAccountByAdmin(Guid id)
         {

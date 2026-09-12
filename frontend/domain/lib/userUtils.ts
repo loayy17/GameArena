@@ -1,17 +1,5 @@
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 
-function buildFullName(first: string | null | undefined, last: string | null | undefined): string {
-  return `${first ?? ""} ${last ?? ""}`.trim();
-}
-
-function withFullName<T extends IUserSummary>(user: T): T {
-  if (user.fullName) return user;
-  return {
-    ...user,
-    fullName: buildFullName(user.firstName, user.lastName) || user.userName || user.id,
-  };
-}
-
 type TSearchableUser = Pick<IUserSummary, "firstName" | "lastName" | "userName" | "fullName">;
 
 function filterUsersByTerm<T extends TSearchableUser>(users: T[], term: string): T[] {
@@ -23,4 +11,4 @@ function filterUsersByTerm<T extends TSearchableUser>(users: T[], term: string):
   });
 }
 
-export { buildFullName, filterUsersByTerm, withFullName };
+export { filterUsersByTerm };

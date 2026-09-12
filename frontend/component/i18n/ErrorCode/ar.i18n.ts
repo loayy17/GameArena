@@ -8,6 +8,8 @@ const ar: THashMap<string, number> = {
   [ErrorCodeEnum.TokenExpired]: "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى",
   [ErrorCodeEnum.EmailNotVerified]: "البريد الإلكتروني غير مؤكد",
   [ErrorCodeEnum.RefreshTokenInvalid]: "رمز التحديث غير صالح",
+  [ErrorCodeEnum.UserBanned]: "تم حظر هذا الحساب",
+  [ErrorCodeEnum.Forbidden]: "غير مسموح لك بتنفيذ هذا الإجراء",
   [ErrorCodeEnum.OtpInvalid]: "رمز التحقق غير صحيح",
   [ErrorCodeEnum.OtpExpired]: "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد",
   [ErrorCodeEnum.EmailNotFound]: "البريد الإلكتروني غير موجود",

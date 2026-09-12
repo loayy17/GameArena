@@ -2,34 +2,31 @@ using System.Text.Json;
 using backend.Enums;
 using backend.Utils;
 
-namespace backend.Domain;
-
-public class TicTacToeRoom : BaseGameRoom
+namespace backend.Domain
 {
-    private readonly Lock _lock = new();
-
-    public TicTacToeRoom() : base(GamesKind.TicTacToe) { }
-    public string[] Board { get; set; } = [.. Enumerable.Repeat(".", 9)];
-    public override object GetStatePayload()
+    public class TicTacToeRoom : BaseGameRoom
     {
-        var p = GetBasePayload();
-        p["board"] = Board;
-        p["boardWidth"] = 3;
-        p["boardHeight"] = 3;
-        p["winScore"] = 0;
-        p["tickRateHz"] = 0;
-        return p;
-    }
+        public TicTacToeRoom() : base(GamesKind.TicTacToe) { }
+        public string[] Board { get; set; } = [.. Enumerable.Repeat(".", 9)];
 
-    public override void ResetForNewRound()
-    {
-        base.ResetForNewRound();
-        Board = [.. Enumerable.Repeat(".", 9)];
-    }
+        protected override object GetStatePayloadCore()
+        {
+            var p = GetBasePayload();
+            p["board"] = Board;
+            p["boardWidth"] = 3;
+            p["boardHeight"] = 3;
+            p["winScore"] = 0;
+            p["tickRateHz"] = 0;
+            return p;
+        }
 
-    public override void HandleAction(string playerId, JsonElement action)
-    {
-        lock (_lock)
+        protected override void ResetForNewRoundCore()
+        {
+            base.ResetForNewRoundCore();
+            Board = [.. Enumerable.Repeat(".", 9)];
+        }
+
+        protected override void HandleActionCore(string playerId, JsonElement action)
         {
             if (action.ValueKind != JsonValueKind.Object
                 || !action.TryGetProperty("type", out var typeProp)
@@ -69,11 +66,8 @@ public class TicTacToeRoom : BaseGameRoom
 
             SwitchTurn();
         }
-    }
 
-    public override void MakeBotMove()
-    {
-        lock (_lock)
+        protected override void MakeBotMoveCore()
         {
             if (WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
             var botId = GetBotId();
@@ -99,11 +93,11 @@ public class TicTacToeRoom : BaseGameRoom
 
             SwitchTurn();
         }
-    }
 
-    public override void OnPlayerDisconnected(string disconnectedPlayerId)
-    {
-        base.OnPlayerDisconnected(disconnectedPlayerId);
-        WinnerSymbol = WinnerPlayerId == Player1Id ? "X" : "O";
+        protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
+        {
+            base.OnPlayerDisconnectedCore(disconnectedPlayerId);
+            WinnerSymbol = WinnerPlayerId == Player1Id ? "X" : "O";
+        }
     }
 }

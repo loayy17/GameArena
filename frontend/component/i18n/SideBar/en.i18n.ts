@@ -8,6 +8,7 @@ const en = {
   historyShort: "History",
   notifications: "Notifications",
   settings: "Settings",
+  admin: "Administration",
   profile: "Profile",
   logout: "Logout",
   user: "User",

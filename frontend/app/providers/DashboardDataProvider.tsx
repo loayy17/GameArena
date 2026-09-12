@@ -25,17 +25,17 @@ import type { TNullable, TOptional } from "@/domain/type/TCommon";
 
 const DashboardDataContext = createContext<TOptional<IDashboardDataContext>>(undefined);
 
-const NOTIFICATION_TYPES: NotificationTypeEnum[] = [
-  NotificationTypeEnum.FriendRequest,
-  NotificationTypeEnum.FriendRequestAccepted,
-  NotificationTypeEnum.GameInvite,
-  NotificationTypeEnum.NewMessage,
-];
+const NOTIFICATION_TYPE_BY_CODE: Record<number, NotificationTypeEnum> = {
+  0: NotificationTypeEnum.FriendRequest,
+  1: NotificationTypeEnum.FriendRequestAccepted,
+  2: NotificationTypeEnum.GameInvite,
+  3: NotificationTypeEnum.NewMessage,
+};
 
 const normalizeNotification = (n: INotificationItem): INotificationItem => {
   if (typeof n.type === "string") return n;
-  const type = NOTIFICATION_TYPES[Number(n.type)];
-  return type ? { ...n, type } : n;
+  const mapped = NOTIFICATION_TYPE_BY_CODE[Number(n.type)];
+  return mapped ? { ...n, type: mapped } : n;
 };
 
 export function DashboardDataProvider({ children }: IDashboardDataProviderProps) {

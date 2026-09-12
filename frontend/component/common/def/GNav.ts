@@ -8,7 +8,6 @@ interface IGNavItem {
   badge?: ReactNode;
   active?: boolean;
   disabled?: boolean;
-  mobile?: boolean;
   href?: string;
   onClick?: () => void;
 }

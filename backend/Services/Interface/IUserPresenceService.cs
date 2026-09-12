@@ -9,5 +9,6 @@ namespace backend.Services.Interface
         bool RemoveConnection(string userId);
         bool SetActivity(string userId, UserStatus status);
         bool HasOtherConnections(string userId);
+        (int Online, int InGame) GetOnlineCounts();
     }
 }

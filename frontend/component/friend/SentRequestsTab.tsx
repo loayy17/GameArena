@@ -33,16 +33,14 @@ function SentRequestsTab({ sentRequests, onCancel, t }: ISentRequestsTabProps) {
     firstName: r.receiverFirstName,
     lastName: r.receiverLastName,
     userName: r.receiverUserName,
-    fullName: r.receiverFullName || [r.receiverFirstName, r.receiverLastName].filter(Boolean).join(" ") || r.receiverUserName || r.receiverId,
+    fullName: r.receiverFullName,
   }));
 
   return (
     <>
       <FriendsList
         friends={friends}
-        actions={(friend) => (
-          <GButton icon={X} label={t.sentTab.cancel} tone="danger" onClick={() => setPending(friend.id)} />
-        )}
+        actions={(friend) => <GButton icon={X} label={t.sentTab.cancel} tone="danger" onClick={() => setPending(friend.id)} />}
       />
       <GConfirmDialog
         open={!!pending}

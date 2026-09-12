@@ -77,7 +77,8 @@ builder.Services.AddCors(options =>
     {
         var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-        origins = [.. origins, "http://localhost:3000"];
+        if (builder.Environment.IsDevelopment())
+            origins = [.. origins, "http://localhost:3000"];
 
         policy.WithOrigins(origins.Distinct().ToArray())
               .AllowAnyHeader()
@@ -107,8 +108,12 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IUserPresenceService, UserPresenceService>();
 builder.Services.AddSingleton<IGameRoomService, GameRoomService>();
 var app = builder.Build();
-app.UseSwagger();
-app.UseSwaggerUI();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

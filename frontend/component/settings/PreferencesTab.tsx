@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Activity, Bell, Gamepad2, Languages, List, Moon, Save, Volume2 } from "lucide-react";
+import { Activity, Bell, Gamepad2, List, Save, Volume2 } from "lucide-react";
 
 import { GButton } from "@/component/common/GButton";
 import { GSwitch } from "@/component/common/GSwitch";
@@ -10,11 +10,8 @@ import { GIcon } from "@/component/common/GIcon";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
-import { useLocale, useTheme } from "@/hooks/useSetting";
 import { userService } from "@/services/def/UserService";
 import { DEFAULT_USER_PREFERENCES } from "@/domain/meta/IUserPreferences";
-import { ThemeEnum } from "@/domain/enum/ThemeEnum";
-import { LocaleEnum } from "@/domain/enum/LocaleEnum";
 
 import type { IUserPreferences } from "@/domain/meta/IUserPreferences";
 import type { IPrefRowProps, IPreferencesTabProps } from "./def/SettingsTabs";
@@ -43,25 +40,20 @@ function PrefRow({ icon, label, control }: IPrefRowProps) {
 export function PreferencesTab({ user, showMessage, t }: IPreferencesTabProps) {
   const resolveError = useErrorMessage();
   const { updatePreferences } = useAuth();
-  const [theme, setTheme] = useTheme();
-  const [locale, setLocale] = useLocale();
   const [prefSaving, setPrefSaving] = useState(false);
   const [preferences, setPreferences] = useState<IUserPreferences>(() => parsePreferences(user.preferences));
 
   const isDirty = useMemo(() => {
     const merged = parsePreferences(user.preferences);
-    if (theme !== String(merged.theme)) return true;
-    if (locale !== String(merged.locale)) return true;
     for (const k of Object.keys(preferences) as Array<keyof IUserPreferences>) if (preferences[k] !== merged[k]) return true;
     return false;
-  }, [preferences, theme, locale, user]);
+  }, [preferences, user]);
 
   const handleSave = async () => {
     setPrefSaving(true);
     try {
-      const toPersist: IUserPreferences = { ...preferences, theme: theme as IUserPreferences["theme"], locale: locale as IUserPreferences["locale"] };
-      await userService.updatePreferences({ preferences: JSON.stringify(toPersist) });
-      updatePreferences(toPersist);
+      await userService.updatePreferences({ preferences: JSON.stringify(preferences) });
+      updatePreferences(preferences);
       showMessage(t.settings.preferences.saved, "success");
     } catch (e: unknown) {
       showMessage(resolveError(toErrorCode(e), t.settings.preferences.saveFailed), "danger");
@@ -76,6 +68,7 @@ export function PreferencesTab({ user, showMessage, t }: IPreferencesTabProps) {
   };
 
   const pageSizeOptions = [5, 10, 15, 20, 25];
+  // Theme & language intentionally live only in the user menu (single source of truth).
   const prefItems: { key: keyof IUserPreferences; label: string; icon: React.ReactNode }[] = [
     { key: "soundEnabled", label: t.settings.preferences.sound, icon: <GIcon icon={Volume2} size={SizeEnum.sm} /> },
     { key: "showOnlineStatus", label: t.settings.preferences.showOnline, icon: <GIcon icon={Activity} size={SizeEnum.sm} /> },
@@ -85,34 +78,6 @@ export function PreferencesTab({ user, showMessage, t }: IPreferencesTabProps) {
 
   return (
     <div className="space-y-2">
-      <PrefRow
-        icon={<GIcon icon={Moon} size={SizeEnum.sm} />}
-        label={t.settings.preferences.darkMode}
-        control={
-          <GSwitch
-            aria-label={t.settings.preferences.darkMode}
-            checked={theme === ThemeEnum.Dark}
-            onChange={(e) => setTheme(e.target.checked ? ThemeEnum.Dark : ThemeEnum.Light)}
-          />
-        }
-      />
-      <PrefRow
-        icon={<GIcon icon={Languages} size={SizeEnum.sm} />}
-        label={t.settings.preferences.language}
-        control={
-          <GSelect
-            className="w-36"
-            aria-label={t.settings.preferences.language}
-            value={locale}
-            options={[
-              { value: LocaleEnum.En, label: "English" },
-              { value: LocaleEnum.Ar, label: "العربية" },
-              { value: LocaleEnum.Fr, label: "Français" },
-            ]}
-            onChange={(e) => setLocale(e.target.value as LocaleEnum)}
-          />
-        }
-      />
       {prefItems.map((item) => (
         <PrefRow
           key={item.key}

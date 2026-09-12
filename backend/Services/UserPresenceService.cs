@@ -45,5 +45,17 @@ namespace backend.Services
 
         public bool HasOtherConnections(string userId) =>
             _state.TryGetValue(userId, out var s) && s.Connections > 1;
+
+        public (int Online, int InGame) GetOnlineCounts()
+        {
+            var online = 0;
+            var inGame = 0;
+            foreach (var entry in _state.Values)
+            {
+                if (entry.Status == UserStatus.InGame) inGame++;
+                else if (entry.Status == UserStatus.Online) online++;
+            }
+            return (online, inGame);
+        }
     }
 }

@@ -9,7 +9,7 @@ import { useTranslation } from "@/hooks/useSetting";
 import { en } from "@/component/i18n/GTextField/en.i18n";
 import { ar } from "@/component/i18n/GTextField/ar.i18n";
 import { fr } from "@/component/i18n/GTextField/fr.i18n";
-
+import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n";
 import type { TPasswordFieldProps } from "./def/PasswordField";
 
@@ -27,6 +27,7 @@ function PasswordField({ ref, ...props }: TPasswordFieldProps) {
         <GButton
           icon={visible ? EyeOff : Eye}
           label={toggleLabel}
+          variant={ButtonVariantEnum.Subtle}
           tooltipPosition="bottom"
           onClick={() => setVisible((v) => !v)}
           tabIndex={-1}

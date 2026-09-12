@@ -10,15 +10,18 @@ import { GCard } from "../common/GCard";
 import { GList } from "../common/GList";
 import { GIcon } from "../common/GIcon";
 
+import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { IFriendsListProps } from "./def/FriendsList";
 
-function FriendsList({ friends, query, unreadCounts, actions }: IFriendsListProps) {
+function FriendsList<T extends IUserSummary>({ friends, query, unreadCounts, emptyMessage, emptyDescription, actions }: IFriendsListProps<T>) {
   return (
     <GCard className="p-0">
       <GList
         items={friends}
         keyExtractor={(friend) => friend.id}
         listClassName="divide-y divide-border/60"
+        emptyMessage={emptyMessage}
+        emptyDescription={emptyDescription}
         emptyIcon={<GIcon icon={UsersRound} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}>
         {(friend) => (
           <GUserRow

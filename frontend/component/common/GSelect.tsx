@@ -32,7 +32,7 @@ function GSelect<TValue extends string | number>({ label, error, className, star
           aria-describedby={field.describedBy}
           aria-invalid={field.invalid}
           required={required}
-          className={cn(fieldBase, "appearance-none", fieldSize[size], startIcon && "ps-10", "pe-9", error && fieldError, className)}
+          className={cn(fieldBase, "appearance-none", fieldSize[size], startIcon && "ps-10", "pe-9", !error && "hover:border-text-muted/50", error && fieldError, className)}
           {...props}>
           {placeholder && (
             <option value="" disabled>

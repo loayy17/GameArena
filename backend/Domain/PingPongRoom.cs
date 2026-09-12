@@ -5,8 +5,6 @@ namespace backend.Domain
 {
     public class PingPongRoom : BaseGameRoom
     {
-        private readonly Lock _lock = new();
-
         public PingPongRoom() : base(GamesKind.PingPong) { }
 
         public float BallPX { get; set; } = 0.5f;
@@ -56,13 +54,10 @@ namespace backend.Domain
 
         public override bool NeedsGameLoop => true;
 
-        public override void Tick()
+        protected override void TickCore()
         {
-            lock (_lock)
-            {
-                AdvanceBall();
-                MakeBotMove();
-            }
+            AdvanceBall();
+            MakeBotMoveCore();
         }
 
         private void AdvanceBall()
@@ -122,7 +117,7 @@ namespace backend.Domain
             }
         }
 
-        public override void MakeBotMove()
+        protected override void MakeBotMoveCore()
         {
             if (!IsBotGame || IsFinished || !HasStarted) return;
 
@@ -165,7 +160,7 @@ namespace backend.Domain
                 PadYP2 = botPaddleY;
         }
 
-        public override object GetStatePayload()
+        protected override object GetStatePayloadCore()
         {
             var p = GetBasePayload();
             p["boardWidth"] = BoardWidthPx;
@@ -182,9 +177,9 @@ namespace backend.Domain
             return p;
         }
 
-        public override void ResetForNewRound()
+        protected override void ResetForNewRoundCore()
         {
-            base.ResetForNewRound();
+            base.ResetForNewRoundCore();
             Score[0] = 0;
             Score[1] = 0;
             PadYP1 = 0.4f;
@@ -196,48 +191,45 @@ namespace backend.Domain
             ResetBall();
         }
 
-        public override void HandleAction(string playerId, JsonElement action)
+        protected override void HandleActionCore(string playerId, JsonElement action)
         {
-            lock (_lock)
+            if (Player1Id != playerId && Player2Id != playerId) return;
+
+            if (action.ValueKind != JsonValueKind.Object
+                || !action.TryGetProperty("type", out var typeProp))
+                return;
+
+            bool isPlayerOne = playerId == Player1Id;
+
+            if (typeProp.ValueEquals(ActionSetPaddle)
+                && action.TryGetProperty("y", out var yProp)
+                && yProp.TryGetSingle(out var targetY))
             {
-                if (Player1Id != playerId && Player2Id != playerId) return;
-
-                if (action.ValueKind != JsonValueKind.Object
-                    || !action.TryGetProperty("type", out var typeProp))
-                    return;
-
-                bool isPlayerOne = playerId == Player1Id;
-
-                if (typeProp.ValueEquals(ActionSetPaddle)
-                    && action.TryGetProperty("y", out var yProp)
-                    && yProp.TryGetSingle(out var targetY))
-                {
-                    if (isPlayerOne)
-                        PadYP1 = Math.Clamp(targetY, 0, 1 - PadHP1);
-                    else
-                        PadYP2 = Math.Clamp(targetY, 0, 1 - PadHP2);
-                    return;
-                }
-
-                if (!typeProp.ValueEquals(ActionMovePaddle)
-                    || !action.TryGetProperty("direction", out var directionProp))
-                    return;
-
-                bool isUp = directionProp.ValueEquals(DirectionUp);
-                if (!isUp && !directionProp.ValueEquals(DirectionDown)) return;
-
                 if (isPlayerOne)
-                {
-                    PadYP1 = isUp
-                        ? Math.Max(0, PadYP1 - PadVP1)
-                        : Math.Min(1 - PadHP1, PadYP1 + PadVP1);
-                }
+                    PadYP1 = Math.Clamp(targetY, 0, 1 - PadHP1);
                 else
-                {
-                    PadYP2 = isUp
-                        ? Math.Max(0, PadYP2 - PadVP2)
-                        : Math.Min(1 - PadHP2, PadYP2 + PadVP2);
-                }
+                    PadYP2 = Math.Clamp(targetY, 0, 1 - PadHP2);
+                return;
+            }
+
+            if (!typeProp.ValueEquals(ActionMovePaddle)
+                || !action.TryGetProperty("direction", out var directionProp))
+                return;
+
+            bool isUp = directionProp.ValueEquals(DirectionUp);
+            if (!isUp && !directionProp.ValueEquals(DirectionDown)) return;
+
+            if (isPlayerOne)
+            {
+                PadYP1 = isUp
+                    ? Math.Max(0, PadYP1 - PadVP1)
+                    : Math.Min(1 - PadHP1, PadYP1 + PadVP1);
+            }
+            else
+            {
+                PadYP2 = isUp
+                    ? Math.Max(0, PadYP2 - PadVP2)
+                    : Math.Min(1 - PadHP2, PadYP2 + PadVP2);
             }
         }
     }

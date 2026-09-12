@@ -130,9 +130,9 @@ export const pageSize: THashMap<string> = {
 };
 
 export const fieldBase =
-  "w-full bg-surface border border-border rounded-lg text-text placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-60 focus:border-primary focus:ring-2 focus:ring-primary-muted hover:border-text-muted/50";
+  "w-full bg-surface border border-border rounded-lg text-text placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-60 focus:border-primary hover:border-text-muted/50";
 
-export const fieldError = "border-danger focus:border-danger focus:ring-danger-muted";
+export const fieldError = "border-danger focus-visible:outline-danger";
 
 export const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg";

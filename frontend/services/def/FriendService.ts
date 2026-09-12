@@ -1,6 +1,5 @@
 import { friendsApi } from "@/repositories/proxy/friends.api";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
-import { withFullName } from "@/domain/lib/userUtils";
 
 import { SignalRServiceBase } from "../lib/SignalR";
 
@@ -23,10 +22,10 @@ class FriendService extends SignalRServiceBase {
         counters?: { receivedFriendRequests: number; sentFriendRequests: number; friends: number; unreadMessages: number };
       };
 
-      const sortedFriends = (batch.friends ?? []).map(withFullName).sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""));
+      const sortedFriends = (batch.friends ?? []).sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""));
       this.subs.dispatch("social:friends", sortedFriends);
       this.subs.dispatch("social:requests", { received: batch.receivedRequests ?? [], sent: batch.sentRequests ?? [] });
-      this.subs.dispatch("social:blocked", (batch.blockedUsers ?? []).map(withFullName));
+      this.subs.dispatch("social:blocked", batch.blockedUsers ?? []);
       this.subs.dispatch(
         "notification:update",
         batch.counters ?? { receivedFriendRequests: 0, sentFriendRequests: 0, friends: 0, unreadMessages: 0 },
@@ -34,7 +33,7 @@ class FriendService extends SignalRServiceBase {
     });
 
     this.addHandler("social:friends", (data: unknown) => {
-      const list = (data as IUserSummary[]).map(withFullName).sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""));
+      const list = (data as IUserSummary[]).sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""));
       this.subs.dispatch("social:friends", list);
     });
 
@@ -43,7 +42,7 @@ class FriendService extends SignalRServiceBase {
     });
 
     this.addHandler("social:blocked", (data: unknown) => {
-      this.subs.dispatch("social:blocked", (data as IUserSummary[]).map(withFullName));
+      this.subs.dispatch("social:blocked", data as IUserSummary[]);
     });
 
     this.addHandler("friend:online", (data: unknown) => {

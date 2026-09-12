@@ -36,11 +36,18 @@ namespace backend.Services
 
             if (existingRequest != null)
             {
-                existingRequest.SenderId = senderId;
-                existingRequest.ReceiverId = receiverId;
-                existingRequest.Status = FriendRequestStatus.Pending;
-                existingRequest.CreatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+               await TransactionHelper.ExecuteAsync(_context, async () =>
+                {
+                    _context.FriendRequests.Remove(existingRequest);
+                    _context.FriendRequests.Add(new FriendRequest
+                    {
+                        SenderId = senderId,
+                        ReceiverId = receiverId,
+                        Status = FriendRequestStatus.Pending,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                });
 
                 var reactivatedSender = await _context.Users
                     .Where(u => u.Id == senderId)

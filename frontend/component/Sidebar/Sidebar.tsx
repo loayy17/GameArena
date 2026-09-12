@@ -15,7 +15,6 @@ import { GButton } from "@/component/common/GButton";
 import { GBrandMark } from "@/component/common/GBrandMark";
 import { GAvatar } from "@/component/common/GAvatar";
 import { GUserRow } from "@/component/user/GUserRow";
-import { LangTheme } from "@/component/LangTheme/LangTheme";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { NavOrientationEnum } from "@/domain/enum/NavOrientationEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -34,8 +33,6 @@ function SidebarFooter({ collapsed, closeMobile, t }: ISidebarFooterProps) {
 
   return (
     <div className={cn("flex flex-col gap-1.5 p-2 pb-safe", collapsed && "items-center")}>
-      <LangTheme collapsed={collapsed} variant={collapsed ? "compact" : "equal"} align="top" />
-
       {collapsed ? (
         <div className="flex flex-col items-center gap-2">
           {user && (
@@ -71,15 +68,7 @@ function SidebarFooter({ collapsed, closeMobile, t }: ISidebarFooterProps) {
 }
 
 function SidebarNavSections({ items, collapsed }: ISidebarNavSectionsProps) {
-  const primary = items.filter((item) => item.mobile !== false);
-  const secondary = items.filter((item) => item.mobile === false);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <GNav items={primary} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} />
-      <GNav items={secondary} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} className="border-t border-border/40 pt-4" />
-    </div>
-  );
+  return <GNav items={items} orientation={NavOrientationEnum.Vertical} collapsed={collapsed} />;
 }
 
 function Sidebar({ aside: asideProp }: ISidebarProps) {

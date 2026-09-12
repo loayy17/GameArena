@@ -53,9 +53,9 @@ function GList<T>({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <div className={cn("grid", listClassName)}>
+      <div className={cn("grid grid-cols-[minmax(0,1fr)]", listClassName)}>
         {visibleItems.map((item, index) => (
-          <div key={keyExtractor ? keyExtractor(item, index) : index}>{children(item, index)}</div>
+          <div key={keyExtractor ? keyExtractor(item, index) : index} className="min-w-0">{children(item, index)}</div>
         ))}
       </div>
       {paginated && (

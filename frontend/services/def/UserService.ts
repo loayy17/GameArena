@@ -1,55 +1,45 @@
 import { userApi } from "@/repositories/proxy/user.api";
 import { api } from "@/app/network";
-import { withFullName } from "@/domain/lib/userUtils";
-
 import type { AxiosRequestConfig } from "axios";
 import type { IUser } from "@/domain/meta/IUser";
+import type { IAdminUser } from "@/domain/meta/IAdminUser";
+import type { UserRoleEnum } from "@/domain/enum/UserRoleEnum";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { IUserPublicProfile } from "@/domain/meta/IUserPublicProfile";
 import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
 import type { IRegisterRequest } from "@/domain/meta/IRegisterRequest";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
 import type { TNullable, TPromise } from "@/domain/type/TCommon";
+import type { IAdminStats } from "@/domain/meta/IAdminStats";
 
 class UserService {
   private api = userApi.api;
 
   async profile(): TPromise<IUser> {
-    const result = await this.api.profile<IUser>();
-    if (result.data) result.data = withFullName(result.data);
-    return result;
+    return this.api.profile<IUser>();
   }
 
   async list(data: IUserFilterRequest, config?: AxiosRequestConfig): TPromise<IUserSummary[]> {
-    const result = await this.api.search<IUserSummary[]>(data, config);
-    if (result.data) result.data = result.data.map(withFullName);
-    return result;
+    return this.api.search<IUserSummary[]>(data, config);
   }
 
   async publicProfile(id: string): TPromise<IUserPublicProfile> {
-    const result = await this.api.publicProfile<IUserPublicProfile>({ id });
-    if (result.data) {
-      result.data.recentMatches = (result.data.recentMatches ?? []).map((match) => ({
-        ...match,
-        opponent: withFullName(match.opponent),
-      }));
-    }
-    return result;
+    return this.api.publicProfile<IUserPublicProfile>({ id });
   }
 
-  updateProfile(data: IRegisterRequest): TPromise<IUser> {
+  async updateProfile(data: IRegisterRequest): TPromise<IUser> {
     return this.api.updateProfile<IUser>(data);
   }
 
-  changePassword(data: { oldPassword: string; newPassword: string }): TPromise<unknown> {
+  async changePassword(data: { oldPassword: string; newPassword: string }): TPromise<unknown> {
     return this.api.changePassword<unknown>(data);
   }
 
-  getPreferences(): TPromise<TNullable<string>> {
+  async getPreferences(): TPromise<TNullable<string>> {
     return this.api.getPreferences<TNullable<string>>();
   }
 
-  updatePreferences(data: { preferences: string }): TPromise<unknown> {
+  async updatePreferences(data: { preferences: string }): TPromise<unknown> {
     return this.api.updatePreferences<unknown>(data);
   }
 
@@ -59,12 +49,35 @@ class UserService {
     const result = await api.post<IApiResponse<IUser>>("/user/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    if (result.data?.data) result.data.data = withFullName(result.data.data);
     return result.data;
   }
 
-  removeAvatar(): TPromise<IUser> {
+  async removeAvatar(): TPromise<IUser> {
     return this.api.removeAvatar<IUser>();
+  }
+
+  async getStats(config?: AxiosRequestConfig): TPromise<IAdminStats> {
+    return this.api.getStats<IAdminStats>(undefined, config);
+  }
+
+  async getUsersByAdmin(data: IUserFilterRequest, config?: AxiosRequestConfig): TPromise<IAdminUser[]> {
+    return this.api.getUsersByAdmin<IAdminUser[]>(data, config);
+  }
+
+  async banUser(id: string): TPromise<void> {
+    return this.api.banUser<void>({ id });
+  }
+
+  async unbanUser(id: string): TPromise<void> {
+    return this.api.unbanUser<void>({ id });
+  }
+
+  async setRole(id: string, role: UserRoleEnum): TPromise<void> {
+    return this.api.setRole<void>({ id, role });
+  }
+
+  async deleteUser(id: string): TPromise<void> {
+    return this.api.deleteUser<void>({ id });
   }
 }
 

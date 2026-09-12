@@ -24,20 +24,21 @@ import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { useTranslation } from "@/hooks/useSetting";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { toErrorCode, useErrorMessage } from "@/hooks/useErrorMessage";
 import { friendService } from "@/services/def/FriendService";
 import { userService } from "@/services/def/UserService";
-
+import { UserRoleEnum } from "@/domain/enum/UserRoleEnum";
 import type { TFriendsTranslation } from "@/app/(dashboard)/friends/i18n/en.i18n";
 import type { IUserFilterRequest } from "@/domain/meta/IUserFilterRequest";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { TNullable } from "@/domain/type/TCommon";
 
-const SEARCH_DEBOUNCE_MS = 500;
 
 const defaultFilter: IUserFilterRequest = {
   name: "",
   userStatus: UserStatusEnum.All,
+  userRole: UserRoleEnum.All,
 };
 
 function SearchTab() {
@@ -53,13 +54,14 @@ function SearchTab() {
 
   const query = userFilter.name?.trim() ?? "";
   const status = userFilter.userStatus;
+  const debouncedQuery = useDebouncedValue(query, 500);
 
   useEffect(() => {
     let ignore = false;
     const controller = new AbortController();
 
     const performSearch = async () => {
-      if (!query) {
+      if (!debouncedQuery) {
         if (!ignore) {
           setSearchUsers([]);
           setSearchError(null);
@@ -72,7 +74,10 @@ function SearchTab() {
       if (!ignore) setSearchError(null);
 
       try {
-        const usersRes = await userService.list({ name: query, userStatus: status }, { signal: controller.signal });
+        const usersRes = await userService.list(
+          { name: debouncedQuery, userStatus: status, userRole: UserRoleEnum.All },
+          { signal: controller.signal },
+        );
         if (!ignore) setSearchUsers(usersRes.data ?? []);
       } catch (e: unknown) {
         if (axios.isCancel(e)) return;
@@ -85,16 +90,13 @@ function SearchTab() {
       }
     };
 
-    const timer = window.setTimeout(() => {
-      void performSearch();
-    }, SEARCH_DEBOUNCE_MS);
+    void performSearch();
 
     return () => {
-      window.clearTimeout(timer);
       ignore = true;
       controller.abort();
     };
-  }, [query, status, t.searchTab.searchError, resolveError]);
+  }, [debouncedQuery, status, t.searchTab.searchError, resolveError]);
 
   const searchResults = useMemo(() => {
     const friendIds = new Set(friends.map((f) => f.id));

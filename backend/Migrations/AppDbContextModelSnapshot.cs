@@ -54,6 +54,9 @@ namespace backend.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
@@ -276,9 +279,6 @@ namespace backend.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<int>("Role")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<string>("UserName")

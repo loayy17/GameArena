@@ -76,6 +76,8 @@ namespace backend.Hubs
         public async Task SendTyping(Guid receiverId)
         {
             var senderId = GetUserId();
+            var friendIds = await _socialReadService.GetFriendIdsAsync(senderId);
+            if (!friendIds.Contains(receiverId)) return;
             await Clients.Group($"user:{receiverId}").SendAsync("chat:typing", new { senderId, receiverId });
         }
 

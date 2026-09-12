@@ -3,6 +3,7 @@
 import { useId } from "react";
 
 import { cn } from "@/lib/cn";
+import { focusRing } from "@/domain/constant/style-tokens";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -81,7 +82,7 @@ function GTabs<T extends string | number>({ tabs, value, onChange, responsive = 
       </div>
 
       {children && activeTab && (
-        <div role="tabpanel" id={`${baseId}-panel-${value}`} aria-labelledby={`${baseId}-tab-${value}`} tabIndex={0} className="pt-4">
+        <div role="tabpanel" id={`${baseId}-panel-${value}`} aria-labelledby={`${baseId}-tab-${value}`} tabIndex={0} className={cn("pt-4", focusRing)}>
           {children}
         </div>
       )}

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class UserService(AppDbContext _context, IUserPresenceService _presence) : IUserService
+    public class UserService(AppDbContext _context, IUserPresenceService _presence, IEmailVerificationService _emailVerificationService) : IUserService
     {
         public async Task<UserResponse> GetUserByIdAsync(Guid userId)
         {
@@ -107,7 +107,6 @@ namespace backend.Services
 
             var users = await query
                 .OrderBy(u => u.UserName)
-                .Take(50)
                 .Select(MappingExtensions.ToAdminResponse)
                 .ToListAsync();
 
@@ -122,21 +121,13 @@ namespace backend.Services
 
         public async Task<AdminStatsResponse> GetStatsAsync()
         {
-            var ids = await _context.Users.AsNoTracking().Select(u => u.Id).ToListAsync();
+            var total = await _context.Users.AsNoTracking().CountAsync();
             var banned = await _context.Users.AsNoTracking().CountAsync(u => u.IsBanned);
-
-            var online = 0;
-            var inGame = 0;
-            foreach (var id in ids)
-            {
-                var status = _presence.GetStatus(id.ToString());
-                if (status == UserStatus.Online) online++;
-                else if (status == UserStatus.InGame) inGame++;
-            }
+            var (online, inGame) = _presence.GetOnlineCounts();
 
             return new AdminStatsResponse
             {
-                TotalUsers = ids.Count,
+                TotalUsers = total,
                 OnlineUsers = online,
                 InGameUsers = inGame,
                 BannedUsers = banned
@@ -162,11 +153,27 @@ namespace backend.Services
         public async Task<UserResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
         {
             var user = await GetUserForUpdateAsync(userId);
+            var emailChanged = !string.Equals(user.Email, request.Email, StringComparison.OrdinalIgnoreCase);
+            if (!string.Equals(user.UserName, request.UserName, StringComparison.Ordinal)
+                && await _context.Users.AnyAsync(u => u.Id != userId && u.UserName == request.UserName))
+                throw new AppException(ErrorCode.UsernameAlreadyExists);
+            if (emailChanged
+                && await _context.Users.AnyAsync(u => u.Id != userId && u.Email == request.Email))
+                throw new AppException(ErrorCode.EmailAlreadyExists);
+
             user.UserName = request.UserName;
-            user.Email = request.Email;
             user.FirstName = request.FirstName;
             user.LastName = request.LastName;
+
+            if (emailChanged)
+            {
+                user.Email = request.Email;
+                user.IsVerified = false;
+            }
             await _context.SaveChangesAsync();
+
+            if (emailChanged) await _emailVerificationService.GenerateAndSendOtpAsync(request.Email, OtpPurpose.EmailVerification);
+            
             return user.ToDto(_presence);
         }
 
@@ -225,7 +232,7 @@ namespace backend.Services
 
         public async Task BanUserAsync(Guid actorId, Guid userId)
         {
-            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: false);
+            var (_, target) = await GetModerationPairAsync(actorId, userId, UserRole.Moderator);
             target.IsBanned = true;
             await RevokeTokensAsync(target.Id);
             await _context.SaveChangesAsync();
@@ -233,7 +240,7 @@ namespace backend.Services
 
         public async Task UnbanUserAsync(Guid actorId, Guid userId)
         {
-            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: false);
+            var (_, target) = await GetModerationPairAsync(actorId, userId, UserRole.Moderator);
             target.IsBanned = false;
             await _context.SaveChangesAsync();
         }
@@ -243,7 +250,24 @@ namespace backend.Services
             if (!Enum.IsDefined(role) || role == UserRole.All)
                 throw new AppException(ErrorCode.ValidationError);
 
-            var target = await GetModifiableUserAsync(actorId, userId, requireAdmin: true);
+            var actor = await _context.Users.FirstOrDefaultAsync(u => u.Id == actorId)
+                ?? throw new AppException(ErrorCode.UserNotFound);
+
+            if (actor.Role != UserRole.Admin && actor.Role != UserRole.SuperAdmin)
+                throw new AppException(ErrorCode.Forbidden);
+
+            if (actor.Role == UserRole.Admin && role != UserRole.User && role != UserRole.Moderator)
+                throw new AppException(ErrorCode.Forbidden);
+
+            if (actorId == userId)
+                throw new AppException(ErrorCode.Forbidden);
+
+            var target = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new AppException(ErrorCode.UserNotFound);
+
+            if (target.Role >= actor.Role)
+                throw new AppException(ErrorCode.Forbidden);
+
             target.Role = role;
             await RevokeTokensAsync(target.Id);
             await _context.SaveChangesAsync();
@@ -252,15 +276,7 @@ namespace backend.Services
         public async Task DeleteAccountAsync(Guid actorId, Guid targetId)
         {
             if (actorId != targetId)
-            {
-                var actorRole = await _context.Users
-                    .AsNoTracking()
-                    .Where(u => u.Id == actorId)
-                    .Select(u => (UserRole?)u.Role)
-                    .FirstOrDefaultAsync();
-                if (actorRole != UserRole.Admin)
-                    throw new AppException(ErrorCode.Forbidden);
-            }
+                await GetModerationPairAsync(actorId, targetId, UserRole.Admin);
 
             await TransactionHelper.ExecuteAsync(_context, async () =>
             {
@@ -298,15 +314,12 @@ namespace backend.Services
             => await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
                ?? throw new AppException(ErrorCode.UserNotFound);
 
-        private async Task<User> GetModifiableUserAsync(Guid actorId, Guid userId, bool requireAdmin)
+        private async Task<(User Actor, User Target)> GetModerationPairAsync(Guid actorId, Guid userId, UserRole minPower)
         {
             var actor = await _context.Users.FirstOrDefaultAsync(u => u.Id == actorId)
                 ?? throw new AppException(ErrorCode.UserNotFound);
 
-            var allowed = requireAdmin
-                ? actor.Role == UserRole.Admin
-                : actor.Role is UserRole.Admin or UserRole.Moderator;
-            if (!allowed)
+            if (actor.Role < minPower)
                 throw new AppException(ErrorCode.Forbidden);
 
             if (actorId == userId)
@@ -315,10 +328,10 @@ namespace backend.Services
             var target = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
                 ?? throw new AppException(ErrorCode.UserNotFound);
 
-            if (target.Role == UserRole.Admin)
+            if (target.Role >= actor.Role)
                 throw new AppException(ErrorCode.Forbidden);
 
-            return target;
+            return (actor, target);
         }
 
         private async Task RevokeTokensAsync(Guid userId)
@@ -346,7 +359,7 @@ namespace backend.Services
             if (filter.UserRole != UserRole.All)
                 query = query.Where(u => u.Role == filter.UserRole);
 
-            return query.Take(20);
+            return query;
         }
 
         private async Task<(int Total, int Wins, int Losses, int Draws)> GetMatchStatsAsync(Guid userId)
@@ -388,8 +401,8 @@ namespace backend.Services
                     Player1Score = mh.Player1Score,
                     Player2Score = mh.Player2Score,
                     Opponent = mh.Player1Id == userId
-                        ? new UserSummaryResponse(mh.Player2.Id, mh.Player2.UserName, mh.Player2.FirstName, mh.Player2.LastName, mh.Player2.FirstName + " " + mh.Player2.LastName, mh.Player2.Status, MappingExtensions.AvatarUrl(mh.Player2.Id, mh.Player2.Avatar))
-                        : new UserSummaryResponse(mh.Player1.Id, mh.Player1.UserName, mh.Player1.FirstName, mh.Player1.LastName, mh.Player1.FirstName + " " + mh.Player1.LastName, mh.Player1.Status, MappingExtensions.AvatarUrl(mh.Player1.Id, mh.Player1.Avatar)),
+                        ? new UserSummaryResponse(mh.Player2.Id, mh.Player2.UserName, mh.Player2.FirstName, mh.Player2.LastName, mh.Player2.FirstName + " " + mh.Player2.LastName, UserStatus.Offline, MappingExtensions.AvatarUrl(mh.Player2.Id, mh.Player2.Avatar))
+                        : new UserSummaryResponse(mh.Player1.Id, mh.Player1.UserName, mh.Player1.FirstName, mh.Player1.LastName, mh.Player1.FirstName + " " + mh.Player1.LastName, UserStatus.Offline, MappingExtensions.AvatarUrl(mh.Player1.Id, mh.Player1.Avatar)),
                     Result = mh.Player1Id == userId
                         ? (mh.Player1Score > mh.Player2Score ? MatchStatus.Win : mh.Player1Score < mh.Player2Score ? MatchStatus.Lost : MatchStatus.Draw)
                         : (mh.Player2Score > mh.Player1Score ? MatchStatus.Win : mh.Player2Score < mh.Player1Score ? MatchStatus.Lost : MatchStatus.Draw)

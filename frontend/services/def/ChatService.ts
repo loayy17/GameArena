@@ -9,6 +9,7 @@ import type { IPerFriendUnreadCount } from "@/domain/meta/IPerFriendUnreadCount"
 import type { Handler } from "../lib/SignalR";
 
 const normalizeMessage = (payload: IPrivateMessagePayload): IMessage => ({
+  id: payload.id,
   senderId: payload.senderId,
   receiverId: payload.receiverId,
   content: payload.content ?? payload.message ?? "",

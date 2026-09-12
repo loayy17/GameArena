@@ -8,6 +8,7 @@ import { useDashboardData } from "@/app/providers/DashboardDataProvider";
 import { useTranslation } from "@/hooks/useSetting";
 import { useGameTranslation } from "@/hooks/useGameTranslation";
 import { useMatchHistory } from "@/hooks/useMatchHistory";
+import { cn } from "@/lib/cn";
 import { GPage } from "@/component/common/GPage";
 import { GCard } from "@/component/common/GCard";
 import { GIcon } from "@/component/common/GIcon";
@@ -16,6 +17,7 @@ import { GameCard } from "@/component/games/common/GameCard";
 import { RecentHistorySection } from "@/component/history/RecentHistorySection";
 import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
 import { GamesList, translateGameInfo } from "@/domain/constant/games";
+import { focusRing } from "@/domain/constant/style-tokens";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 
 import { ar } from "./i18n/ar.i18n";
@@ -46,7 +48,7 @@ function Home() {
         <p className="mt-1.5 text-sm text-text-secondary">{t.welcomeDesc}</p>
         <div className="mt-6 grid grid-cols-2 gap-3 @lg:grid-cols-3 @4xl:grid-cols-5">
           {stats.map((stat) => (
-            <Link key={stat.label} href={stat.href} className="focus-visible:outline-none">
+            <Link key={stat.label} href={stat.href} className={cn("rounded-2xl", focusRing)}>
               <GCard variant={CardVariantEnum.Interactive} className="flex items-center gap-3 p-3 sm:p-4">
                 <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${stat.tile}`}>
                   <GIcon icon={stat.icon} size={SizeEnum.md} />

@@ -211,6 +211,8 @@ namespace backend.Services
                 return false;
             }
 
+            room.HumanPlayer1Id = room.Player1Id;
+            room.HumanPlayer2Id = room.Player2Id == "__BOT__" ? null : room.Player2Id;
             room.HasStarted = true;
             room.CurrentTurnPlayerId = room.Player1Id!;
             room.ResetForNewRound();
@@ -308,17 +310,19 @@ namespace backend.Services
 
         private async Task PersistMatchResultAsync(BaseGameRoom room)
         {
-            if (room.IsBotGame) return;
-            if (!Guid.TryParse(room.Player1Id, out var _) || !Guid.TryParse(room.Player2Id, out var _)) return;
+            var p1 = room.HumanPlayer1Id;
+            var p2 = room.HumanPlayer2Id;
+            if (!Guid.TryParse(p1, out var p1Guid) || !Guid.TryParse(p2, out var p2Guid))
+                return;
 
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var matchHistory = scope.ServiceProvider.GetRequiredService<IMatchHistoryService>();
-                await matchHistory.SaveMatchHistoryAsync(room);
+                await matchHistory.SaveMatchHistoryAsync(room.RoomId, room.GameType, p1Guid, p2Guid, room.Score[0], room.Score[1]);
 
                 var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
-                await eventBus.PublishAsync(new GameFinishedEvent(room.Player1Id!, room.Player2Id!, room.Score?[0] ?? 0, room.Score?[1] ?? 0));
+                await eventBus.PublishAsync(new GameFinishedEvent(p1, p2, room.Score[0], room.Score[1]));
             }
             catch (Exception ex)
             {
@@ -502,9 +506,11 @@ namespace backend.Services
             {
                 await Task.Delay(delayMs + Random.Shared.Next(0, 400));
                 if (!_rooms.ContainsKey(roomId)) return;
+
                 room.MakeBotMove();
                 await _hubContext.Clients.Group(roomId)
                     .SendAsync("gameState", room.GetStatePayload());
+
                 if (room.WinnerPlayerId != null)
                     await CompleteRoundAsync(room, roomId);
             }

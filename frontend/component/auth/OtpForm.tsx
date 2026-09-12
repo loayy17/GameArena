@@ -124,7 +124,7 @@ function OtpForm({ email, onSuccess, onResend, validateOnly = false }: IOtpFormP
         await emailVerificationService.sendOtp({ email });
       }
       setSuccess(t.codeSent);
-      setCooldown(45);
+      setCooldown(60);
     } catch (e: unknown) {
       setError(resolveError(toErrorCode(e), t.resendCodeFailed));
     } finally {
@@ -162,7 +162,7 @@ function OtpForm({ email, onSuccess, onResend, validateOnly = false }: IOtpFormP
             onChange={(e) => setDigit(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={handlePaste}
-            className="w-12 h-14 text-center font-bold text-lg border-2 border-text-muted/40 rounded-xl bg-surface text-text placeholder:text-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none caret-primary"
+            className="w-12 h-14 text-center font-bold text-lg border-2 border-text-muted/40 rounded-xl bg-surface text-text placeholder:text-transparent focus:border-primary caret-primary"
           />
         ))}
       </div>

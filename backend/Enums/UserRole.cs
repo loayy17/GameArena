@@ -5,6 +5,7 @@
         All,
         User,
         Moderator,
-        Admin
+        Admin,
+        SuperAdmin
     }
 }

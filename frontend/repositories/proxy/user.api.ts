@@ -36,6 +36,30 @@ const userApi = clientFactory(
       verb: HttpVerbEnum.Delete,
       template: "/avatar",
     },
+    getStats: {
+      verb: HttpVerbEnum.Get,
+      template: "/admin/stats",
+    },
+    getUsersByAdmin: {
+      verb: HttpVerbEnum.Get,
+      template: "/admin/users",
+    },
+    banUser: {
+      verb: HttpVerbEnum.Post,
+      template: "/admin/users/{id}/ban",
+    },
+    unbanUser: {
+      verb: HttpVerbEnum.Post,
+      template: "/admin/users/{id}/unban",
+    },
+    setRole: {
+      verb: HttpVerbEnum.Put,
+      template: "/admin/users/role",
+    },
+    deleteUser: {
+      verb: HttpVerbEnum.Delete,
+      template: "/admin/users/{id}",
+    },
   },
   undefined,
   (json) => json,

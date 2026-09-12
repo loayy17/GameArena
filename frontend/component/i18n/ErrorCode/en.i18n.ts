@@ -8,6 +8,8 @@ const en: THashMap<string, number> = {
   [ErrorCodeEnum.TokenExpired]: "Session expired. Please log in again",
   [ErrorCodeEnum.EmailNotVerified]: "Email not verified",
   [ErrorCodeEnum.RefreshTokenInvalid]: "Invalid refresh token",
+  [ErrorCodeEnum.UserBanned]: "This account has been banned",
+  [ErrorCodeEnum.Forbidden]: "You are not allowed to perform this action",
   [ErrorCodeEnum.OtpInvalid]: "Invalid verification code",
   [ErrorCodeEnum.OtpExpired]: "Verification code expired. Please request a new one",
   [ErrorCodeEnum.EmailNotFound]: "Email not found",

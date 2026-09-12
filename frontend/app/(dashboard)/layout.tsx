@@ -24,12 +24,10 @@ import type { IDashboardLayoutProps } from "./def/DashboardLayout";
 function MobileFooter() {
   const { t, navItems } = useNavItems();
 
-  const items = navItems
-    .filter((item) => item.mobile !== false)
-    .map((item) => ({
-      ...item,
-      label: item.id === "history" ? t.historyShort : item.label,
-    }));
+  const items = navItems.slice(0, 5).map((item) => ({
+    ...item,
+    label: item.id === "history" ? t.historyShort : item.label,
+  }));
 
   return (
     <GNav

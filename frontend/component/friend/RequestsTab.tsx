@@ -33,7 +33,7 @@ function RequestsTab({ requests, onAccept, onDecline, t }: IRequestsTabProps) {
     firstName: r.senderFirstName,
     lastName: r.senderLastName,
     userName: r.senderUserName,
-    fullName: r.senderFullName || [r.senderFirstName, r.senderLastName].filter(Boolean).join(" ") || r.senderUserName || r.senderId,
+    fullName: r.senderFullName || r.senderUserName || r.senderId,
   }));
 
   return (

@@ -43,8 +43,8 @@ function PingPongPage() {
   const isActive = isPingPongState(state) && !state.isFinished;
 
   const resolveDirection = (keys: Set<string>): "UP" | "DOWN" | "LEFT" | "RIGHT" | null => {
-    const up = PADDLE_KEYS.UP.intersection(keys).size > 0;
-    const down = PADDLE_KEYS.DOWN.intersection(keys).size > 0;
+    const up = [...PADDLE_KEYS.UP].some((k) => keys.has(k));
+    const down = [...PADDLE_KEYS.DOWN].some((k) => keys.has(k));
     if (up && down) return null;
     if (up) return DirectionValues.UP;
     if (down) return DirectionValues.DOWN;
@@ -89,8 +89,22 @@ function PingPongPage() {
           className="relative mx-auto w-full overflow-hidden rounded-2xl border border-game-board-border bg-game-board shadow-inner touch-none select-none"
           style={{ aspectRatio: boardWidth / boardHeight }}>
           <div className="absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-game-board-border/60" />
-          <Paddle paddle={player1Paddle} paddleWidth={paddleWidth} boardWidth={boardWidth} boardHeight={boardHeight} tickMs={tickMs} colorClass="bg-accent" />
-          <Paddle paddle={player2Paddle} paddleWidth={paddleWidth} boardWidth={boardWidth} boardHeight={boardHeight} tickMs={tickMs} colorClass="bg-warning" />
+          <Paddle
+            paddle={player1Paddle}
+            paddleWidth={paddleWidth}
+            boardWidth={boardWidth}
+            boardHeight={boardHeight}
+            tickMs={tickMs}
+            colorClass="bg-accent"
+          />
+          <Paddle
+            paddle={player2Paddle}
+            paddleWidth={paddleWidth}
+            boardWidth={boardWidth}
+            boardHeight={boardHeight}
+            tickMs={tickMs}
+            colorClass="bg-warning"
+          />
           <div
             className="absolute rounded-full bg-primary shadow-lg shadow-primary/20 transition-[top,left] ease-linear will-change-[top,left]"
             style={{

@@ -5,12 +5,11 @@ namespace backend.Domain
 {
     public sealed class SnakeRoom : BaseGameRoom
     {
-        private readonly Lock _lock = new();
-
         public static readonly int BoardWidth = 30;
         public static readonly int BoardHeight = 20;
         private const int InitialLength = 3;
         private const int GameTickIntervalMs = 100;
+        private const int MaxRandomSpawnAttempts = 100;
 
         private const string ActionChangeDirection = "CHANGE_DIRECTION";
 
@@ -31,19 +30,17 @@ namespace backend.Domain
         public override bool NeedsGameLoop => true;
         public override int TickIntervalMs => GameTickIntervalMs;
 
-        public override void Tick()
+        protected override void TickCore()
         {
-            lock (_lock)
-            {
-                if (WinnerPlayerId != null || !HasStarted) return;
-                if (_snake1.Count == 0 || _snake2.Count == 0) return;
+            if (WinnerPlayerId != null || !HasStarted) return;
+            if (_snake1.Count == 0 || _snake2.Count == 0) return;
 
-                ApplyDirections();
-                MovePlayers();
-                HandleFood();
-                HandleCollisions();
-                ResolveWinner();
-            }
+            MakeBotMoveCore();
+            ApplyDirections();
+            MovePlayers();
+            HandleFood();
+            HandleCollisions();
+            ResolveWinner();
         }
 
         private void ApplyDirections()
@@ -86,7 +83,7 @@ namespace backend.Domain
 
         private void SpawnFood()
         {
-            while (true)
+            for (int i = 0; i < MaxRandomSpawnAttempts; i++)
             {
                 var p = new Point(Random.Shared.Next(BoardWidth), Random.Shared.Next(BoardHeight));
                 if (!_snake1.Contains(p) && !_snake2.Contains(p))
@@ -95,6 +92,18 @@ namespace backend.Domain
                     return;
                 }
             }
+
+            var free = new List<Point>();
+            for (int x = 0; x < BoardWidth; x++)
+                for (int y = 0; y < BoardHeight; y++)
+                {
+                    var p = new Point(x, y);
+                    if (!_snake1.Contains(p) && !_snake2.Contains(p))
+                        free.Add(p);
+                }
+
+            if (free.Count > 0)
+                Food = free[Random.Shared.Next(free.Count)];
         }
 
         private void HandleCollisions()
@@ -104,13 +113,13 @@ namespace backend.Domain
             var h1 = _snake1.First!.Value;
             var h2 = _snake2.First!.Value;
 
-            if (_alive1 && IsDead(h1, _snake1, _snake2, h2)) _alive1 = false;
-            if (_alive2 && IsDead(h2, _snake2, _snake1, h1)) _alive2 = false;
+            if (_alive1 && IsDead(h1, _snake1, _snake2)) _alive1 = false;
+            if (_alive2 && IsDead(h2, _snake2, _snake1)) _alive2 = false;
 
             if (h1.Equals(h2)) _alive1 = _alive2 = false;
         }
 
-        private bool IsDead(Point head, LinkedList<Point> me, LinkedList<Point> enemy, Point otherHead)
+        private bool IsDead(Point head, LinkedList<Point> me, LinkedList<Point> enemy)
         {
             var cur = me.First!.Next;
             while (cur != null)
@@ -136,17 +145,14 @@ namespace backend.Domain
             else if (!_alive2) CompleteRound(Player1Id);
         }
 
-        public override void HandleAction(string playerId, JsonElement action)
+        protected override void HandleActionCore(string playerId, JsonElement action)
         {
-            lock (_lock)
-            {
-                if (Player1Id != playerId && Player2Id != playerId) return;
-                if (_snake1.Count == 0 || _snake2.Count == 0) return;
-                if (!TryParseAction(action, out var dir)) return;
+            if (Player1Id != playerId && Player2Id != playerId) return;
+            if (_snake1.Count == 0 || _snake2.Count == 0) return;
+            if (!TryParseAction(action, out var dir)) return;
 
-                if (playerId == Player1Id && IsValidTurn(Dir1, dir)) _pending1 = dir;
-                else if (playerId == Player2Id && IsValidTurn(Dir2, dir)) _pending2 = dir;
-            }
+            if (playerId == Player1Id && IsValidTurn(Dir1, dir)) _pending1 = dir;
+            else if (playerId == Player2Id && IsValidTurn(Dir2, dir)) _pending2 = dir;
         }
 
         private static bool TryParseAction(JsonElement action, out Direction dir)
@@ -164,26 +170,29 @@ namespace backend.Domain
                 and not (Direction.Left, Direction.Right)
                 and not (Direction.Right, Direction.Left);
 
-        public override void MakeBotMove()
+        protected override void MakeBotMoveCore()
         {
-            lock (_lock)
+            if (!IsBotGame || IsFinished || !HasStarted) return;
+            if (_alive1 && Player1Id == "__BOT__" && _snake1.Count > 0)
+                _pending1 = BestDirection(_snake1, Dir1);
+            if (_alive2 && Player2Id == "__BOT__" && _snake2.Count > 0)
+                _pending2 = BestDirection(_snake2, Dir2);
+        }
+
+        private Direction BestDirection(LinkedList<Point> snake, Direction current)
+        {
+            var head = snake.First!.Value;
+            var best = current;
+            var bestScore = int.MinValue;
+
+            foreach (var d in Enum.GetValues<Direction>())
             {
-                if (!IsBotGame || IsFinished || !HasStarted || !_alive2) return;
-                if (_snake2.Count == 0) return;
-
-                var head = _snake2.First!.Value;
-                var best = Dir2;
-                var bestScore = int.MinValue;
-
-                foreach (var d in Enum.GetValues<Direction>())
-                {
-                    if (!IsValidTurn(Dir2, d)) continue;
-                    var next = head.Move(d);
-                    int s = ScoreMove(next);
-                    if (s > bestScore) { bestScore = s; best = d; }
-                }
-                _pending2 = best;
+                if (!IsValidTurn(current, d)) continue;
+                var next = head.Move(d);
+                int s = ScoreMove(next);
+                if (s > bestScore) { bestScore = s; best = d; }
             }
+            return best;
         }
 
         private int ScoreMove(Point p)
@@ -202,26 +211,23 @@ namespace backend.Domain
             return s;
         }
 
-        public override void ResetForNewRound()
+        protected override void ResetForNewRoundCore()
         {
-            lock (_lock)
-            {
-                base.ResetForNewRound();
-                Dir1 = Direction.Right; Dir2 = Direction.Left;
-                _pending1 = _pending2 = null;
-                _alive1 = _alive2 = true;
+            base.ResetForNewRoundCore();
+            Dir1 = Direction.Right; Dir2 = Direction.Left;
+            _pending1 = _pending2 = null;
+            _alive1 = _alive2 = true;
 
-                _snake1.Clear(); _snake2.Clear();
+            _snake1.Clear(); _snake2.Clear();
 
-                int y = BoardHeight / 2;
-                for (int i = 0; i < InitialLength; i++) _snake1.AddLast(new Point(2 - i, y));
-                for (int i = 0; i < InitialLength; i++) _snake2.AddLast(new Point(BoardWidth - 3 + i, y));
+            int y = BoardHeight / 2;
+            for (int i = 0; i < InitialLength; i++) _snake1.AddLast(new Point(2 - i, y));
+            for (int i = 0; i < InitialLength; i++) _snake2.AddLast(new Point(BoardWidth - 3 + i, y));
 
-                SpawnFood();
-            }
+            SpawnFood();
         }
 
-        public override object GetStatePayload()
+        protected override object GetStatePayloadCore()
         {
             var p = GetBasePayload();
             p["boardWidth"] = BoardWidth;

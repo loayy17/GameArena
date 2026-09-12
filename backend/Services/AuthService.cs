@@ -92,6 +92,7 @@ namespace backend.Services
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == storedToken.UserId)
                 ?? throw new AppException(ErrorCode.UserNotFound);
 
+            if (user.IsBanned) throw new AppException(ErrorCode.UserBanned);
             if (!user.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
             _context.RefreshTokens.Remove(storedToken);
             return await IssueAuthResponseAsync(user);
@@ -111,7 +112,7 @@ namespace backend.Services
             if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
 
             if (!await _context.Users.AnyAsync(u => u.Email == email))
-                throw new AppException(ErrorCode.EmailNotFound);
+                return;
 
             await _emailVerificationService.GenerateAndSendOtpAsync(email, OtpPurpose.PasswordReset);
         }

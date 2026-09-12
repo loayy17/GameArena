@@ -20,6 +20,10 @@ namespace backend.Services
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email)
                 ?? throw new AppException(ErrorCode.EmailNotFound);
 
+            await _context.EmailVerifications
+                .Where(x => x.UserId == user.Id && (x.IsUsed || x.ExpiresAt < DateTime.UtcNow))
+                .ExecuteDeleteAsync();
+
             var recent = await _context.EmailVerifications
                 .Where(x => x.UserId == user.Id && x.Purpose == purpose && !x.IsUsed)
                 .OrderByDescending(x => x.CreatedAt)
@@ -37,6 +41,7 @@ namespace backend.Services
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(15),
                 IsUsed = false,
+                FailedAttempts = 0,
                 Purpose = purpose
             };
             _context.EmailVerifications.Add(verification);
@@ -64,14 +69,21 @@ namespace backend.Services
 
             var record = await _context.EmailVerifications
                 .Where(x => x.UserId == user.Id && !x.IsUsed && x.Purpose == purpose)
-                .OrderByDescending(x => x.ExpiresAt)
+                .OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefaultAsync()
                 ?? throw new AppException(ErrorCode.OtpInvalid);
 
             if (record.ExpiresAt < DateTime.UtcNow)
                 throw new AppException(ErrorCode.OtpExpired);
+
             if (record.OtpHash != AuthHelper.Hash(otp))
-                throw new AppException(ErrorCode.OtpInvalid);
+            {
+                record.FailedAttempts++;
+                if (record.FailedAttempts >= 5)
+                    record.IsUsed = true;
+                await _context.SaveChangesAsync();
+                throw new AppException(record.IsUsed ? ErrorCode.RateLimited : ErrorCode.OtpInvalid);
+            }
             if (purpose == OtpPurpose.EmailVerification && user.IsVerified)
                 throw new AppException(ErrorCode.EmailAlreadyVerified);
 

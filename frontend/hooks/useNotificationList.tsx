@@ -150,7 +150,7 @@ export function useNotificationList(tab: TNotificationTab) {
     }
 
     for (const r of requests) {
-      const name = r.senderFullName || `${r.senderFirstName ?? ""} ${r.senderLastName ?? ""}`.trim() || (r.senderUserName ?? gameT.invite.fallbackName);
+      const name = (r.senderFullName?.trim() || r.senderUserName) ?? gameT.invite.fallbackName;
       out.push({
         id: `fr-${r.senderId}`,
         type: NotificationTypeEnum.FriendRequest,

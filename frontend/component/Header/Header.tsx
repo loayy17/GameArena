@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Scale,
   Settings,
+  ShieldCheck,
   Sun,
   User,
   UsersRound,
@@ -25,22 +26,23 @@ import {
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useLogout } from "@/hooks/useLogout";
-import { withFullName } from "@/domain/lib/userUtils";
 import { useNotificationList } from "@/hooks/useNotificationList";
 import { useLocale, useTheme, useTranslation } from "@/hooks/useSetting";
+import { cn } from "@/lib/cn";
 import { GBrandMark } from "@/component/common/GBrandMark";
 import { GButton } from "@/component/common/GButton";
 import { GIcon } from "@/component/common/GIcon";
 import { GBadge } from "@/component/common/GBadge";
 import { GDropdown } from "@/component/common/GDropdown";
 import { GMenuItem } from "@/component/common/GMenuItem";
-import { GLocalePickerItems } from "@/component/common/GLocalePickerItems";
+import { GSwitch } from "@/component/common/GSwitch";
 import { GAvatar } from "@/component/common/GAvatar";
 import { GUserRow } from "@/component/user/GUserRow";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { LocaleEnum } from "@/domain/enum/LocaleEnum";
 import { ThemeEnum } from "@/domain/enum/ThemeEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
+import { UserRoleEnum } from "@/domain/enum/UserRoleEnum";
 import { ar as sideAr } from "@/component/i18n/SideBar/ar.i18n";
 import { fr as sideFr } from "@/component/i18n/SideBar/fr.i18n";
 import { en as sideEn } from "@/component/i18n/SideBar/en.i18n";
@@ -59,11 +61,11 @@ import type { IHeaderProps } from "./def/Header";
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 const BUG_REPORT_MAILTO = SUPPORT_EMAIL ? `mailto:${SUPPORT_EMAIL}?subject=GameArena%20Bug%20Report` : null;
 
-const localeLabels = (t: TUserMenuTranslation) => ({
-  [LocaleEnum.En]: t.english,
-  [LocaleEnum.Ar]: t.arabic,
-  [LocaleEnum.Fr]: t.french,
-});
+const LOCALE_OPTIONS: { value: LocaleEnum; label: string }[] = [
+  { value: LocaleEnum.En, label: "EN" },
+  { value: LocaleEnum.Ar, label: "AR" },
+  { value: LocaleEnum.Fr, label: "FR" },
+];
 
 function UserMenu() {
   const { user } = useAuth();
@@ -75,11 +77,10 @@ function UserMenu() {
   const t = useTranslation<TUserMenuTranslation>({ en: menuEn, ar: menuAr, fr: menuFr });
 
   const [open, setOpen] = useState(false);
-  const [nestedOpen, setNestedOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const isDark = theme === ThemeEnum.Dark;
 
   const closeMenu = () => {
-    setNestedOpen(false);
     setHelpOpen(false);
     setOpen(false);
   };
@@ -87,11 +88,6 @@ function UserMenu() {
   const goTo = (path: string) => {
     closeMenu();
     router.push(path);
-  };
-
-  const toggleSubmenu = (which: "nested" | "help") => {
-    setNestedOpen(which === "nested" ? (current) => !current : false);
-    setHelpOpen(which === "help" ? (current) => !current : false);
   };
 
   const navigateDelayed = (path: string) => {
@@ -115,59 +111,66 @@ function UserMenu() {
           aria-haspopup="menu"
           onClick={() => {
             setOpen((current) => !current);
-            setNestedOpen(false);
             setHelpOpen(false);
           }}
           className="rounded-full">
           <div className="flex items-center gap-2">
             <GAvatar user={user ?? {}} size={SizeEnum.xs} />
             <span className="hidden max-w-32 truncate text-sm font-medium text-text sm:inline-block">
-              {user ? withFullName(user).fullName : ""}
+              {user?.fullName?.trim() || user?.userName || ""}
             </span>
             <GIcon icon={ChevronDown} size={SizeEnum.xs} className="shrink-0 text-text-muted" />
           </div>
         </GButton>
       }>
-      <div className="border-b border-border p-2">
-        {user && <GUserRow user={user} size={SizeEnum.xs} />}
+      <div className="border-b border-border p-2">{user && <GUserRow user={user} size={SizeEnum.xs} />}</div>
+
+      <div className="border-b border-border pb-2 pt-1.5">
+        <div className="flex items-center justify-between gap-3 px-4 py-1.5">
+          <span className="flex items-center gap-3 text-sm font-medium text-text">
+            <GIcon icon={isDark ? Moon : Sun} size={SizeEnum.md} />
+            {t.theme}
+          </span>
+          <GSwitch
+            aria-label={isDark ? t.dark : t.light}
+            checked={isDark}
+            onChange={(e) => setTheme(e.target.checked ? ThemeEnum.Dark : ThemeEnum.Light)}
+          />
+        </div>
+
+        <div className="px-4 pb-1 pt-1">
+          <div className="flex items-center gap-3 pb-1.5 text-sm font-medium text-text">
+            <GIcon icon={Globe} size={SizeEnum.md} />
+            {t.language}
+          </div>
+          <div className="flex overflow-hidden rounded-lg border border-border bg-surface" role="group" aria-label={t.language}>
+            {LOCALE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setLocale(opt.value)}
+                aria-pressed={locale === opt.value}
+                className={cn(
+                  "flex-1 px-2 py-1.5 text-xs font-semibold transition-colors",
+                  locale === opt.value ? "bg-primary text-on-primary" : "text-text-secondary hover:bg-primary-muted hover:text-primary",
+                )}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-border md:hidden">
+        <p className="px-4 pb-1 pt-2 text-2xs font-semibold uppercase tracking-wider text-text-muted">{t.navigate}</p>
+        <GMenuItem icon={Bell} label={t.notifications} onClick={() => goTo("/notifications")} />
+        <GMenuItem icon={Settings} label={t.settings} onClick={() => goTo("/settings")} />
+        {(user?.role === UserRoleEnum.Admin || user?.role === UserRoleEnum.Moderator || user?.role === UserRoleEnum.SuperAdmin) && (
+          <GMenuItem icon={ShieldCheck} label={t.admin} onClick={() => goTo("/admin")} />
+        )}
       </div>
 
       <GMenuItem icon={User} label={t.profile} onClick={() => user?.id && goTo(`/profile/${user.id}`)} />
-      <GMenuItem icon={Bell} label={t.notifications} onClick={() => goTo("/notifications")} />
-      <GMenuItem
-        icon={theme === ThemeEnum.Dark ? Sun : Moon}
-        label={theme === ThemeEnum.Dark ? t.light : t.dark}
-        onClick={() => {
-          setTheme(theme === ThemeEnum.Dark ? ThemeEnum.Light : ThemeEnum.Dark);
-          closeMenu();
-        }}
-      />
-
-      <GDropdown
-        open={nestedOpen && open}
-        onClose={() => setNestedOpen(false)}
-        align="left"
-        trigger={
-          <GMenuItem
-            icon={Globe}
-            className="w-full"
-            label={`${t.language}: ${localeLabels(t)[locale]}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleSubmenu("nested");
-            }}>
-            <GIcon icon={ChevronRight} size={SizeEnum.xs} />
-          </GMenuItem>
-        }>
-        <GLocalePickerItems
-          locale={locale}
-          labels={localeLabels(t)}
-          onSelect={(nextLocale) => {
-            setLocale(nextLocale);
-            closeMenu();
-          }}
-        />
-      </GDropdown>
 
       <GDropdown
         open={helpOpen && open}
@@ -180,7 +183,7 @@ function UserMenu() {
             label={t.help}
             onClick={(e) => {
               e.stopPropagation();
-              toggleSubmenu("help");
+              setHelpOpen((current) => !current);
             }}>
             <GIcon icon={ChevronRight} size={SizeEnum.xs} />
           </GMenuItem>
@@ -199,7 +202,6 @@ function UserMenu() {
         <GMenuItem icon={FileText} label={t.privacyPolicy} onClick={() => navigateDelayed("/privacy")} />
         <GMenuItem icon={Scale} label={t.termsOfService} onClick={() => navigateDelayed("/terms")} />
       </GDropdown>
-      <GMenuItem icon={Settings} label={t.settings} onClick={() => goTo("/settings")} />
       <GMenuItem
         icon={LogOut}
         label={t.logout}
@@ -221,7 +223,7 @@ function Header({ sidebar, social }: IHeaderProps) {
 
   const socialBadgeEl =
     socialBadgeTotal > 0 ? (
-      <span aria-hidden className="absolute -top-1 -end-1">
+      <span aria-hidden className="absolute -top-1 -inset-e-1">
         <GBadge count={socialBadgeTotal} size={SizeEnum.xs} className="h-4 min-w-4 px-1 text-2xs ring-2 ring-bg-sidebar" />
       </span>
     ) : undefined;
@@ -271,7 +273,15 @@ function Header({ sidebar, social }: IHeaderProps) {
       <div className="flex shrink-0 items-center gap-1.5">
         <UserMenu />
         <span className="relative inline-flex xl:hidden">
-          {iconToggle(UsersRound, st.friendsAndInvites, Boolean(social?.open), "inline-flex", () => social?.toggleMobile(), { expanded: social?.open }, "start")}
+          {iconToggle(
+            UsersRound,
+            st.friendsAndInvites,
+            Boolean(social?.open),
+            "inline-flex",
+            () => social?.toggleMobile(),
+            { expanded: social?.open },
+            "start",
+          )}
           {socialBadgeEl}
         </span>
         <span className="relative hidden xl:inline-flex">

@@ -5,7 +5,6 @@ import Image from "next/image";
 
 import { apiBase } from "@/app/network";
 import { cn } from "@/lib/cn";
-import { buildFullName } from "@/domain/lib/userUtils";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { UserStatusEnum } from "@/domain/enum/UserStatusEnum";
 import { squareSize, statusColor } from "@/domain/constant/style-tokens";
@@ -26,7 +25,7 @@ function GAvatar({ user, src, alt, fallback = "", size = SizeEnum.xs, status, cl
   const rawSrc = user?.avatarUrl ?? src;
   const avatarSrc = rawSrc ? (rawSrc.startsWith("http") ? rawSrc : `${apiBase}${rawSrc}`) : null;
 
-  const avatarAlt = alt ?? ((user ? user.fullName || buildFullName(user.firstName, user.lastName) : "") || "avatar");
+  const avatarAlt = alt ?? (user?.fullName?.trim() || "avatar");
 
   const avatarFallback = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
@@ -55,14 +54,14 @@ function GAvatar({ user, src, alt, fallback = "", size = SizeEnum.xs, status, cl
         <div
           aria-hidden="true"
           className={cn(
-            "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary/80 to-primary font-bold text-on-primary",
+            "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-primary/80 to-primary font-bold text-on-primary",
             squareSize[size],
           )}>
           {avatarFallback}
         </div>
       )}
 
-      {showDot && <span className={cn("absolute bottom-0 end-0 size-2.5 rounded-full border-2 border-bg", statusColor[avatarStatus])} />}
+      {showDot && <span className={cn("absolute bottom-0 inset-e-0 size-2.5 rounded-full border-2 border-bg", statusColor[avatarStatus])} />}
     </div>
   );
 }

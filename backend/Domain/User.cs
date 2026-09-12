@@ -39,7 +39,6 @@ namespace backend.Domain
         public bool IsBanned { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsVerified { get; set; }
-        public UserStatus Status { get; set; } = UserStatus.Offline;
         public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
         public ICollection<Message> SentMessages { get; set; } = [];
         public ICollection<Message> ReceivedMessages { get; set; } = [];

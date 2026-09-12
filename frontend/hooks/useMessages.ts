@@ -23,11 +23,15 @@ const normalizeHistoryMessage = (message: IMessage): IMessage => ({
   sentAt: new Date(message.sentAt),
 });
 
-const areSameMessage = (left: IMessage, right: IMessage): boolean =>
-  left.senderId === right.senderId &&
-  left.receiverId === right.receiverId &&
-  left.content === right.content &&
-  Math.abs(left.sentAt.getTime() - right.sentAt.getTime()) < 5000;
+const areSameMessage = (left: IMessage, right: IMessage): boolean => {
+  if (left.id && right.id) return left.id === right.id;
+  return (
+    left.senderId === right.senderId &&
+    left.receiverId === right.receiverId &&
+    left.content === right.content &&
+    Math.abs(left.sentAt.getTime() - right.sentAt.getTime()) < 5000
+  );
+};
 
 export function useMessages(initialFriendId?: TNullable<string>) {
   const { isSocialConnected: isConnected } = useConnections();
@@ -108,7 +112,10 @@ export function useMessages(initialFriendId?: TNullable<string>) {
 
   const messages = useMemo(() => {
     const combined = [...apiMessages, ...localMessages];
-    return combined.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+    const deduped: IMessage[] = [];
+    for (const m of combined) if (!deduped.some((x) => areSameMessage(x, m))) deduped.push(m);
+
+    return deduped.sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
   }, [apiMessages, localMessages]);
 
   const selectedFriend = useMemo<TNullable<IUserSummary>>(() => {

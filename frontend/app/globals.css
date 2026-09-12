@@ -123,6 +123,8 @@
 
   --theme-game-board: #191b22;
   --theme-game-board-border: #30333e;
+
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
@@ -158,6 +160,8 @@
 
   --theme-game-board: #f3f4f6;
   --theme-game-board-border: #e5e7eb;
+
+  color-scheme: light;
 }
 
 @layer base {
@@ -274,6 +278,18 @@
   ::selection {
     background-color: var(--color-primary-muted);
     color: var(--color-primary);
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  input:-moz-autofill {
+    -webkit-text-fill-color: var(--color-text);
+    caret-color: var(--color-text);
+    -webkit-box-shadow: 0 0 0 100px var(--color-surface) inset;
+    box-shadow: 0 0 0 100px var(--color-surface) inset;
+    transition: background-color 9999s ease-in-out 0s;
   }
 
   .msg-outgoing ::selection {

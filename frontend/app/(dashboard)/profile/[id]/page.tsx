@@ -25,7 +25,6 @@ import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { GamesKindEnum } from "@/domain/enum/GamesKindEnum";
-import { withFullName } from "@/domain/lib/userUtils";
 import { en as GameEn } from "@/component/i18n/Game/en.i18n";
 import { ar as GameAr } from "@/component/i18n/Game/ar.i18n";
 import { fr as GameFr } from "@/component/i18n/Game/fr.i18n";
@@ -111,7 +110,7 @@ function ProfilePage() {
 
                 <div className="min-w-0 flex-1 text-center sm:text-start">
                   <h1 className="text-2xl font-bold text-text">
-                    {withFullName(profile).fullName}
+                    {profile.fullName?.trim() || profile.userName || profile.id}
                   </h1>
                   <p className="mt-0.5 text-sm text-text-secondary">@{profile.userName}</p>
 

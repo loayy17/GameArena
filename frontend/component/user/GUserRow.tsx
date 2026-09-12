@@ -5,7 +5,6 @@ import { GButton } from "@/component/common/GButton";
 import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { focusRing } from "@/domain/constant/style-tokens";
-import { withFullName } from "@/domain/lib/userUtils";
 import { GAvatar } from "@/component/common/GAvatar";
 import type { IGUserRowProps } from "./def/GUserRow";
 
@@ -44,7 +43,7 @@ function GUserRow({
   trailing,
   className,
 }: IGUserRowProps) {
-  const name = withFullName(user).fullName?.trim() || userNameFallback || "";
+  const name = user.fullName?.trim() || userNameFallback || "";
   const username = user.userName ? `@${user.userName}` : userNameFallback;
 
   const rowClassName = cn(

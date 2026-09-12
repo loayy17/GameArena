@@ -15,6 +15,8 @@ namespace backend.Utils
             [ErrorCode.TokenExpired] = 401,
             [ErrorCode.EmailNotVerified] = 401,
             [ErrorCode.RefreshTokenInvalid] = 401,
+            [ErrorCode.UserBanned] = 403,
+            [ErrorCode.Forbidden] = 403,
             [ErrorCode.EmailAlreadyVerified] = 400,
             [ErrorCode.EmailNotFound] = 404,
             [ErrorCode.EmailAlreadyExists] = 409,
