@@ -11,7 +11,7 @@ import type { IGLocalePickerItemsProps } from "./def/GLocalePickerItems";
 
 function GLocalePickerItems({ locale, labels, onSelect }: IGLocalePickerItemsProps) {
   const renderItem = (value: LocaleEnum) => (
-    <GMenuItem key={value} label={labels[value]} disabled={locale === value} onClick={() => onSelect(value)}>
+    <GMenuItem key={value} label={labels[value]} selected={locale === value} onClick={() => onSelect(value)}>
       <GIcon icon={locale === value ? CircleCheck : Circle} />
     </GMenuItem>
   );

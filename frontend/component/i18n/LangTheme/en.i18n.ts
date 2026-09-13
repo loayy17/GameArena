@@ -4,8 +4,6 @@ const en = {
   french: "Français",
   light: "Light",
   dark: "Dark",
-  switchToArabic: "Switch to Arabic",
-  switchToEnglish: "Switch to English",
   languages: "Languages",
   switchToLight: "Switch to Light Mode",
   switchToDark: "Switch to Dark Mode",

@@ -18,6 +18,12 @@ const ar: TSidebarTranslation = {
   close: "إغلاق",
   expand: "توسيع",
   collapse: "طي",
+  more: "المزيد",
+  groupMain: "الرئيسي",
+  groupSocial: "اجتماعي",
+  groupCompetition: "المنافسات",
+  groupAccount: "الحساب",
+  groupAdministration: "الإدارة",
 };
 
 export { ar };

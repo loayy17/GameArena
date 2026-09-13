@@ -73,8 +73,8 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className,
 
   useEffect(() => {
     if (!open) return;
-    const getMenuItems = () => Array.from(floatingRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])') ?? []);
-    const frame = requestAnimationFrame(() => getMenuItems()[0]?.focus());
+    const getMenuItems = () =>
+      Array.from(floatingRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])') ?? []).filter((item) => !item.closest("[inert]"));
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -107,7 +107,6 @@ function GDropdown({ open, onClose, trigger, children, align = "end", className,
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      cancelAnimationFrame(frame);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open, onClose, floatingRef]);

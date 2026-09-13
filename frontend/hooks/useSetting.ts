@@ -4,7 +4,9 @@ import { useMemo, useSyncExternalStore } from "react";
 
 import { LocaleEnum } from "@/domain/enum/LocaleEnum";
 import { ThemeEnum } from "@/domain/enum/ThemeEnum";
+import { localeDirection } from "@/lib/locale";
 
+import type { TDirection } from "@/lib/locale";
 import type { THashMap, TTranslate } from "@/domain/type/TCommon";
 
 let currentLocale: LocaleEnum = LocaleEnum.En;
@@ -24,7 +26,7 @@ function subscribe(listener: () => void) {
 function updateLocaleDOM(locale: LocaleEnum) {
   if (typeof document === "undefined") return;
   document.documentElement.lang = locale;
-  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+  document.documentElement.dir = localeDirection(locale);
 }
 
 function updateThemeDOM(theme: ThemeEnum) {
@@ -79,6 +81,11 @@ export function useLocale() {
 export function useTheme() {
   const theme = useSyncExternalStore(subscribe, getTheme, () => ThemeEnum.Dark);
   return [theme, setTheme] as const;
+}
+
+export function useDirection(): TDirection {
+  const [locale] = useLocale();
+  return localeDirection(locale);
 }
 
 function resolve(obj: THashMap, path: string[]): unknown {

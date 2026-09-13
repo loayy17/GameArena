@@ -23,5 +23,4 @@ export interface IGButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
   ref?: Ref<HTMLButtonElement>;
 }
 
-export type { IGButtonProps as IGIconButtonProps };
 export type { GTooltipSide };

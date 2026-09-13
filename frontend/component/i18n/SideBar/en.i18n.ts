@@ -16,6 +16,12 @@ const en = {
   close: "Close",
   expand: "Expand",
   collapse: "Collapse",
+  more: "More",
+  groupMain: "Main",
+  groupSocial: "Social",
+  groupCompetition: "Competition",
+  groupAccount: "Account",
+  groupAdministration: "Administration",
 };
 
 type TSidebarTranslation = typeof en;

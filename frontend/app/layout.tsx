@@ -2,6 +2,7 @@ import "./globals.css";
 import { Cairo, Chakra_Petch } from "next/font/google";
 
 import { getSettingFromCookie } from "@/lib/getSettingFromCookie";
+import { localeDirection } from "@/lib/locale";
 
 import { AuthProvider } from "./providers/AuthProvider";
 
@@ -29,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang={locale}
-      dir={locale === "ar" ? "rtl" : "ltr"}
+      dir={localeDirection(locale)}
       data-theme={theme}
       data-scroll-behavior="smooth"
       className={`${chakraPetch.variable} ${cairo.variable} antialiased h-full`}>

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { cn } from "@/lib/cn";
+import { focusRing } from "@/domain/constant/style-tokens";
 import { GAvatar } from "@/component/common/GAvatar";
 import { GBadge } from "@/component/common/GBadge";
 import { GCard } from "@/component/common/GCard";
@@ -39,7 +41,7 @@ export function MatchHistoryTable({ matches, locale, winLabel, lossLabel, drawLa
               <div className="flex items-center gap-2 min-w-0">
                 <Link
                   href={`/profile/${match.opponent.id}`}
-                  className="flex items-center gap-2 min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                  className={cn("flex items-center gap-2 min-w-0 rounded-lg", focusRing)}>
                   <GAvatar user={match.opponent} size={SizeEnum.xs} />
                   <span className="truncate text-text-secondary hover:text-primary">
                     {match.opponent.fullName || (match.opponent.userName ? `@${match.opponent.userName}` : "")}

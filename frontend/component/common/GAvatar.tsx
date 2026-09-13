@@ -66,4 +66,4 @@ function GAvatar({ user, src, alt, fallback = "", size = SizeEnum.xs, status, cl
   );
 }
 
-export { GAvatar, GAvatar as UserAvatar };
+export { GAvatar };

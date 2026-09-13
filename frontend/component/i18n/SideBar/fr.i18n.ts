@@ -18,6 +18,12 @@ const fr: TSidebarTranslation = {
   close: "Fermer",
   expand: "Développer",
   collapse: "Réduire",
+  more: "Plus",
+  groupMain: "Principal",
+  groupSocial: "Social",
+  groupCompetition: "Compétition",
+  groupAccount: "Compte",
+  groupAdministration: "Administration",
 };
 
 export { fr };

@@ -98,7 +98,7 @@ export function ProfileTab({ user, showMessage, t }: IProfileTabProps) {
       <GAsync loading={!user} spinnerSize={SizeEnum.md} className="py-10">
         <>
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-            <GAvatar user={user ?? {}} size={SizeEnum.xl} />
+            <GAvatar user={user} size={SizeEnum.xl} />
             <div className="flex flex-col sm:flex-row gap-2">
               <input
                 ref={avatarInputRef}

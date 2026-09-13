@@ -82,18 +82,17 @@ function GModal({
     ...props,
   } as React.HTMLAttributes<HTMLElement>;
 
-  if (side !== "center") {
+  if (side !== "center" && open) {
     return (
-      <div className={className}>
-        {open && (
-          <>
-            <GBackdrop onClick={onClose} />
-            <aside ref={panelRef} {...dialogAria} className={cn("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], panelClassName)}>
-              {children}
-            </aside>
-          </>
-        )}
-      </div>
+      <>
+        <GBackdrop onClick={onClose} />
+        <aside
+          ref={panelRef}
+          {...dialogAria}
+          className={cn("fixed z-drawer flex flex-col bg-bg-sidebar", sheetSideStyles[side], className, panelClassName)}>
+          {children}
+        </aside>
+      </>
     );
   }
 
@@ -106,7 +105,11 @@ function GModal({
         <GCard
           ref={panelRef}
           {...dialogAria}
-          className={cn("relative mx-auto max-h-full w-full overflow-y-auto p-6 shadow-xl custom-scrollbar animate-scale-in", modalSize[size], panelClassName)}
+          className={cn(
+            "relative mx-auto max-h-full w-full overflow-y-auto p-6 shadow-xl custom-scrollbar animate-scale-in",
+            modalSize[size],
+            panelClassName,
+          )}
           onClick={(event: React.MouseEvent) => event.stopPropagation()}>
           {children}
         </GCard>

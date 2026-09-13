@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { NavOrientationEnum } from "@/domain/enum/NavOrientationEnum";
+import type { TNavGroup } from "@/domain/constant/sidebarNav";
 
 interface IGNavItem {
   id: string;
@@ -20,4 +21,10 @@ interface IGNavProps extends Omit<ButtonHTMLAttributes<HTMLElement>, "onClick" |
   className?: string;
 }
 
-export type { IGNavProps, IGNavItem };
+interface INavSection {
+  id: TNavGroup;
+  label: string;
+  items: IGNavItem[];
+}
+
+export type { IGNavProps, IGNavItem, INavSection };

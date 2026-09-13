@@ -21,7 +21,7 @@ import { ButtonVariantEnum } from "@/domain/enum/ButtonVariantEnum";
 import type { TLangThemeTranslation } from "@/component/i18n/LangTheme/en.i18n";
 import type { ILangThemeProps } from "./def/LangTheme";
 
-function LangTheme({ collapsed = false, variant = "compact", size = SizeEnum.md, align = "end", className, fill }: ILangThemeProps) {
+function LangTheme({ collapsed = false, variant = "compact", size = SizeEnum.md, buttonVariant = ButtonVariantEnum.Secondary, tooltipSide, align = "end", className, fill }: ILangThemeProps) {
   const [locale, setLocale] = useLocale();
   const [theme, setTheme] = useTheme();
   const t = useTranslation<TLangThemeTranslation>({ en, ar, fr });
@@ -32,12 +32,12 @@ function LangTheme({ collapsed = false, variant = "compact", size = SizeEnum.md,
   const effectiveEqual = (fill || variant === "equal") && !collapsed;
 
   const containerClass = cn(
-    collapsed ? "flex flex-col items-center gap-2" : effectiveEqual ? "grid w-full grid-cols-2 gap-2" : "flex items-center gap-2",
+    collapsed ? "flex items-center gap-1.5" : effectiveEqual ? "grid w-full grid-cols-2 gap-2" : "flex items-center gap-2",
     className,
   );
 
   const buttonSize = collapsed ? SizeEnum.icon : size;
-  const tooltipSide = collapsed ? "end" : undefined;
+  const effectiveTooltipSide = collapsed ? (tooltipSide ?? "end") : undefined;
   const stretchClass = cn("rounded-md", effectiveEqual && "w-full");
 
   return (
@@ -49,12 +49,12 @@ function LangTheme({ collapsed = false, variant = "compact", size = SizeEnum.md,
         triggerClassName={effectiveEqual ? "w-full" : undefined}
         trigger={
           <GButton
-            variant={ButtonVariantEnum.Secondary}
+            variant={buttonVariant}
             size={buttonSize}
             className={stretchClass}
             title={t.languages}
             aria-label={collapsed ? t.languages : undefined}
-            tooltipPosition={tooltipSide}
+            tooltipPosition={effectiveTooltipSide}
             onClick={() => setOpen((prev) => !prev)}>
             <GIcon icon={Globe} size={SizeEnum.md} />
             {!collapsed && <span className="truncate">{localeName}</span>}
@@ -71,12 +71,12 @@ function LangTheme({ collapsed = false, variant = "compact", size = SizeEnum.md,
       </GDropdown>
 
       <GButton
-        variant={ButtonVariantEnum.Secondary}
+        variant={buttonVariant}
         size={buttonSize}
         className={stretchClass}
         title={isDark ? t.switchToLight : t.switchToDark}
         aria-label={collapsed ? (isDark ? t.switchToLight : t.switchToDark) : undefined}
-        tooltipPosition={tooltipSide}
+        tooltipPosition={effectiveTooltipSide}
         onClick={() => setTheme(isDark ? ThemeEnum.Light : ThemeEnum.Dark)}>
         <GIcon icon={isDark ? Moon : Sun} size={SizeEnum.md} color={AccentColorEnum.Primary} />
         {!collapsed && <span className="truncate">{isDark ? t.light : t.dark}</span>}

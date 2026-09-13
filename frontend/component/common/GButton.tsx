@@ -114,4 +114,4 @@ function GButton({
   return buttonEl;
 }
 
-export { GButton, GButton as GIconButton };
+export { GButton };

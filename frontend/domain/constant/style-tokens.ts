@@ -137,6 +137,8 @@ export const fieldError = "border-danger focus-visible:outline-danger";
 export const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
+export const sectionLabel = "text-2xs font-semibold uppercase tracking-wider text-text-muted";
+
 export const buttonVariantStyles: Record<ButtonVariantEnum, string> = {
   [ButtonVariantEnum.Primary]: "bg-primary text-on-primary shadow-sm hover:bg-primary-hover hover:text-on-primary",
   [ButtonVariantEnum.Secondary]: "bg-surface text-text border border-border/40 hover:bg-surface-hover hover:border-border/60",
