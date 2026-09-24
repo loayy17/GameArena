@@ -22,6 +22,11 @@ using System.Threading.RateLimiting;
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Arena 404 API", Version = "v1" });
+});
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
 
@@ -156,7 +161,10 @@ if (app.Configuration.GetValue("ForwardedHeaders:Enabled", false))
 if (!app.Configuration.GetValue("Swagger:Disabled", false))
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Arena 404 API v1");
+    });
 }
 using (var scope = app.Services.CreateScope())
 {
