@@ -41,6 +41,7 @@ namespace backend.Utils
             [ErrorCode.InvalidGameType] = 400,
             [ErrorCode.InvalidRoomId] = 400,
             [ErrorCode.InvalidRequest] = 400,
+            [ErrorCode.FeedbackNotFound] = 404,
             [ErrorCode.ValidationError] = 400,
             [ErrorCode.ServerError] = 500,
             [ErrorCode.None] = 500

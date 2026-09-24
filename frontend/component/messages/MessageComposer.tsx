@@ -47,7 +47,6 @@ function MessageComposer({
       <GButton
         onClick={onSend}
         disabled={sendDisabled}
-        loading={sending}
         size={SizeEnum.md}
         startIcon={<GIcon icon={Send} size={SizeEnum.sm} color={AccentColorEnum.OnPrimary} />}>
         <span className="hidden sm:inline">{sendLabel}</span>

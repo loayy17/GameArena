@@ -94,6 +94,13 @@ namespace backend.Controllers
             return Ok(new ApiResponse<object>());
         }
 
+        [HttpGet("leaderboard")]
+        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetLeaderboard([FromQuery] int limit = 10)
+        {
+            var top = await _userService.GetLeaderboardAsync(limit);
+            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = top });
+        }
+
         // Admin and Moderator roles)
         [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
         [HttpGet("admin/stats")]

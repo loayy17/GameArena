@@ -20,7 +20,7 @@ import { ar } from "./i18n/ar.i18n";
 import { fr } from "./i18n/fr.i18n";
 
 import type { THealthTranslation } from "./i18n/en.i18n";
-import type { IServiceRowProps, IStatusPillProps } from "./def/HealthPage";
+import type { IServiceRowProps, IStatusPillProps } from "./def/health";
 import type { IHealth } from "@/domain/meta/IHealth";
 
 function formatUptime(seconds: number) {

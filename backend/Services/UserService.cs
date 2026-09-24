@@ -6,10 +6,11 @@ using backend.Enums;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace backend.Services
 {
-    public class UserService(AppDbContext _context, IUserPresenceService _presence, IEmailVerificationService _emailVerificationService) : IUserService
+    public class UserService(AppDbContext _context, IUserPresenceService _presence, IEmailVerificationService _emailVerificationService, IMemoryCache _avatarCache) : IUserService
     {
         public async Task<UserResponse> GetUserByIdAsync(Guid userId)
         {
@@ -119,6 +120,20 @@ namespace backend.Services
             return [.. results];
         }
 
+        public async Task<List<UserSummaryResponse>> GetLeaderboardAsync(int limit)
+        {
+            var rows = await _context.Users
+                .AsNoTracking()
+                .Where(u => !u.IsBanned)
+                .OrderByDescending(u => u.Rank)
+                .ThenBy(u => u.UserName)
+                .Take(limit)
+                .Select(MappingExtensions.ToSummaryResponse)
+                .ToListAsync();
+
+            return rows.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
+        }
+
         public async Task<AdminStatsResponse> GetStatsAsync()
         {
             var total = await _context.Users.AsNoTracking().CountAsync();
@@ -140,6 +155,10 @@ namespace backend.Services
 
         public async Task<(byte[] Bytes, string ContentType)?> GetAvatarAsync(Guid userId)
         {
+            var cacheKey = $"avatar:{userId}";
+            if (_avatarCache.TryGetValue(cacheKey, out (byte[] Bytes, string ContentType) cached))
+                return cached;
+
             var avatar = await _context.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new { u.Avatar, u.AvatarContentType })
@@ -147,7 +166,9 @@ namespace backend.Services
             if (avatar?.Avatar == null || string.IsNullOrEmpty(avatar.AvatarContentType))
                 return null;
 
-            return (avatar.Avatar, avatar.AvatarContentType);
+            var result = (avatar.Avatar, avatar.AvatarContentType);
+            _avatarCache.Set(cacheKey, result, TimeSpan.FromMinutes(30));
+            return result;
         }
 
         public async Task<UserResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
@@ -208,6 +229,7 @@ namespace backend.Services
             user.Avatar = stream.ToArray();
             user.AvatarContentType = file.ContentType;
             await _context.SaveChangesAsync();
+            _avatarCache.Remove($"avatar:{userId}");
             return user.ToDto(_presence);
         }
 
@@ -217,6 +239,7 @@ namespace backend.Services
             user.Avatar = null;
             user.AvatarContentType = null;
             await _context.SaveChangesAsync();
+            _avatarCache.Remove($"avatar:{userId}");
             return user.ToDto(_presence);
         }
 

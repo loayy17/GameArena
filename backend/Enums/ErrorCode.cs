@@ -51,6 +51,7 @@
         InvalidRequest = 6001,
         InvalidAvatar = 6002,
 
+        FeedbackNotFound = 7001,
 
         ValidationError = 9001,
         ServerError = 9002

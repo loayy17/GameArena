@@ -31,7 +31,8 @@ namespace backend.Services
                     OpponentFullName = m.Player1Id == userId ? m.Player2.FirstName + " " + m.Player2.LastName : m.Player1.FirstName + " " + m.Player1.LastName,
                     OpponentAvatarUrl = m.Player1Id == userId
                         ? MappingExtensions.AvatarUrl(m.Player2.Id, m.Player2.Avatar)
-                        : MappingExtensions.AvatarUrl(m.Player1.Id, m.Player1.Avatar)
+                        : MappingExtensions.AvatarUrl(m.Player1.Id, m.Player1.Avatar),
+                    OpponentRank = m.Player1Id == userId ? m.Player2.Rank : m.Player1.Rank
                 })
                 .ToListAsync();
 
@@ -42,7 +43,7 @@ namespace backend.Services
                 CompletedAt = m.CompletedAt,
                 Player1Score = m.Player1Score,
                 Player2Score = m.Player2Score,
-                Opponent = new UserSummaryResponse(m.OpponentId, m.OpponentUserName, m.OpponentFirstName, m.OpponentLastName, m.OpponentFullName, _presence.GetStatus(m.OpponentId.ToString()), m.OpponentAvatarUrl),
+                Opponent = new UserSummaryResponse(m.OpponentId, m.OpponentUserName, m.OpponentFirstName, m.OpponentLastName, m.OpponentFullName, _presence.GetStatus(m.OpponentId.ToString()), m.OpponentAvatarUrl, m.OpponentRank),
                 Result = m.IsP1
                     ? (m.Player1Score > m.Player2Score ? MatchStatus.Win : m.Player1Score < m.Player2Score ? MatchStatus.Lost : MatchStatus.Draw)
                     : (m.Player2Score > m.Player1Score ? MatchStatus.Win : m.Player2Score < m.Player1Score ? MatchStatus.Lost : MatchStatus.Draw)

@@ -9,6 +9,7 @@ namespace backend.Services.Interface
         Task<UserResponse> GetUserByIdAsync(Guid userId);
         Task<UserPublicProfileResponse> GetUserProfileAsync(Guid userId, Guid viewerId);
         Task<List<UserSummaryResponse>> GetUsersAsync(Guid currentUserId, UserFilterRequest? filter);
+        Task<List<UserSummaryResponse>> GetLeaderboardAsync(int limit);
         Task<List<AdminUserResponse>> GetUsersByAdminAsync(UserFilterRequest? filter);
         Task<AdminStatsResponse> GetStatsAsync();
         Task<string?> GetPreferencesAsync(Guid userId);

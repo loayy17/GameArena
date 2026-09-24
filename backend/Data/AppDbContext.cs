@@ -14,6 +14,7 @@ namespace backend.Data
         public DbSet<MatchHistory> MatchHistories { get; set; }
         public DbSet<Block> Blocks { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<RefreshToken>()
@@ -117,6 +118,9 @@ namespace backend.Data
 
             modelBuilder.Entity<Notification>()
                 .HasIndex(n => n.CreatedAt);
+
+            modelBuilder.Entity<Feedback>()
+                .HasIndex(f => f.CreatedAt);
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)

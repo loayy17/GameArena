@@ -27,6 +27,10 @@ class UserService {
     return this.api.publicProfile<IUserPublicProfile>({ id });
   }
 
+  getLeaderboard(limit: number = 10, config?: AxiosRequestConfig): TPromise<IUserSummary[]> {
+    return this.api.leaderboard<IUserSummary[]>({ limit }, config);
+  }
+
   async updateProfile(data: IRegisterRequest): TPromise<IUser> {
     return this.api.updateProfile<IUser>(data);
   }

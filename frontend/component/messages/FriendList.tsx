@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import { MessagesSquare } from "lucide-react";
 
-import { GAsync } from "@/component/common/GAsync";
 import { GEmpty } from "@/component/common/GEmpty";
 import { GIcon } from "@/component/common/GIcon";
-import { GButton } from "@/component/common/GButton";
 import { GSearchField } from "@/component/common/GSearchField";
+import { GAsync } from "@/component/common/GAsync";
 import { GUserRow } from "@/component/user/GUserRow";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
@@ -22,12 +21,7 @@ function FriendList({ friends, loading, selectedFriendId, unreadCounts, onSelect
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="space-y-4 border-b border-border p-4">
-        <GSearchField
-          id="friend-search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t.search}
-        />
+        <GSearchField id="friend-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.search} />
       </div>
 
       <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
@@ -44,19 +38,10 @@ function FriendList({ friends, loading, selectedFriendId, unreadCounts, onSelect
                 <GUserRow
                   key={friend.id}
                   user={friend}
-                  href={`/profile/${friend.id}`}
                   active={friend.id === selectedFriendId}
                   unreadCount={unreadCounts[friend.id]}
+                  onClick={() => onSelect(friend.id)}
                   className="p-1"
-                  trailing={
-                    <GButton
-                      icon={MessagesSquare}
-                      label={t.message}
-                      tone={friend.id === selectedFriendId ? "primary" : "muted"}
-                      onClick={() => onSelect(friend.id)}
-                      size={SizeEnum.sm}
-                    />
-                  }
                 />
               ))}
             </div>

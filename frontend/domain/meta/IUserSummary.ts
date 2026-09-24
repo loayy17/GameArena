@@ -9,5 +9,6 @@ interface IUserSummary {
   status?: UserStatusEnum;
   fullName: TNullable<string>;
   avatarUrl?: TNullable<string>;
+  rank?: TNullable<number>;
 }
 export type { IUserSummary };

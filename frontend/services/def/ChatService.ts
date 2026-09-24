@@ -28,6 +28,10 @@ class ChatService extends SignalRServiceBase {
     this.addHandler("chat:typing", (data: unknown) => {
       this.subs.dispatch("chat:typing", data as { senderId: string; receiverId: string });
     });
+
+    this.addHandler("chat:read", (data: unknown) => {
+      this.subs.dispatch("chat:read", data as { readerId: string; senderId: string });
+    });
   }
 
   getMessagesByFriendId(friendId: string, signal?: AbortSignal): TPromise<IMessage[]> {
@@ -52,6 +56,10 @@ class ChatService extends SignalRServiceBase {
 
   onTyping(handler: (data: { senderId: string; receiverId: string }) => void): () => void {
     return this.subscribe("chat:typing", handler as Handler);
+  }
+
+  onReadReceipt(handler: (data: { readerId: string; senderId: string }) => void): () => void {
+    return this.subscribe("chat:read", handler as Handler);
   }
 }
 

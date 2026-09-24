@@ -18,7 +18,8 @@ public static class MappingExtensions
         u.LastName,
         u.FirstName + " " + u.LastName,
         UserStatus.Offline,
-        AvatarUrl(u.Id, u.Avatar));
+        AvatarUrl(u.Id, u.Avatar),
+        u.Rank);
 
     public static readonly Expression<Func<User, AdminUserResponse>> ToAdminResponse = u => new(
         u.Id,
@@ -31,6 +32,16 @@ public static class MappingExtensions
         u.IsBanned,
         UserStatus.Offline,
         AvatarUrl(u.Id, u.Avatar));
+
+    public static readonly Expression<Func<Feedback, FeedbackResponse>> ToFeedbackResponse = f => new()
+    {
+        Id = f.Id,
+        Title = f.Title,
+        Message = f.Message,
+        Category = f.Category,
+        CreatedAt = f.CreatedAt,
+        UpdatedAt = f.UpdatedAt
+    };
 
     public static UserResponse ToDto(this User user, IUserPresenceService presence) => new()
     {
@@ -68,5 +79,15 @@ public static class MappingExtensions
         ReferenceId = notification.ReferenceId,
         IsRead = notification.IsRead,
         CreatedAt = notification.CreatedAt
+    };
+
+    public static FeedbackResponse ToResponse(this Feedback f) => new()
+    {
+        Id = f.Id,
+        Title = f.Title,
+        Message = f.Message,
+        Category = f.Category,
+        CreatedAt = f.CreatedAt,
+        UpdatedAt = f.UpdatedAt
     };
 }

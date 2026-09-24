@@ -1,6 +1,6 @@
 export enum NotificationTypeEnum {
-  FriendRequest = 'FriendRequest',
-  FriendRequestAccepted = 'FriendRequestAccepted',
-  GameInvite = 'GameInvite',
-  NewMessage = 'NewMessage',
+  FriendRequest = "FriendRequest",
+  FriendRequestAccepted = "FriendRequestAccepted",
+  GameInvite = "GameInvite",
+  NewMessage = "NewMessage",
 }

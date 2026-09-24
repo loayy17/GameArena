@@ -21,7 +21,7 @@ namespace backend.Services
                 ?? throw new AppException(ErrorCode.EmailNotFound);
 
             await _context.EmailVerifications
-                .Where(x => x.UserId == user.Id && (x.IsUsed || x.ExpiresAt < DateTime.UtcNow))
+                .Where(x => x.UserId == user.Id && x.Purpose == purpose && (x.IsUsed || x.ExpiresAt < DateTime.UtcNow))
                 .ExecuteDeleteAsync();
 
             var recent = await _context.EmailVerifications

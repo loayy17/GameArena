@@ -70,7 +70,8 @@ namespace backend.Hubs
         {
             var senderId = GetUserId();
             var msg = await _chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
-            await Clients.Group($"user:{receiverId}").SendAsync("chat:private", msg);
+            await Clients.User(receiverId.ToString()).SendAsync("chat:private", msg);
+            await Clients.User(senderId.ToString()).SendAsync("chat:private", msg);
         }
 
         public async Task SendTyping(Guid receiverId)

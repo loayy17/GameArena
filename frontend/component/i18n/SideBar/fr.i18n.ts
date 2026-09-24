@@ -8,6 +8,7 @@ const fr: TSidebarTranslation = {
   games: "Jeux",
   history: "Historique des matchs",
   historyShort: "Historique",
+  leaderboard: "Classement",
   notifications: "Notifications",
   settings: "Paramètres",
   admin: "Administration",

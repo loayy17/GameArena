@@ -3,13 +3,15 @@ using backend.Domain;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Events;
+using backend.Hubs;
 using backend.Services.Interface;
 using backend.Utils;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class ChatService(AppDbContext _context, IEventBus _eventBus, INotificationService _notificationService) : IChatService
+    public class ChatService(AppDbContext _context, IEventBus _eventBus, INotificationService _notificationService, IHubContext<SocialHub> _socialHub) : IChatService
     {
         public async Task<List<MessageResponse>> GetMessagesAsync(Guid userId, Guid friendId)
         {
@@ -18,7 +20,10 @@ namespace backend.Services
                 .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.IsRead, true));
 
             if (unreadCount > 0)
+            {
                 await _notificationService.SendCountersAsync(userId);
+                await _socialHub.Clients.Group($"user:{friendId}").SendAsync("chat:read", new { readerId = userId, senderId = friendId });
+            }
 
             await _notificationService.DeleteNotificationsByReferenceAsync(userId, NotificationType.NewMessage, friendId.ToString());
 
@@ -58,8 +63,7 @@ namespace backend.Services
             _context.Messages.Add(msg);
             await _context.SaveChangesAsync();
 
-            await _eventBus.PublishAsync(new ChatMessageSentEvent(senderId, receiverId, trimmed, msg.SentAt));
-
+            _ = _eventBus.PublishAsync(new ChatMessageSentEvent(senderId, receiverId, trimmed, msg.SentAt));
             return msg.ToResponse();
         }
 

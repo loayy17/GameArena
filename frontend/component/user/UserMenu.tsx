@@ -114,7 +114,8 @@ export function GSliderMenu({ panels, backLabel = "Back", className }: IGSliderM
   // Fallback reset if active panel ID no longer exists
   useEffect(() => {
     if (!panels.length || panels.some((p) => p.id === view.id)) return;
-    setView({ id: panels[0].id, direction: "forward", history: [] });
+    const timer = setTimeout(() => setView({ id: panels[0].id, direction: "forward", history: [] }), 0);
+    return () => clearTimeout(timer);
   }, [panels, view.id]);
 
   // Smooth Height Synchronization

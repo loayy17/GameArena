@@ -16,8 +16,6 @@ services:
   backend:
     build:
       context: ./backend
-    ports:
-      - "8080:8080"
     env_file:
       - .env
     depends_on:
@@ -28,13 +26,23 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
-    ports:
-      - "3000:3000"
     depends_on:
+      - backend
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+    volumes:
+      - nginx-certs:/certs
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
       - backend
     restart: unless-stopped
 
 volumes:
   pgdata:
+  nginx-certs:

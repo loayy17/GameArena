@@ -4,11 +4,13 @@ using backend.Enums;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("AuthPolicy")]
     public class AuthController(IAuthService _authService) : ControllerBase
     {
         [HttpPost("register")]

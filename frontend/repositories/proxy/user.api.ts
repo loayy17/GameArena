@@ -1,8 +1,8 @@
-import { baseURL, clientFactory } from "@/app/network";
+import { clientFactory } from "@/app/network";
 import { HttpVerbEnum } from "@/domain/enum/HttpVerbEnum";
 
 const userApi = clientFactory(
-  `${baseURL}/user`,
+  `/user`,
   {
     profile: {
       verb: HttpVerbEnum.Get,
@@ -11,6 +11,10 @@ const userApi = clientFactory(
     publicProfile: {
       verb: HttpVerbEnum.Get,
       template: "/{id}",
+    },
+    leaderboard: {
+      verb: HttpVerbEnum.Get,
+      template: "/leaderboard",
     },
     search: {
       verb: HttpVerbEnum.Post,

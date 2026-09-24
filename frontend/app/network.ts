@@ -3,7 +3,7 @@ import axios, { type AxiosRequestConfig } from "axios";
 import type { TEndpoint, TEndpointsMap, THashMap, TPromise, TProxy } from "@/domain/type/TCommon";
 import type { IApiResponse } from "@/domain/meta/IApiResponse";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const apiBase = process.env.NEXT_PUBLIC_API_URL ;
 const baseURL = `${apiBase}/api`;
 let isRefreshing = false;
 let queue: Array<{

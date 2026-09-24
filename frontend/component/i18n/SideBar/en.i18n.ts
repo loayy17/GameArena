@@ -6,6 +6,7 @@ const en = {
   games: "Games",
   history: "Match History",
   historyShort: "History",
+  leaderboard: "Leaderboard",
   notifications: "Notifications",
   settings: "Settings",
   admin: "Administration",

@@ -1,7 +1,5 @@
-using System.Text;
-using System.Text.Json;
+using System.Net.Http.Json;
 using backend.Services.Interface;
-using System.Text.Json.Serialization;
 
 namespace backend.Services
 {
@@ -18,19 +16,9 @@ namespace backend.Services
                 htmlContent = body
             };
 
-            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-
             using var client = _httpClientFactory.CreateClient("Brevo");
 
-            var response = await client.PostAsync(
-                "email",
-                new StringContent(json, Encoding.UTF8, "application/json")
-            );
-
+            var response = await client.PostAsJsonAsync("email", payload);
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Email sent via Brevo to {Email}", to);

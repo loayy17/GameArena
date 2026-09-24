@@ -23,16 +23,6 @@ const normalizeHistoryMessage = (message: IMessage): IMessage => ({
   sentAt: new Date(message.sentAt),
 });
 
-const areSameMessage = (left: IMessage, right: IMessage): boolean => {
-  if (left.id && right.id) return left.id === right.id;
-  return (
-    left.senderId === right.senderId &&
-    left.receiverId === right.receiverId &&
-    left.content === right.content &&
-    Math.abs(left.sentAt.getTime() - right.sentAt.getTime()) < 5000
-  );
-};
-
 export function useMessages(initialFriendId?: TNullable<string>) {
   const { isSocialConnected: isConnected } = useConnections();
   const { user } = useAuth();
@@ -112,10 +102,11 @@ export function useMessages(initialFriendId?: TNullable<string>) {
 
   const messages = useMemo(() => {
     const combined = [...apiMessages, ...localMessages];
-    const deduped: IMessage[] = [];
-    for (const m of combined) if (!deduped.some((x) => areSameMessage(x, m))) deduped.push(m);
-
-    return deduped.sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
+    const byId = new Map<string, IMessage>();
+    for (const m of combined) {
+      if (m.id) byId.set(m.id, m);
+    }
+    return [...byId.values()].sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
   }, [apiMessages, localMessages]);
 
   const selectedFriend = useMemo<TNullable<IUserSummary>>(() => {
@@ -131,11 +122,20 @@ export function useMessages(initialFriendId?: TNullable<string>) {
 
       if (!isCurrentConversation) return;
 
-      setLocalMessages((prev) => (prev.some((m) => areSameMessage(m, incoming)) ? prev : [...prev, incoming]));
+      setLocalMessages((prev) => (prev.some((m) => m.id && incoming.id && m.id === incoming.id) ? prev : [...prev, incoming]));
     });
 
     return off;
   }, [selectedFriendId]);
+
+  useEffect(() => {
+    const off = chatService.onReadReceipt((data) => {
+      setLocalMessages((prev) => prev.map((m) => (m.senderId === user?.id && m.receiverId === data.readerId ? { ...m, isRead: true } : m)));
+      setApiMessages((prev) => prev.map((m) => (m.senderId === user?.id && m.receiverId === data.readerId ? { ...m, isRead: true } : m)));
+    });
+
+    return off;
+  }, [user?.id]);
 
   const selectFriend = useCallback((friendId: TNullable<string>) => {
     controllerRef.current?.abort();
@@ -167,22 +167,12 @@ export function useMessages(initialFriendId?: TNullable<string>) {
     setSending(true);
     setSendError(null);
 
-    const outgoing: IMessage = {
-      senderId: user.id,
-      receiverId: selectedFriendId,
-      content,
-      sentAt: new Date(),
-      isRead: false,
-    };
-
-    setLocalMessages((prev) => [...prev, outgoing]);
     setDraft("");
 
     try {
       await chatService.sendMessage(selectedFriendId, content);
     } catch {
       setSendError(t.error.send);
-      setLocalMessages((prev) => prev.filter((m) => m !== outgoing));
     } finally {
       setSending(false);
     }
