@@ -8,6 +8,7 @@ const ar = {
   language: "اللغة",
   light: "فاتح",
   dark: "داكن",
+  system: "النظام",
   english: "English",
   arabic: "العربية",
   french: "Français",

@@ -1,20 +1,19 @@
-﻿using backend.Services.Interface;
+using backend.DTOs.Responses;
+using backend.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using backend.DTOs.Responses;
 
-namespace backend.Controllers
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class MatchHistoryController(IMatchHistoryService matchHistory, ICurrentUserService currentUser) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class MatchHistoryController(IMatchHistoryService _matchHistoryService, ICurrentUserService _currentUser) : ControllerBase
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<List<MatchHistoryResponse>>>> GetMatchHistoryAsync()
     {
-        [HttpGet]
-        public async Task<ActionResult<ApiResponse<List<MatchHistoryResponse>>>> GetMatchHistory()
-        {
-            var matchHistory = await _matchHistoryService.GetMatchHistoryByUserIdAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<List<MatchHistoryResponse>> { Data = matchHistory });
-        }
+        var history = await matchHistory.GetMatchHistoryByUserIdAsync(currentUser.UserId);
+        return Ok(new ApiResponse<List<MatchHistoryResponse>> { Data = history });
     }
 }

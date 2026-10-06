@@ -4,9 +4,9 @@ const en = {
   french: "Français",
   light: "Light",
   dark: "Dark",
+  system: "System",
+  theme: "Theme",
   languages: "Languages",
-  switchToLight: "Switch to Light Mode",
-  switchToDark: "Switch to Dark Mode",
 };
 
 type TLangThemeTranslation = typeof en;

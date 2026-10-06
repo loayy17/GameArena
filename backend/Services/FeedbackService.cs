@@ -7,70 +7,69 @@ using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Services
+namespace backend.Services;
+
+public class FeedbackService(AppDbContext context) : IFeedbackService
 {
-    public class FeedbackService(AppDbContext _context) : IFeedbackService
+    public async Task<List<FeedbackResponse>> GetAllAsync(int limit, int offset)
     {
-        public async Task<List<FeedbackResponse>> GetAllAsync(int limit, int offset)
+        return await context.Feedbacks
+            .AsNoTracking()
+            .OrderByDescending(f => f.CreatedAt)
+            .Skip(offset)
+            .Take(limit)
+            .Select(MappingExtensions.ToFeedbackItem)
+            .ToListAsync();
+    }
+
+    public async Task<FeedbackResponse> GetByIdAsync(Guid id)
+    {
+        var feedback = await context.Feedbacks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == id)
+            ?? throw new AppException(ErrorCode.FeedbackNotFound);
+
+        return feedback.ToResponse();
+    }
+
+    public async Task<FeedbackResponse> CreateAsync(FeedbackRequest request)
+    {
+        var feedback = new Feedback
         {
-            return await _context.Feedbacks
-                .AsNoTracking()
-                .OrderByDescending(f => f.CreatedAt)
-                .Skip(offset)
-                .Take(limit)
-                .Select(MappingExtensions.ToFeedbackResponse)
-                .ToListAsync();
-        }
+            Title = request.Title.Trim(),
+            Message = request.Message.Trim(),
+            Category = ParseCategory(request.Category)
+        };
 
-        public async Task<FeedbackResponse> GetByIdAsync(Guid id)
-        {
-            var feedback = await _context.Feedbacks
-                .AsNoTracking()
-                .FirstOrDefaultAsync(f => f.Id == id)
-                ?? throw new AppException(ErrorCode.FeedbackNotFound);
+        context.Feedbacks.Add(feedback);
+        await context.SaveChangesAsync();
+        return feedback.ToResponse();
+    }
 
-            return feedback.ToResponse();
-        }
+    public async Task<FeedbackResponse> UpdateAsync(Guid id, FeedbackRequest request)
+    {
+        var feedback = await context.Feedbacks.FirstOrDefaultAsync(f => f.Id == id)
+            ?? throw new AppException(ErrorCode.FeedbackNotFound);
 
-        public async Task<FeedbackResponse> CreateAsync(FeedbackRequest request)
-        {
-            if (!Enum.TryParse<FeedbackCategory>(request.Category, ignoreCase: true, out var category))
-                throw new AppException(ErrorCode.ValidationError);
+        feedback.Title = request.Title.Trim();
+        feedback.Message = request.Message.Trim();
+        feedback.Category = ParseCategory(request.Category);
+        feedback.UpdatedAt = DateTime.UtcNow;
 
-            var feedback = new Feedback
-            {
-                Title = request.Title.Trim(),
-                Message = request.Message.Trim(),
-                Category = category
-            };
+        await context.SaveChangesAsync();
+        return feedback.ToResponse();
+    }
 
-            _context.Feedbacks.Add(feedback);
-            await _context.SaveChangesAsync();
-            return feedback.ToResponse();
-        }
+    public async Task DeleteAsync(Guid id)
+    {
+        var deleted = await context.Feedbacks.Where(f => f.Id == id).ExecuteDeleteAsync();
 
-        public async Task<FeedbackResponse> UpdateAsync(Guid id, FeedbackRequest request)
-        {
-            if (!Enum.TryParse<FeedbackCategory>(request.Category, ignoreCase: true, out var category))
-                throw new AppException(ErrorCode.ValidationError);
+        if (deleted == 0) throw new AppException(ErrorCode.FeedbackNotFound);
+    }
 
-            var feedback = await _context.Feedbacks.FirstOrDefaultAsync(f => f.Id == id)
-                ?? throw new AppException(ErrorCode.FeedbackNotFound);
-
-            feedback.Title = request.Title.Trim();
-            feedback.Message = request.Message.Trim();
-            feedback.Category = category;
-            feedback.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return feedback.ToResponse();
-        }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var deleted = await _context.Feedbacks.Where(f => f.Id == id).ExecuteDeleteAsync();
-            if (deleted == 0)
-                throw new AppException(ErrorCode.FeedbackNotFound);
-        }
+    private static FeedbackCategory ParseCategory(string value)
+    {
+        if (!Enum.TryParse<FeedbackCategory>(value, ignoreCase: true, out var category)) throw new AppException(ErrorCode.ValidationError);
+        return category;
     }
 }

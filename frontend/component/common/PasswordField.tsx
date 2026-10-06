@@ -14,27 +14,27 @@ import type { GTextFieldTranslation } from "@/component/i18n/GTextField/en.i18n"
 import type { TPasswordFieldProps } from "./def/PasswordField";
 
 function PasswordField({ ref, ...props }: TPasswordFieldProps) {
-  const [visible, setVisible] = useState(false);
-  const t = useTranslation<GTextFieldTranslation>({ en, ar, fr });
-  const toggleLabel = visible ? t.hidePassword : t.showPassword;
+    const [visible, setVisible] = useState(false);
+    const t = useTranslation<GTextFieldTranslation>({ en, ar, fr });
+    const toggleLabel = visible ? t.hidePassword : t.showPassword;
 
-  return (
-    <GTextField
-      {...props}
-      ref={ref}
-      type={visible ? "text" : "password"}
-      endAction={
-        <GButton
-          icon={visible ? EyeOff : Eye}
-          label={toggleLabel}
-          variant={ButtonVariantEnum.Subtle}
-          tooltipPosition="bottom"
-          onClick={() => setVisible((v) => !v)}
-          tabIndex={-1}
+    return (
+        <GTextField
+            {...props}
+            ref={ref}
+            type={visible ? "text" : "password"}
+            endAction={
+                <GButton
+                    icon={visible ? EyeOff : Eye}
+                    label={toggleLabel}
+                    variant={ButtonVariantEnum.Subtle}
+                    tooltipPosition="bottom"
+                    onClick={() => setVisible((v) => !v)}
+                    tabIndex={-1}
+                />
+            }
         />
-      }
-    />
-  );
+    );
 }
 
 export { PasswordField };

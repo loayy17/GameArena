@@ -1,101 +1,123 @@
 using System.Text.Json;
 using backend.Enums;
+using backend.Utils;
 
-namespace backend.Domain
+namespace backend.Domain;
+
+public class RockPaperScissors : BaseGameRoom
 {
-    public class RockPaperScissors : BaseGameRoom
+    private const string ActionMakeMove = "MAKE_MOVE";
+    private static readonly string[] Choices = ["Rock", "Paper", "Scissors"];
+    private readonly int[] _humanChoiceCounts = new int[Choices.Length];
+    private int _lastHumanChoice = -1;
+    public RockPaperScissors() : base(GamesKind.RockPaperScissors) { }
+    public string? Player1Choice { get; set; }
+    public string? Player2Choice { get; set; }
+
+    protected override object GetStatePayloadCore()
     {
-        public RockPaperScissors() : base(GamesKind.RockPaperScissors) { }
-        private static readonly string[] Choices = ["Rock", "Paper", "Scissors"];
-        public string? Player1Choice { get; set; }
-        public string? Player2Choice { get; set; }
+        var payload = GetBasePayload();
+        payload["winScore"] = 1;
+        payload["boardWidth"] = 1;
+        payload["boardHeight"] = 1;
+        payload["tickRateHz"] = 0;
+        payload["player1Choice"] = Player1Choice;
+        payload["player2Choice"] = Player2Choice;
+        return payload;
+    }
 
-        protected override void ResetForNewRoundCore()
+    protected override void ResetForNewRoundCore()
+    {
+        base.ResetForNewRoundCore();
+        Player1Choice = null;
+        Player2Choice = null;
+    }
+
+    protected override void HandleActionCore(string playerId, JsonElement action)
+    {
+        if (WinnerPlayerId != null
+            || !IsFull
+            || playerId != CurrentTurnPlayerId
+            || !IsSeated(playerId)
+            || !TryReadChoice(action, out var choice))
+            return;
+        if (playerId == Player1Id)
         {
-            base.ResetForNewRoundCore();
-            Player1Choice = null;
-            Player2Choice = null;
+            Player1Choice = choice;
+            CurrentTurnPlayerId = Player2Id;
+        }
+        else
+        {
+            Player2Choice = choice;
+            SettleRound();
         }
 
-        protected override object GetStatePayloadCore()
+        RememberHumanChoice(playerId, choice);
+    }
+
+    protected override void MakeBotMoveCore()
+    {
+        if (!IsBotGame || IsFinished || !HasStarted) return;
+
+        var botId = GetBotId();
+        if (botId == null) return;
+        var choice = Choices[PickChoice()];
+        if (botId == Player1Id)
         {
-            var p = GetBasePayload();
-            p["winScore"] = 1;
-            p["boardWidth"] = 1;
-            p["boardHeight"] = 1;
-            p["tickRateHz"] = 0;
-            p["player1Choice"] = Player1Choice;
-            p["player2Choice"] = Player2Choice;
-            return p;
+            Player1Choice = choice;
+            CurrentTurnPlayerId = Player2Id;
+            return;
+        }
+        Player2Choice = choice;
+        SettleRound();
+    }
+
+    private int PickChoice() => BotDifficulty switch
+    {
+        BotDifficulty.Easy => RandomHelper.Index(Choices.Length),
+        BotDifficulty.Medium => _lastHumanChoice >= 0 && RandomHelper.CoinFlip()
+            ? CounterOf(_lastHumanChoice)
+            : RandomHelper.Index(Choices.Length),
+        _ => CounterOf(MostFrequentHumanChoice()),
+    };
+
+    private void SettleRound()
+    {
+        if (Player1Choice == Player2Choice)
+        {
+            CompleteRound("");
+            return;
         }
 
-        protected override void HandleActionCore(string playerId, JsonElement action)
-        {
-            if (action.ValueKind != JsonValueKind.Object
-                || !action.TryGetProperty("type", out var typeProp)
-                || typeProp.GetString() != "MAKE_MOVE"
-                || !action.TryGetProperty("choice", out var choiceProp))
-                return;
+        int player1 = Array.IndexOf(Choices, Player1Choice);
+        int player2 = Array.IndexOf(Choices, Player2Choice);
+        CompleteRound(CounterOf(player2) == player1 ? Player1Id : Player2Id);
+    }
 
-            var choice = choiceProp.GetString();
-            if (
-                WinnerPlayerId != null
-                || !IsFull
-                || playerId != CurrentTurnPlayerId
-                || (playerId != Player1Id && playerId != Player2Id)
-                || !Choices.Contains(choice)
-            )
-                return;
+    private void RememberHumanChoice(string playerId, string choice)
+    {
+        if (IsBot(playerId)) return;
+        var index = Array.IndexOf(Choices, choice);
+        if (index < 0) return;
+        _humanChoiceCounts[index]++;
+        _lastHumanChoice = index;
+    }
 
-            if (playerId == Player1Id)
-            {
-                Player1Choice = choice;
-                CurrentTurnPlayerId = Player2Id;
-            }
-            else if (playerId == Player2Id)
-            {
-                Player2Choice = choice;
-                DetermineWinner();
-            }
-        }
+    private int MostFrequentHumanChoice() =>
+        _humanChoiceCounts.Sum() == 0 ? RandomHelper.Index(Choices.Length) : Array.IndexOf(_humanChoiceCounts, _humanChoiceCounts.Max());
+    private static int CounterOf(int humanIndex) => (humanIndex + 1) % Choices.Length;
+    private bool IsSeated(string playerId) => playerId == Player1Id || playerId == Player2Id;
+    private static bool TryReadChoice(JsonElement action, out string choice)
+    {
+        choice = string.Empty;
 
-        protected override void MakeBotMoveCore()
-        {
-            if (!IsBotGame || IsFinished || !HasStarted) return;
-            bool botIsP1 = Player1Id == "__BOT__";
-            bool botIsP2 = Player2Id == "__BOT__";
-            if (!botIsP1 && !botIsP2) return;
-            var botChoice = Random.Shared.Next(3);
-            if (botIsP1)
-            {
-                Player1Choice = Choices[botChoice];
-                CurrentTurnPlayerId = Player2Id;
-            }
-            else if (botIsP2)
-            {
-                Player2Choice = Choices[botChoice];
-                DetermineWinner();
-            }
-        }
+        if (action.ValueKind != JsonValueKind.Object
+            || !action.TryGetProperty("type", out var typeProp)
+            || typeProp.GetString() != ActionMakeMove
+            || !action.TryGetProperty("choice", out var choiceProp))
+            return false;
 
-        private void DetermineWinner()
-        {
-            if (Player1Choice == Player2Choice)
-            {
-                CompleteRound("");
-                return;
-            }
-
-            if ((Player1Choice == "Rock" && Player2Choice == "Scissors") ||
-                (Player1Choice == "Paper" && Player2Choice == "Rock") ||
-                (Player1Choice == "Scissors" && Player2Choice == "Paper"))
-            {
-                CompleteRound(Player1Id);
-            }
-            else
-            {
-                CompleteRound(Player2Id);
-            }
-        }
+        choice = choiceProp.GetString() ?? string.Empty;
+        return Choices.Contains(choice);
     }
 }

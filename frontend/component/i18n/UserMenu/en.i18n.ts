@@ -8,6 +8,7 @@ const en = {
   language: "Language",
   light: "Light",
   dark: "Dark",
+  system: "System",
   english: "English",
   arabic: "العربية",
   french: "Français",

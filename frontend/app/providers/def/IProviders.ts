@@ -1,19 +1,7 @@
 import type { ReactNode } from "react";
 
-interface IAuthProviderProps {
+interface IProviderProps {
   children: ReactNode;
 }
 
-interface IConnectionProviderProps {
-  children: ReactNode;
-}
-
-interface IDashboardDataProviderProps {
-  children: ReactNode;
-}
-
-interface IGameProviderProps {
-  children: ReactNode;
-}
-
-export type { IAuthProviderProps, IConnectionProviderProps, IDashboardDataProviderProps, IGameProviderProps };
+export type { IProviderProps };

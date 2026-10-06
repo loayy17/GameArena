@@ -1,4 +1,3 @@
-namespace backend.DTOs.Responses
-{
-    public sealed record PerFriendUnreadCountResponse(Guid FriendId, int UnreadCount);
-}
+namespace backend.DTOs.Responses;
+
+public sealed record PerFriendUnreadCountResponse(Guid FriendId, int UnreadCount);

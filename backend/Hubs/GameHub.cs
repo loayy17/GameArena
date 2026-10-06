@@ -1,256 +1,168 @@
 using System.Text.Json;
 using backend.Domain;
 using backend.Enums;
-using backend.Events;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace backend.Hubs
+namespace backend.Hubs;
+
+[Authorize]
+public class GameHub(
+    IGameRoomService rooms,
+    IGameSessionService sessions,
+    ILogger<GameHub> logger) : Hub
 {
-    [Authorize]
-    public class GameHub(
-        IGameRoomService _roomService,
-        IEventBus _eventBus,
-        INotificationService _notificationService,
-        ILogger<GameHub> _logger) : Hub
+    public override async Task OnConnectedAsync()
     {
-        private string GetPlayerId() =>
-            Context.UserIdentifier ?? throw new HubException("Unauthorized");
+        var playerId = Context.UserIdentifier;
 
-        private string GetUsername() =>
-            Context.User?.Identity?.Name ?? "Player";
-
-        private bool TryGetPlayerRoom(string playerId, out BaseGameRoom? room, out string? roomId)
+        if (playerId != null)
         {
-            room = null;
-            roomId = null;
-            return _roomService.TryGetPlayerRoom(playerId, out roomId)
-                && roomId != null
-                && _roomService.TryGetRoom(roomId, out room)
-                && room != null;
+            rooms.RegisterConnection(playerId, Context.ConnectionId);
+
+            var result = await sessions.RejoinAsync(playerId);
+            if (result.Joined) await AttachAsync(result.RoomId!, result.Room!);
         }
 
-        public override async Task OnConnectedAsync()
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (exception != null) logger.LogWarning(exception, "GameHub connection dropped for user {UserId}", Context.UserIdentifier);
+
+        if (Context.UserIdentifier is { } playerId) await rooms.UnregisterConnectionAsync(playerId, Context.ConnectionId);
+
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task FindMatch(GamesKind gameType, BotDifficulty difficulty = BotDifficulty.Medium)
+    {
+        var result = await Run(() => sessions.FindMatchAsync(PlayerId, Username, gameType, difficulty));
+        if (result.Joined) await AttachAsync(result.RoomId!, result.Room!, broadcast: result.CreatedNewRoom);
+    }
+
+    public async Task CreateLobby(GamesKind gameType, BotDifficulty difficulty = BotDifficulty.Medium)
+    {
+        var result = await Run(() => sessions.CreateLobbyAsync(PlayerId, Username, gameType, difficulty));
+        if (result.Joined) await AttachAsync(result.RoomId!, result.Room!);
+    }
+
+    public async Task InviteFriend(string friendId, GamesKind gameType, BotDifficulty difficulty = BotDifficulty.Medium)
+    {
+        var result = await Run(() => sessions.InviteFriendAsync(PlayerId, Username, friendId, gameType, difficulty));
+        if (result.Joined) await AttachAsync(result.RoomId!, result.Room!, broadcast: result.CreatedNewRoom);
+        if (result.CreatedNewRoom) await SendInviteAsync(friendId, result.RoomId, gameType);
+    }
+
+    public async Task InviteToRoom(string friendId)
+    {
+        var result = await sessions.OpenSeatAsync(PlayerId, friendId);
+        if (result.Room is null) return;
+        await SendInviteAsync(friendId, result.RoomId, result.Room.GameType);
+    }
+
+    public async Task AcceptInvite(string roomId)
+    {
+        if (!await Run(() => sessions.AcceptInviteAsync(PlayerId, Username, roomId))) return;
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+        if (rooms.TryGetRoom(roomId, out var room)) await Clients.Group(roomId).SendAsync("gameState", room!.GetStatePayload());
+    }
+
+    public async Task StartGame(string? friendId, GamesKind gameKind)
+    {
+        if (!TryLocate(out var room, out var roomId) || room!.GameType != gameKind) return;
+        if (!await rooms.StartGameAsync(roomId!, PlayerId, friendId)) return;
+        await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
+    }
+
+    public async Task SendAction(JsonElement action)
+    {
+        if (!TryLocate(out var room, out var roomId)
+            || room!.IsFinished
+            || room.WinnerPlayerId != null
+            || !room.HasStarted
+            || !IsSeated(room, PlayerId))
+            return;
+
+        try
         {
-            var playerId = Context.UserIdentifier;
-            if (playerId == null)
-            {
-                await base.OnConnectedAsync();
-                return;
-            }
-
-            _roomService.RegisterConnection(playerId, Context.ConnectionId);
-            if (TryGetPlayerRoom(playerId, out var room, out var roomId))
-            {
-                if (room!.WinnerPlayerId != null)
-                   await _roomService.LeaveGameAsync(playerId);
-                else
-                {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, roomId!);
-                    await Clients.Caller.SendAsync("gameState", room!.GetStatePayload());
-                }
-            }
-
-            await base.OnConnectedAsync();
+            await rooms.ProcessActionAsync(roomId!, PlayerId, action);
         }
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        catch (Exception ex)
         {
-            if (exception != null)
-                _logger.LogWarning(exception, "GameHub connection disconnected with error for user {UserId}", Context.UserIdentifier);
-
-            if (Context.UserIdentifier is { } playerId)
-                await _roomService.UnregisterConnectionAsync(playerId, Context.ConnectionId);
-
-            await base.OnDisconnectedAsync(exception);
-        }
-
-        public async Task FindMatch(GamesKind gameType)
-        {
-            try
-            {
-                var playerId = GetPlayerId();
-
-                if (TryGetPlayerRoom(playerId, out var existingRoom, out var existingRoomId))
-                {
-                    if (existingRoom!.GameType == gameType && existingRoom.WinnerPlayerId == null)
-                    {
-                        await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
-                        await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
-                        return;
-                    }
-
-                    await _roomService.LeaveGameAsync(playerId);
-                }
-
-                var username = GetUsername();
-                var (room, _) = _roomService.FindOrCreateRoom(gameType, playerId, username);
-
-                await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
-                await Clients.Group(room.RoomId)
-                    .SendAsync("gameState", room.GetStatePayload());
-            }
-            catch (AppException ex)
-            {
-                throw new HubException(ex.Message);
-            }
-        }
-
-        public async Task RequestPlayAgain()
-        {
-            var playerId = GetPlayerId();
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
-                return;
-
-            await _roomService.RequestPlayAgainAsync(roomId!, playerId);
-        }
-
-        public async Task RespondPlayAgain(bool accept)
-        {
-            var playerId = GetPlayerId();
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId) || room == null)
-                return;
-
-            await _roomService.RespondPlayAgainAsync(roomId!, playerId, accept);
-        }
-
-        public async Task SendAction(JsonElement action)
-        {
-            var playerId = GetPlayerId();
-
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId)
-                || room!.IsFinished
-                || (room.WinnerPlayerId != null)
-                || !room.HasStarted
-                || (room.Player1Id != playerId && room.Player2Id != playerId))
-                return;
-
-            try
-            {
-                await _roomService.ProcessActionAsync(roomId!, playerId, action);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing game action for player {PlayerId}", playerId);
-                throw new HubException("Failed to process game action");
-            }
-        }
-
-        public async Task StartGame(string? friendId, GamesKind gameKind)
-        {
-            var playerId = GetPlayerId();
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId)
-                || room!.GameType != gameKind)
-                return;
-
-            var started = await _roomService.StartGameAsync(roomId!, playerId, friendId);
-            if (!started) return;
-
-            await Clients.Group(roomId!).SendAsync("gameState", room.GetStatePayload());
-        }
-
-        public async Task LeaveGame()
-        {
-            var playerId = GetPlayerId();
-
-            if (!TryGetPlayerRoom(playerId, out _, out var roomId))
-                return;
-
-            await _roomService.LeaveGameAsync(playerId);
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
-        }
-
-        public async Task InviteToRoom(string friendId)
-        {
-            var playerId = GetPlayerId();
-
-            if (!TryGetPlayerRoom(playerId, out var room, out var roomId)
-                || room!.IsFinished || room.IsFull)
-                return;
-
-            room.InvitedPlayerId = friendId;
-
-            var username = GetUsername();
-            await Clients.User(friendId).SendAsync("game:invite", new
-            {
-                roomId = room.RoomId,
-                gameType = (int)room.GameType,
-                inviterId = playerId,
-                inviterName = username
-            });
-        }
-
-        public async Task CancelSearch()
-        {
-            var playerId = GetPlayerId();
-
-            if (TryGetPlayerRoom(playerId, out var room, out var roomId) && !room!.IsFull)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
-
-            await _roomService.CancelSearchAsync(playerId);
-        }
-
-        public async Task CreateLobby(GamesKind gameType)
-        {
-            var playerId = GetPlayerId();
-            var username = GetUsername();
-
-            if (TryGetPlayerRoom(playerId, out _, out _))
-                await _roomService.LeaveGameAsync(playerId);
-
-            var room = _roomService.CreatePrivateRoom(gameType, playerId, username, null);
-            await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
-            await Clients.Caller.SendAsync("gameState", room.GetStatePayload());
-        }
-
-        public async Task InviteFriend(string friendId, GamesKind gameType)
-        {
-            var playerId = GetPlayerId();
-            var username = GetUsername();
-
-            if (TryGetPlayerRoom(playerId, out var existingRoom, out var existingRoomId))
-            {
-                if (existingRoom!.GameType == gameType && existingRoom.WinnerPlayerId == null)
-                {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, existingRoomId!);
-                    await Clients.Caller.SendAsync("gameState", existingRoom!.GetStatePayload());
-                    return;
-                }
-
-                await _roomService.LeaveGameAsync(playerId);
-            }
-
-            var room = _roomService.CreatePrivateRoom(gameType, playerId, username, friendId);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
-            await Clients.Group(room.RoomId).SendAsync("gameState", room.GetStatePayload());
-            await Clients.User(friendId).SendAsync("game:invite", new
-            {
-                roomId = room.RoomId,
-                gameType = (int)gameType,
-                inviterId = playerId,
-                inviterName = username
-            });
-            await _eventBus.PublishAsync(new GameInviteSentEvent(friendId, room.RoomId, playerId, username, gameType));
-        }
-
-        public async Task AcceptInvite(string roomId)
-        {
-            var playerId = GetPlayerId();
-            if (string.IsNullOrEmpty(roomId)) throw new AppException(ErrorCode.InvalidRoomId);
-            var username = Context.User?.Identity?.Name;
-
-            if (_roomService.TryJoinRoom(roomId, playerId, username))
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-                if (_roomService.TryGetRoom(roomId, out var room))
-                    await Clients.Group(roomId).SendAsync("gameState", room!.GetStatePayload());
-
-                if (Guid.TryParse(playerId, out var joinerId))
-                    await _notificationService.DeleteNotificationsByReferenceAsync(joinerId, NotificationType.GameInvite, roomId);
-            }
+            logger.LogError(ex, "Action failed for player {PlayerId} in room {RoomId}", PlayerId, roomId);
+            throw new HubException("Failed to process game action");
         }
     }
+
+    public async Task RequestPlayAgain()
+    {
+        if (TryLocate(out _, out var roomId)) await rooms.RequestPlayAgainAsync(roomId!, PlayerId);
+    }
+
+    public async Task RespondPlayAgain(bool accept)
+    {
+        if (TryLocate(out _, out var roomId)) await rooms.RespondPlayAgainAsync(roomId!, PlayerId, accept);
+    }
+
+    public async Task LeaveGame()
+    {
+        if (!TryLocate(out _, out var roomId)) return;
+
+        await rooms.LeaveGameAsync(PlayerId);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
+    }
+
+    public async Task CancelSearch()
+    {
+        if (TryLocate(out var room, out var roomId) && !room!.IsFull) await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId!);
+
+        await rooms.CancelSearchAsync(PlayerId);
+    }
+
+    private string PlayerId => Context.UserIdentifier ?? throw new HubException("Unauthorized");
+    private static async Task<T> Run<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            return await action();
+        }
+        catch (AppException ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    private string Username => Context.User?.Identity?.Name ?? "Player";
+    private bool TryLocate(out BaseGameRoom? room, out string? roomId)
+    {
+        room = null;
+        roomId = null;
+
+        return rooms.TryGetPlayerRoom(PlayerId, out roomId)
+            && roomId != null
+            && rooms.TryGetRoom(roomId, out room)
+            && room != null;
+    }
+
+    private static bool IsSeated(BaseGameRoom room, string playerId) =>
+        room.Player1Id == playerId || room.Player2Id == playerId;
+    private async Task AttachAsync(string roomId, BaseGameRoom room, bool broadcast = false)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+        if (broadcast) await Clients.Group(roomId).SendAsync("gameState", room.GetStatePayload());
+        else await Clients.Caller.SendAsync("gameState", room.GetStatePayload());
+    }
+
+    private Task SendInviteAsync(string friendId, string? roomId, GamesKind gameType) =>
+        Clients.User(friendId).SendAsync("game:invite", new
+        {
+            roomId,
+            gameType = (int)gameType,
+            inviterId = PlayerId,
+            inviterName = Username
+        });
 }

@@ -1,7 +1,6 @@
-﻿namespace backend.Services.Interface
+namespace backend.Services.Interface;
+
+public interface ICurrentUserService
 {
-    public interface ICurrentUserService
-    {
-        Guid UserId { get; }
-    }
+    Guid UserId { get; }
 }

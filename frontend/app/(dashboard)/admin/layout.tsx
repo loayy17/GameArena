@@ -25,7 +25,7 @@ function AdminLayout({ children }: { children: ReactNode }) {
 
   if (loading || !user || !isStaff) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="flex min-h-half-viewport items-center justify-center">
         <GSpinner size={SizeEnum.lg} />
       </div>
     );

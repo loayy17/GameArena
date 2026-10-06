@@ -1,55 +1,54 @@
-using backend.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using backend.Enums;
 
-namespace backend.Domain
+namespace backend.Domain;
+
+public class User
 {
-    public class User
-    {
-        [Key]
-        public Guid Id { get; set; }
+    [Key]
+    public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string UserName { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    public string UserName { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
 
-        [Required]
-        public string PasswordHash { get; set; } = string.Empty;
+    [Required]
+    public string PasswordHash { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
-        public string FirstName { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    public string FirstName { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
-        public string LastName { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    public string LastName { get; set; } = string.Empty;
 
-        [NotMapped]
-        public string FullName => $"{FirstName} {LastName}".Trim();
-        public string? Preferences { get; set; }
-        public byte[]? Avatar { get; set; }
-        public double? Rank { get; set; }
-        public string? AvatarContentType { get; set; }
+    [NotMapped]
+    public string FullName => $"{FirstName} {LastName}".Trim();
+    public string? Preferences { get; set; }
+    public byte[]? Avatar { get; set; }
+    public double? Rank { get; set; }
+    public string? AvatarContentType { get; set; }
 
-        public UserRole Role { get; set; } = UserRole.User;
-        public bool IsBanned { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public bool IsVerified { get; set; }
-        public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
-        public ICollection<Message> SentMessages { get; set; } = [];
-        public ICollection<Message> ReceivedMessages { get; set; } = [];
+    public UserRole Role { get; set; } = UserRole.User;
+    public bool IsBanned { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsVerified { get; set; }
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+    public ICollection<Message> SentMessages { get; set; } = [];
+    public ICollection<Message> ReceivedMessages { get; set; } = [];
 
-        public ICollection<UserFriends> FriendshipsSent { get; set; } = [];
-        public ICollection<UserFriends> FriendshipsReceived { get; set; } = [];
+    public ICollection<UserFriends> FriendshipsSent { get; set; } = [];
+    public ICollection<UserFriends> FriendshipsReceived { get; set; } = [];
 
-        public ICollection<FriendRequest> FriendRequestsSent { get; set; } = [];
-        public ICollection<FriendRequest> FriendRequestsReceived { get; set; } = [];
+    public ICollection<FriendRequest> FriendRequestsSent { get; set; } = [];
+    public ICollection<FriendRequest> FriendRequestsReceived { get; set; } = [];
 
-        public ICollection<MatchHistory> MatchesAsPlayer1 { get; set; } = [];
-        public ICollection<MatchHistory> MatchesAsPlayer2 { get; set; } = [];
-    }
+    public ICollection<MatchHistory> MatchesAsPlayer1 { get; set; } = [];
+    public ICollection<MatchHistory> MatchesAsPlayer2 { get; set; } = [];
 }

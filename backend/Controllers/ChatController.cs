@@ -3,30 +3,24 @@ using backend.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Controllers
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ChatController(IChatService chat, ICurrentUserService currentUser) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class ChatController(
-        IChatService _chatService,
-        ICurrentUserService _currentUser) : ControllerBase
+    [HttpGet("messages/{friendId}")]
+    public async Task<ActionResult<ApiResponse<List<MessageResponse>>>> GetMessagesAsync(Guid friendId)
     {
-        [HttpGet("messages/{friendId}")]
-        public async Task<ActionResult<ApiResponse<List<MessageResponse>>>> GetMessages(Guid friendId)
-        {
-            var userId = _currentUser.UserId;
-            var messages = await _chatService.GetMessagesAsync(userId, friendId);
+        var messages = await chat.GetMessagesAsync(currentUser.UserId, friendId);
+        return Ok(new ApiResponse<List<MessageResponse>> { Data = messages });
+    }
 
-            return Ok(new ApiResponse<List<MessageResponse>> { Data = messages });
-        }
-
-        [HttpGet("unread/per-friend")]
-        public async Task<ActionResult<ApiResponse<List<PerFriendUnreadCountResponse>>>> GetUnreadPerFriend()
-        {
-            var userId = _currentUser.UserId;
-            var counts = await _chatService.GetUnreadCountsPerFriendAsync(userId);
-            return Ok(new ApiResponse<List<PerFriendUnreadCountResponse>> { Data = counts });
-        }
+    [HttpGet("unread/per-friend")]
+    public async Task<ActionResult<ApiResponse<List<PerFriendUnreadCountResponse>>>> GetUnreadPerFriendAsync()
+    {
+        var counts = await chat.GetUnreadCountsPerFriendAsync(currentUser.UserId);
+        return Ok(new ApiResponse<List<PerFriendUnreadCountResponse>> { Data = counts });
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum MatchStatus
 {
-    public enum MatchStatus
-    {
-        Draw,
-        Lost,
-        Win
-    }
+    Draw,
+    Lost,
+    Win
 }

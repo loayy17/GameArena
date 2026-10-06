@@ -21,7 +21,7 @@ const ar: TSidebarTranslation = {
   collapse: "طي",
   more: "المزيد",
   groupMain: "الرئيسي",
-  groupSocial: "社会化",
+  groupSocial: "التواصل",
   groupCompetition: "المنافسات",
   groupAccount: "الحساب",
   groupAdministration: "الإدارة",

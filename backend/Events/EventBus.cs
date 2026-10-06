@@ -1,20 +1,19 @@
 namespace backend.Events;
 
-public class EventBus(IServiceScopeFactory _scopeFactory, ILogger<EventBus> _logger) : IEventBus
+public class EventBus(IServiceScopeFactory scopeFactory, ILogger<EventBus> logger) : IEventBus
 {
-    public async Task PublishAsync<TEvent>(TEvent eventHappen) where TEvent : DomainEvent
+    public async Task PublishAsync<TEvent>(TEvent domainEvent) where TEvent : DomainEvent
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
-        var handlers = scope.ServiceProvider.GetServices<IEventHandler<TEvent>>();
-        foreach (var handler in handlers)
+        await using var scope = scopeFactory.CreateAsyncScope();
+        foreach (var handler in scope.ServiceProvider.GetServices<IEventHandler<TEvent>>())
         {
             try
             {
-                await handler.HandleAsync(eventHappen);
+                await handler.HandleAsync(domainEvent);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "EventBus handler error for {EventType}", typeof(TEvent).Name);
+                logger.LogError(ex, "Handler for {EventType} failed", typeof(TEvent).Name);
             }
         }
     }

@@ -17,7 +17,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   const t = useTranslation<TAppTranslation>({ en, ar, fr });
 
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="flex min-h-half-viewport flex-col items-center justify-center gap-4 p-8 text-center">
       <div className="flex size-16 items-center justify-center rounded-2xl bg-danger-muted">
         <GIcon icon={AlertTriangle} size={SizeEnum.lg} color={AccentColorEnum.Danger} />
       </div>

@@ -1,14 +1,12 @@
 using backend.Enums;
 
-namespace backend.Services.Interface
+namespace backend.Services.Interface;
+
+public interface IUserPresenceService
 {
-    public interface IUserPresenceService
-    {
-        UserStatus GetStatus(string userId);
-        bool AddConnection(string userId);
-        bool RemoveConnection(string userId);
-        bool SetActivity(string userId, UserStatus status);
-        bool HasOtherConnections(string userId);
-        (int Online, int InGame) GetOnlineCounts();
-    }
+    UserStatus GetStatus(string userId);
+    bool AddConnection(string userId);
+    bool RemoveConnection(string userId);
+    bool SetActivity(string userId, UserStatus status);
+    (int Online, int InGame) GetOnlineCounts();
 }

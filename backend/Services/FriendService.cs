@@ -1,228 +1,190 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.Domain;
 using backend.Enums;
 using backend.Events;
 using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace backend.Services
+namespace backend.Services;
+
+public class FriendService(AppDbContext context, IEventBus eventBus, ILogger<FriendService> logger) : IFriendService
 {
-    public class FriendService(AppDbContext _context, IEventBus _eventBus, ILogger<FriendService> _logger) : IFriendService
+    public async Task SendRequestAsync(Guid senderId, Guid receiverId)
     {
-        public async Task SendRequestAsync(Guid senderId, Guid receiverId)
+        if (senderId == receiverId) throw new AppException(ErrorCode.InvalidRequest);
+
+        var blocker = await SocialQueryHelper.GetBlockerAsync(context, senderId, receiverId);
+        if (blocker != null) throw new AppException(blocker == receiverId ? ErrorCode.UserBlockedYou : ErrorCode.YouBlockedUser);
+
+        if (await SocialQueryHelper.AreFriendsAsync(context, senderId, receiverId)) throw new AppException(ErrorCode.AlreadyFriends);
+
+        var existing = await context.FriendRequests.FirstOrDefaultAsync(fr =>
+            (fr.SenderId == senderId && fr.ReceiverId == receiverId) ||
+            (fr.SenderId == receiverId && fr.ReceiverId == senderId));
+
+        if (existing is { Status: FriendRequestStatus.Pending })
         {
-            if (senderId == receiverId)
-                throw new AppException(ErrorCode.InvalidRequest);
+            throw new AppException(existing.SenderId == senderId
+                ? ErrorCode.RequestAlreadyExists
+                : ErrorCode.ReceiverHasAlreadySentRequest);
+        }
 
-            var blocker = await SocialQueryHelper.GetBlockerAsync(_context, senderId, receiverId);
-            if (blocker != null)
-                throw new AppException(blocker == receiverId ? ErrorCode.UserBlockedYou : ErrorCode.YouBlockedUser);
-
-            if (await SocialQueryHelper.AreFriendsAsync(_context, senderId, receiverId))
-                throw new AppException(ErrorCode.AlreadyFriends);
-
-            var existingRequest = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr => (fr.SenderId == senderId && fr.ReceiverId == receiverId) ||
-                                           (fr.SenderId == receiverId && fr.ReceiverId == senderId));
-
-            if (existingRequest != null && existingRequest.Status == FriendRequestStatus.Pending)
+        if (existing != null)
+        {
+            await TransactionHelper.ExecuteAsync(context, async () =>
             {
-                if (existingRequest.SenderId == senderId)
-                    throw new AppException(ErrorCode.RequestAlreadyExists);
-                throw new AppException(ErrorCode.ReceiverHasAlreadySentRequest);
-            }
-
-            if (existingRequest != null)
-            {
-               await TransactionHelper.ExecuteAsync(_context, async () =>
-                {
-                    _context.FriendRequests.Remove(existingRequest);
-                    _context.FriendRequests.Add(new FriendRequest
-                    {
-                        SenderId = senderId,
-                        ReceiverId = receiverId,
-                        Status = FriendRequestStatus.Pending,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    await _context.SaveChangesAsync();
-                });
-
-                var reactivatedSender = await _context.Users
-                    .Where(u => u.Id == senderId)
-                    .Select(u => new { u.UserName })
-                    .FirstAsync();
-
-                await _eventBus.PublishAsync(new FriendRequestSentEvent(senderId, receiverId, reactivatedSender.UserName!));
-                return;
-            }
-
-            _context.FriendRequests.Add(new FriendRequest
-            {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Status = FriendRequestStatus.Pending
+                context.FriendRequests.Remove(existing);
+                context.FriendRequests.Add(NewPendingRequest(senderId, receiverId));
+                await context.SaveChangesAsync();
             });
-
-            await _context.SaveChangesAsync();
-
-            var sender = await _context.Users
-                .Where(u => u.Id == senderId)
-                .Select(u => new { u.UserName })
-                .FirstAsync();
-
-            await _eventBus.PublishAsync(new FriendRequestSentEvent(senderId, receiverId, sender.UserName!));
+        }
+        else
+        {
+            context.FriendRequests.Add(NewPendingRequest(senderId, receiverId));
+            await context.SaveChangesAsync();
         }
 
-        public async Task AcceptRequestAsync(Guid userId, Guid senderId)
+        var senderName = await SocialQueryHelper.GetUserNameAsync(context, senderId);
+        await eventBus.PublishAsync(new FriendRequestSentEvent(senderId, receiverId, senderName));
+    }
+
+    public async Task AcceptRequestAsync(Guid userId, Guid senderId)
+    {
+        var blocker = await SocialQueryHelper.GetBlockerAsync(context, userId, senderId);
+        if (blocker != null) throw new AppException(blocker == senderId ? ErrorCode.YouBlockedUser : ErrorCode.UserBlockedYou);
+
+        var request = await context.FriendRequests.FirstOrDefaultAsync(fr =>
+            fr.SenderId == senderId &&
+            fr.ReceiverId == userId &&
+            fr.Status == FriendRequestStatus.Pending)
+            ?? throw new AppException(ErrorCode.FriendRequestNotFound);
+
+        try
         {
-            var blocker = await SocialQueryHelper.GetBlockerAsync(_context, userId, senderId);
-            if (blocker != null)
-                throw new AppException(blocker == senderId ? ErrorCode.YouBlockedUser : ErrorCode.UserBlockedYou);
+            await TransactionHelper.ExecuteAsync(context, () => LinkBothWaysAsync(request, userId, senderId));
+        }
+        catch (DbUpdateException)
+        {
+            context.ChangeTracker.Clear();
 
-            var request = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr =>
-                    fr.SenderId == senderId &&
-                    fr.ReceiverId == userId &&
-                    fr.Status == FriendRequestStatus.Pending)
-                ?? throw new AppException(ErrorCode.FriendRequestNotFound);
+            var settled = await context.FriendRequests
+                .AsNoTracking()
+                .FirstOrDefaultAsync(fr => fr.SenderId == senderId && fr.ReceiverId == userId);
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                request.Status = FriendRequestStatus.Accepted;
+            if (settled?.Status == FriendRequestStatus.Accepted) throw new AppException(ErrorCode.AlreadyFriends);
 
-                var existingFriendships = await _context.UserFriends
-                    .Where(x => (x.UserId == userId && x.FriendId == senderId) ||
-                                (x.UserId == senderId && x.FriendId == userId))
-                    .Select(x => x.UserId)
-                    .ToListAsync();
+            logger.LogWarning(
+                "Friendship insert lost a race between {UserId} and {SenderId}, rolling back",
+                userId,
+                senderId);
 
-                if (!existingFriendships.Contains(userId))
-                    _context.UserFriends.Add(new UserFriends { UserId = userId, FriendId = senderId });
-                if (!existingFriendships.Contains(senderId))
-                    _context.UserFriends.Add(new UserFriends { UserId = senderId, FriendId = userId });
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (DbUpdateException)
-            {
-                await transaction.RollbackAsync();
-
-                _context.ChangeTracker.Clear();
-                var currentRequest = await _context.FriendRequests
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(fr =>
-                        fr.SenderId == senderId &&
-                        fr.ReceiverId == userId);
-
-                if (currentRequest?.Status == FriendRequestStatus.Accepted)
-                    throw new AppException(ErrorCode.AlreadyFriends);
-
-                _logger.LogWarning("Race condition on friendship insert between {UserId} and {SenderId}, rolling back", userId, senderId);
-                throw new AppException(ErrorCode.RequestAlreadyProcessed);
-            }
-
-            var accepter = await _context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.UserName })
-                .FirstAsync();
-
-            await _eventBus.PublishAsync(new FriendRequestAcceptedEvent(senderId, userId, accepter.UserName!));
+            throw new AppException(ErrorCode.RequestAlreadyProcessed);
         }
 
-        public async Task DeclineRequestAsync(Guid userId, Guid senderId)
+        var accepterName = await SocialQueryHelper.GetUserNameAsync(context, userId);
+        await eventBus.PublishAsync(new FriendRequestAcceptedEvent(senderId, userId, accepterName));
+    }
+
+    public async Task DeclineRequestAsync(Guid userId, Guid senderId)
+    {
+        var request = await context.FriendRequests.FirstOrDefaultAsync(fr =>
+            fr.SenderId == senderId &&
+            fr.ReceiverId == userId &&
+            fr.Status == FriendRequestStatus.Pending)
+            ?? throw new AppException(ErrorCode.FriendRequestNotFound);
+
+        request.Status = FriendRequestStatus.Rejected;
+        await context.SaveChangesAsync();
+
+        await eventBus.PublishAsync(new FriendRequestDeclinedEvent(senderId, userId));
+    }
+
+    public async Task CancelRequestAsync(Guid userId, Guid receiverId)
+    {
+        var request = await context.FriendRequests.FirstOrDefaultAsync(fr =>
+            fr.SenderId == userId &&
+            fr.ReceiverId == receiverId &&
+            fr.Status == FriendRequestStatus.Pending)
+            ?? throw new AppException(ErrorCode.FriendRequestNotFound);
+
+        request.Status = FriendRequestStatus.Cancelled;
+        await context.SaveChangesAsync();
+        await eventBus.PublishAsync(new FriendRequestCancelledEvent(userId, receiverId));
+    }
+
+    public async Task RemoveFriendAsync(Guid userId, Guid friendId)
+    {
+        var friendships = await SocialQueryHelper.GetFriendshipsAsync(context, userId, friendId);
+
+        if (friendships.Count == 0) throw new AppException(ErrorCode.IsNotFriend);
+
+        context.UserFriends.RemoveRange(friendships);
+        await context.SaveChangesAsync();
+
+        await eventBus.PublishAsync(new FriendRemovedEvent(userId, friendId));
+    }
+
+    public async Task BlockUserAsync(Guid blockerId, Guid blockedId)
+    {
+        if (blockerId == blockedId) throw new AppException(ErrorCode.CannotSelfBlock);
+
+        if (await context.Blocks.AnyAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId)) throw new AppException(ErrorCode.AlreadyBlocked);
+
+        context.Blocks.Add(new Block { BlockerId = blockerId, BlockedId = blockedId });
+        context.UserFriends.RemoveRange(await SocialQueryHelper.GetFriendshipsAsync(context, blockerId, blockedId));
+        var pending = await context.FriendRequests
+            .Where(fr => fr.Status == FriendRequestStatus.Pending &&
+                        ((fr.SenderId == blockerId && fr.ReceiverId == blockedId) ||
+                         (fr.SenderId == blockedId && fr.ReceiverId == blockerId)))
+            .ToListAsync();
+
+        foreach (var request in pending)
         {
-            var request = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr =>
-                    fr.SenderId == senderId &&
-                    fr.ReceiverId == userId &&
-                    fr.Status == FriendRequestStatus.Pending)
-                ?? throw new AppException(ErrorCode.FriendRequestNotFound);
-
-            request.Status = FriendRequestStatus.Rejected;
-            await _context.SaveChangesAsync();
-
-            await _eventBus.PublishAsync(new FriendRequestDeclinedEvent(senderId, userId));
-        }
-
-        public async Task CancelRequestAsync(Guid userId, Guid receiverId)
-        {
-            var request = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr =>
-                    fr.SenderId == userId &&
-                    fr.ReceiverId == receiverId &&
-                    fr.Status == FriendRequestStatus.Pending)
-                ?? throw new AppException(ErrorCode.FriendRequestNotFound);
-
             request.Status = FriendRequestStatus.Cancelled;
-            await _context.SaveChangesAsync();
-            await _eventBus.PublishAsync(new FriendRequestCancelledEvent(userId, receiverId));
         }
 
-        public async Task RemoveFriendAsync(Guid userId, Guid friendId)
+        await context.SaveChangesAsync();
+
+        foreach (var request in pending)
         {
-            var friendships = await SocialQueryHelper.GetFriendshipsAsync(_context, userId, friendId);
-
-            if (friendships.Count == 0)
-                throw new AppException(ErrorCode.IsNotFriend);
-
-            _context.UserFriends.RemoveRange(friendships);
-            await _context.SaveChangesAsync();
-            await _eventBus.PublishAsync(new FriendRemovedEvent(userId, friendId));
+            await eventBus.PublishAsync(new FriendRequestCancelledEvent(request.SenderId, request.ReceiverId));
         }
 
-        public async Task BlockUserAsync(Guid blockerId, Guid blockedId)
-        {
-            if (blockerId == blockedId)
-                throw new AppException(ErrorCode.CannotSelfBlock);
+        await eventBus.PublishAsync(new UserBlockedEvent(blockerId, blockedId));
+    }
 
-            if (await _context.Blocks.AnyAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId))
-                throw new AppException(ErrorCode.AlreadyBlocked);
+    public async Task UnblockUserAsync(Guid blockerId, Guid blockedId)
+    {
+        var block = await context.Blocks.FirstOrDefaultAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId)
+            ?? throw new AppException(ErrorCode.NotBlocked);
 
-            _context.Blocks.Add(new Block { BlockerId = blockerId, BlockedId = blockedId });
+        context.Blocks.Remove(block);
+        await context.SaveChangesAsync();
 
-            var friendships = await SocialQueryHelper.GetFriendshipsAsync(_context, blockerId, blockedId);
+        await eventBus.PublishAsync(new UserUnblockedEvent(blockerId, blockedId));
+    }
 
-            _context.UserFriends.RemoveRange(friendships);
+    private static FriendRequest NewPendingRequest(Guid senderId, Guid receiverId) => new()
+    {
+        SenderId = senderId,
+        ReceiverId = receiverId,
+        Status = FriendRequestStatus.Pending
+    };
 
-            var pendingRequests = await _context.FriendRequests
-                .Where(fr =>
-                    fr.Status == FriendRequestStatus.Pending &&
-                    ((fr.SenderId == blockerId && fr.ReceiverId == blockedId) ||
-                     (fr.SenderId == blockedId && fr.ReceiverId == blockerId)))
-                .ToListAsync();
+    private async Task LinkBothWaysAsync(FriendRequest request, Guid userId, Guid senderId)
+    {
+        request.Status = FriendRequestStatus.Accepted;
 
-            foreach (var req in pendingRequests)
-            {
-                req.Status = FriendRequestStatus.Cancelled;
-            }
+        var existing = await context.UserFriends
+            .Where(x => (x.UserId == userId && x.FriendId == senderId) ||
+                        (x.UserId == senderId && x.FriendId == userId))
+            .Select(x => x.UserId)
+            .ToListAsync();
 
-            await _context.SaveChangesAsync();
+        if (!existing.Contains(userId)) context.UserFriends.Add(new UserFriends { UserId = userId, FriendId = senderId });
 
-            var cancelledEvents = pendingRequests
-                .Select(req => new FriendRequestCancelledEvent(req.SenderId, req.ReceiverId))
-                .ToList();
-
-            foreach (var evt in cancelledEvents)
-            {
-                await _eventBus.PublishAsync(evt);
-            }
-
-            await _eventBus.PublishAsync(new UserBlockedEvent(blockerId, blockedId));
-        }
-
-        public async Task UnblockUserAsync(Guid blockerId, Guid blockedId)
-        {
-            var block = await _context.Blocks
-                .FirstOrDefaultAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId)
-                ?? throw new AppException(ErrorCode.NotBlocked);
-
-            _context.Blocks.Remove(block);
-            await _context.SaveChangesAsync();
-            await _eventBus.PublishAsync(new UserUnblockedEvent(blockerId, blockedId));
-        }
+        if (!existing.Contains(senderId)) context.UserFriends.Add(new UserFriends { UserId = senderId, FriendId = userId });
+        await context.SaveChangesAsync();
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum OtpPurpose
 {
-    public enum OtpPurpose
-    {
-        EmailVerification,
-        PasswordReset
-    }
+    EmailVerification,
+    PasswordReset
 }

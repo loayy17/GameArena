@@ -1,4 +1,4 @@
-﻿using backend.DTOs.Requests;
+using backend.DTOs.Requests;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Services.Interface;
@@ -6,29 +6,27 @@ using backend.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace backend.Controllers
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/email-verification")]
+[EnableRateLimiting("AuthPolicy")]
+public class EmailVerificationController(IEmailVerificationService verification, IAuthService auth, IAuthCookieHelper cookies)
+    : ControllerBase
 {
-    [ApiController]
-    [Route("api/email-verification")]
-    [EnableRateLimiting("AuthPolicy")]
-    public class EmailVerificationController(IEmailVerificationService _service, IAuthService _authService) : ControllerBase
+    [HttpPost("send")]
+    public async Task<ActionResult<ApiResponse<object>>> SendAsync(SendOtpRequest request)
     {
-        [HttpPost("send")]
-        public async Task<ActionResult<ApiResponse<object>>> Send([FromBody] SendOtpRequest request)
-        {
-            await _service.GenerateAndSendOtpAsync(request.Email, OtpPurpose.EmailVerification);
-            return Ok(new ApiResponse<object>());
-        }
+        await verification.GenerateAndSendOtpAsync(request.Email, OtpPurpose.EmailVerification);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [HttpPost("verify")]
-        public async Task<ActionResult<ApiResponse<object>>> Verify([FromBody] VerifyOtpRequest request)
-        {
-            await _service.VerifyOtpAsync(request.Email, request.Otp, OtpPurpose.EmailVerification);
+    [HttpPost("verify")]
+    public async Task<ActionResult<ApiResponse<object>>> VerifyAsync(VerifyOtpRequest request)
+    {
+        await verification.VerifyOtpAsync(request.Email, request.Otp, OtpPurpose.EmailVerification);
 
-            var auth = await _authService.LoginByVerifiedEmailAsync(request.Email);
-            AuthCookieHelper.SetAuthCookies(Response, auth);
-
-            return Ok(new ApiResponse<object>());
-        }
+        cookies.Issue(Response, await auth.LoginByVerifiedEmailAsync(request.Email));
+        return Ok(new ApiResponse<object>());
     }
 }

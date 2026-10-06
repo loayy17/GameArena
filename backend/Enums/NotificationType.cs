@@ -1,10 +1,9 @@
-namespace backend.Enums
+namespace backend.Enums;
+
+public enum NotificationType
 {
-    public enum NotificationType
-    {
-        FriendRequest,
-        FriendRequestAccepted,
-        GameInvite,
-        NewMessage
-    }
+    FriendRequest,
+    FriendRequestAccepted,
+    GameInvite,
+    NewMessage
 }

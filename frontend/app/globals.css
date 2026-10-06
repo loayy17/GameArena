@@ -24,11 +24,6 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-md:0 4px 6px -1px rgb(0 0 0 / 0.07),0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg:0 10px 15px -3px rgb(0 0 0 / 0.08),0 4px 6px -4px rgb(0 0 0 / 0.04);
-  --shadow-xl:0 20px 25px -5px rgb(0 0 0 / 0.1),0 8px 10px -6px rgb(0 0 0 / 0.06);
-
   --transition-fast: 150ms ease;
   --transition-normal: 200ms ease;
   --transition-slow: 300ms ease;
@@ -43,11 +38,9 @@
   --z-tooltip: 800;
   --z-toast: 900;
 
-  --color-game-board: var(--theme-game-board);
-  --color-game-board-border: var(--theme-game-board-border);
-}
+  --space-bottom-nav: 5rem;
 
-@theme inline {
+  /* Brand */
   --color-primary: var(--theme-primary);
   --color-primary-hover: var(--theme-primary-hover);
   --color-primary-muted: var(--theme-primary-muted);
@@ -59,7 +52,7 @@
   --color-accent: var(--theme-accent);
   --color-accent-muted: var(--theme-accent-muted);
 
-
+  /* Status */
   --color-success: var(--theme-success);
   --color-success-muted: var(--theme-success-muted);
   --color-warning: var(--theme-warning);
@@ -67,6 +60,7 @@
   --color-danger: var(--theme-danger);
   --color-danger-muted: var(--theme-danger-muted);
 
+  /* Surfaces */
   --color-bg: var(--theme-bg);
   --color-bg-elevated: var(--theme-bg-elevated);
   --color-bg-card: var(--theme-bg-card);
@@ -79,16 +73,70 @@
   --color-border: var(--theme-border);
   --color-border-light: var(--theme-border-light);
 
+  /* Text */
   --color-text: var(--theme-text);
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
 
   --color-overlay: var(--theme-overlay);
 
+  --color-game-board: var(--theme-game-board);
+  --color-game-board-border: var(--theme-game-board-border);
 
-  --space-bottom-nav: 5rem;
+  /* Shadows carry a violet tint rather than pure gray, and darken further on dark
+     surfaces where a light-on-dark edge is the only thing that reads. */
+  --shadow-sm: var(--theme-shadow-sm);
+  --shadow-md: var(--theme-shadow-md);
+  --shadow-lg: var(--theme-shadow-lg);
+  --shadow-xl: var(--theme-shadow-xl);
 }
 
+
+/* Light is the base so a page without a resolved theme still reads correctly.
+   The dark palette is repeated once more inside the media query below, which is
+   the only way to let the OS pick the tokens without scripting. */
+:root,
+[data-theme="light"] {
+  --theme-primary: var(--color-violet-700);
+  --theme-primary-hover: var(--color-violet-800);
+  --theme-primary-muted: rgb(109 40 217 / 0.10);
+  --theme-on-primary: #ffffff;
+  --theme-secondary: #2563eb;
+  --theme-secondary-muted: rgb(37 99 235 / 0.08);
+  --theme-accent: #d946ef;
+  --theme-accent-muted: rgb(217 70 239 / 0.08);
+
+  --theme-success: #16a34a;
+  --theme-success-muted: rgb(22 163 74 / 0.08);
+  --theme-warning: #d97706;
+  --theme-warning-muted: rgb(217 119 6 / 0.08);
+  --theme-danger: #dc2626;
+  --theme-danger-muted: rgb(220 38 38 / 0.08);
+
+  --theme-bg: #f9fafb;
+  --theme-bg-elevated: #ffffff;
+  --theme-bg-card: #ffffff;
+  --theme-bg-card-hover: #f3f4f6;
+  --theme-bg-sidebar: #f3f4f6;
+  --theme-surface: #f1f5f9;
+  --theme-surface-hover: #e5e7eb;
+  --theme-border: #e5e7eb;
+  --theme-border-light: #f1f5f9;
+  --theme-text: #111827;
+  --theme-text-secondary: #4b5563;
+  --theme-text-muted: #6b7280;
+  --theme-overlay: rgb(0 0 0 / 0.40);
+
+  --theme-game-board: #f3f4f6;
+  --theme-game-board-border: #e5e7eb;
+
+  --theme-shadow-sm: 0 1px 2px rgb(23 25 40 / 0.06);
+  --theme-shadow-md: 0 4px 6px -1px rgb(23 25 40 / 0.08), 0 2px 4px -2px rgb(23 25 40 / 0.05);
+  --theme-shadow-lg: 0 10px 15px -3px rgb(23 25 40 / 0.10), 0 4px 6px -4px rgb(23 25 40 / 0.05);
+  --theme-shadow-xl: 0 20px 25px -5px rgb(23 25 40 / 0.12), 0 8px 10px -6px rgb(23 25 40 / 0.06);
+
+  color-scheme: light;
+}
 
 [data-theme="dark"] {
   --theme-primary: var(--color-violet-600);
@@ -124,44 +172,56 @@
   --theme-game-board: #191b22;
   --theme-game-board-border: #30333e;
 
+  --theme-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.40);
+  --theme-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+  --theme-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.50), 0 4px 6px -4px rgb(0 0 0 / 0.35);
+  --theme-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.55), 0 8px 10px -6px rgb(0 0 0 / 0.40);
+
   color-scheme: dark;
 }
 
-[data-theme="light"] {
-  --theme-primary: var(--color-violet-700);
-  --theme-primary-hover: var(--color-violet-800);
-  --theme-primary-muted: rgb(109 40 217 / 0.10);
-  --theme-on-primary: #ffffff;
-  --theme-secondary: #2563eb;
-  --theme-secondary-muted: rgb(37 99 235 / 0.08);
-  --theme-accent: #d946ef;
-  --theme-accent-muted: rgb(217 70 239 / 0.08);
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --theme-primary: var(--color-violet-600);
+    --theme-primary-hover: var(--color-violet-500);
+    --theme-primary-muted: rgb(124 58 237 / 0.10);
+    --theme-on-primary: #f5f3ff;
+    --theme-secondary: #818cf8;
+    --theme-secondary-muted: rgb(129 140 248 / 0.08);
+    --theme-accent: #fb7185;
+    --theme-accent-muted: rgb(251 113 133 / 0.08);
 
-  --theme-success: #16a34a;
-  --theme-success-muted: rgb(22 163 74 / 0.08);
-  --theme-warning: #d97706;
-  --theme-warning-muted: rgb(217 119 6 / 0.08);
-  --theme-danger: #dc2626;
-  --theme-danger-muted: rgb(220 38 38 / 0.08);
+    --theme-success: #34d399;
+    --theme-success-muted: rgb(52 211 153 / 0.08);
+    --theme-warning: #fbbf24;
+    --theme-warning-muted: rgb(251 191 36 / 0.08);
+    --theme-danger: #f87171;
+    --theme-danger-muted: rgb(248 113 113 / 0.08);
 
-  --theme-bg: #f9fafb;
-  --theme-bg-elevated: #ffffff;
-  --theme-bg-card: #ffffff;
-  --theme-bg-card-hover: #f3f4f6;
-  --theme-bg-sidebar: #f3f4f6;
-  --theme-surface: #f1f5f9;
-  --theme-surface-hover: #e5e7eb;
-  --theme-border: #e5e7eb;
-  --theme-border-light: #f1f5f9;
-  --theme-text: #111827;
-  --theme-text-secondary: #4b5563;
-  --theme-text-muted: #6b7280;
-  --theme-overlay: rgb(0 0 0 / 0.40);
+    --theme-bg: #111318;
+    --theme-bg-elevated: #191b22;
+    --theme-bg-card: #1c1e26;
+    --theme-bg-card-hover: #242630;
+    --theme-bg-sidebar: #15171e;
+    --theme-surface: #20222c;
+    --theme-surface-hover: #282a36;
+    --theme-border: #30333e;
+    --theme-border-light: #282a34;
+    --theme-text: #f0f2f7;
+    --theme-text-secondary: #a8adc0;
+    --theme-text-muted: #7d8298;
+    --theme-overlay: rgb(0 0 0 / 0.60);
 
-  --theme-game-board: #f3f4f6;
-  --theme-game-board-border: #e5e7eb;
+    --theme-game-board: #191b22;
+    --theme-game-board-border: #30333e;
 
-  color-scheme: light;
+    --theme-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.40);
+    --theme-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+    --theme-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.50), 0 4px 6px -4px rgb(0 0 0 / 0.35);
+    --theme-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.55), 0 8px 10px -6px rgb(0 0 0 / 0.40);
+
+    color-scheme: dark;
+  }
 }
 
 @layer base {
@@ -397,6 +457,15 @@ html::-webkit-scrollbar-thumb:hover,
 .h-viewport {
   height: 100vh;
   height: 100dvh;
+}
+
+.min-h-half-viewport {
+  min-height: 50vh;
+  min-height: 50dvh;
+}
+
+.w-inset-gutter {
+  width: calc(100% - 2rem);
 }
 
 

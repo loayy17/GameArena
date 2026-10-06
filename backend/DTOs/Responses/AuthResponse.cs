@@ -1,8 +1,7 @@
-namespace backend.DTOs.Responses
+namespace backend.DTOs.Responses;
+
+public sealed record AuthResponse
 {
-    public sealed record AuthResponse
-    {
-        public string AccessToken { get; init; } = string.Empty;
-        public string RefreshToken { get; init; } = string.Empty;
-    }
+    public string AccessToken { get; init; } = string.Empty;
+    public string RefreshToken { get; init; } = string.Empty;
 }

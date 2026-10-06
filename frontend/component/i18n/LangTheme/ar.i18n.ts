@@ -4,9 +4,9 @@ const ar = {
   french: "Français",
   light: "فاتح",
   dark: "داكن",
+  system: "النظام",
+  theme: "المظهر",
   languages: "اللغات",
-  switchToLight: "التبديل إلى الوضع الفاتح",
-  switchToDark: "التبديل إلى الوضع الداكن",
 };
 
 export { ar };

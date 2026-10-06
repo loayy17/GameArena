@@ -1,11 +1,10 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        All,
-        User,
-        Moderator,
-        Admin,
-        SuperAdmin
-    }
+    All,
+    User,
+    Moderator,
+    Admin,
+    SuperAdmin
 }

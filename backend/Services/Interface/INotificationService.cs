@@ -1,23 +1,21 @@
-﻿using backend.DTOs.Responses;
+using backend.DTOs.Responses;
 using backend.Enums;
 
-namespace backend.Services.Interface
-{
-    public interface INotificationService
-    {
-        Task<NotificationCountersResponse> GetCountersAsync(Guid userId);
-        Task SendCountersAsync(Guid userId);
-        Task SendFriendsAsync(Guid userId);
-        Task SendFriendRequestsAsync(Guid userId);
-        Task SendBlockedAsync(Guid userId);
-        Task SendSocialDataAsync(Guid userId);
+namespace backend.Services.Interface;
 
-        Task<List<NotificationResponse>> GetNotificationsAsync(Guid userId, int limit = 50);
-        Task<NotificationResponse> CreateNotificationAsync(Guid userId, string type, string title, string body, string? referenceId = null);
-        Task MarkNotificationAsReadAsync(Guid userId, Guid notificationId);
-        Task MarkAllNotificationsAsReadAsync(Guid userId);
-        Task DeleteNotificationAsync(Guid userId, Guid notificationId);
-        Task DeleteNotificationsByReferenceAsync(Guid userId, NotificationType type, string referenceId);
-        Task ReplaceUnreadNewMessageAsync(Guid userId, string title, string body, string referenceId);
-    }
+public interface INotificationService
+{
+    Task SendCountersAsync(Guid userId);
+    Task SendFriendsAsync(Guid userId);
+    Task SendFriendRequestsAsync(Guid userId);
+    Task SendBlockedAsync(Guid userId);
+    Task SendSocialDataAsync(Guid userId);
+
+    Task<List<NotificationResponse>> GetNotificationsAsync(Guid userId, int limit = 50);
+    Task<NotificationResponse> CreateNotificationAsync(Guid userId, NotificationType type, string title, string body, string? referenceId = null);
+    Task MarkNotificationAsReadAsync(Guid userId, Guid notificationId);
+    Task MarkAllNotificationsAsReadAsync(Guid userId);
+    Task DeleteNotificationAsync(Guid userId, Guid notificationId);
+    Task DeleteNotificationsByReferenceAsync(Guid userId, NotificationType type, string referenceId);
+    Task ReplaceUnreadNewMessageAsync(Guid userId, string title, string body, string referenceId);
 }

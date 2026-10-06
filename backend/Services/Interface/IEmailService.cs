@@ -1,7 +1,6 @@
-﻿namespace backend.Services.Interface
+namespace backend.Services.Interface;
+
+public interface IEmailService
 {
-    public interface IEmailService
-    {
-        Task SendAsync(string to, string subject, string body);
-    }
+    Task SendAsync(string to, string subject, string body);
 }

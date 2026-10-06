@@ -6,116 +6,96 @@ using backend.Services.Interface;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Services
+namespace backend.Services;
+
+public class SocialReadService(AppDbContext context, IUserPresenceService presence) : ISocialReadService
 {
-    public class SocialReadService(
-        IDbContextFactory<AppDbContext> _contextFactory,
-        IUserPresenceService _presence) : ISocialReadService
+    public async Task<List<UserSummaryResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter)
     {
-        public async Task<List<UserSummaryResponse>> GetFriendsAsync(Guid userId, UserFilterRequest? filter)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var blockedIds = await GetBlockedIdsAsync(context, userId);
+        var blockedIds = await SocialQueryHelper.GetBlockedIdsAsync(context, userId);
 
-            var query = context.UserFriends
-                .AsNoTracking()
-                .Where(x => x.UserId == userId && !blockedIds.Contains(x.FriendId))
-                .Select(x => x.Friend);
+        var query = context.UserFriends
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && !blockedIds.Contains(x.FriendId))
+            .Select(x => x.Friend);
 
-            if (filter != null && !string.IsNullOrWhiteSpace(filter.Name))
+        query = UserSearchQuery.Apply(query, filter?.Name);
+
+        var users = await query
+            .Select(MappingExtensions.ToSummaryProjection)
+            .ToListAsync();
+
+        return WithPresenceAndStatusFilter(users, filter?.UserStatus ?? UserStatus.All);
+    }
+
+    public async Task<List<FriendRequestReceivedResponse>> GetReceivedRequestsAsync(Guid userId)
+    {
+        return await context.FriendRequests
+            .AsNoTracking()
+            .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
+            .Select(fr => new FriendRequestReceivedResponse
             {
-                var searchTerm = filter.Name.Trim();
-                query = query.Where(u =>
-                    EF.Functions.ILike(u.UserName, $"%{searchTerm}%") ||
-                    EF.Functions.ILike(u.FirstName, $"%{searchTerm}%") ||
-                    EF.Functions.ILike(u.LastName, $"%{searchTerm}%") ||
-                    EF.Functions.ILike(u.FirstName + " " + u.LastName, $"%{searchTerm}%"));
-            }
+                SenderId = fr.SenderId,
+                SenderFirstName = fr.Sender.FirstName,
+                SenderLastName = fr.Sender.LastName,
+                SenderFullName = fr.Sender.FirstName + " " + fr.Sender.LastName,
+                SenderUserName = fr.Sender.UserName,
+                SenderAvatarUrl = MappingExtensions.AvatarUrl(fr.Sender.Id, fr.Sender.Avatar),
+                SentAt = fr.CreatedAt
+            })
+            .ToListAsync();
+    }
 
-            var users = await query
-                .Select(MappingExtensions.ToSummaryResponse)
-                .ToListAsync();
+    public async Task<List<FriendRequestSentResponse>> GetSentRequestsAsync(Guid userId)
+    {
+        return await context.FriendRequests
+            .AsNoTracking()
+            .Where(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending)
+            .Select(fr => new FriendRequestSentResponse
+            {
+                ReceiverId = fr.ReceiverId,
+                ReceiverFirstName = fr.Receiver.FirstName,
+                ReceiverLastName = fr.Receiver.LastName,
+                ReceiverFullName = fr.Receiver.FirstName + " " + fr.Receiver.LastName,
+                ReceiverUserName = fr.Receiver.UserName,
+                ReceiverAvatarUrl = MappingExtensions.AvatarUrl(fr.Receiver.Id, fr.Receiver.Avatar),
+                SentAt = fr.CreatedAt
+            })
+            .ToListAsync();
+    }
 
-            var result = users.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
+    public async Task<List<UserSummaryResponse>> GetBlockedUsersAsync(Guid userId)
+    {
+        var blocked = await context.Blocks
+            .AsNoTracking()
+            .Where(b => b.BlockerId == userId)
+            .Select(b => b.Blocked)
+            .Select(MappingExtensions.ToSummaryProjection)
+            .ToListAsync();
 
-            if (filter != null && filter.UserStatus != UserStatus.All)
-                result = result.Where(u => u.Status == filter.UserStatus).ToList();
-            return result;
-        }
+        return WithPresenceAndStatusFilter(blocked, UserStatus.All);
+    }
 
-        public async Task<List<FriendRequestReceivedResponse>> GetReceivedRequestsAsync(Guid userId)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+    public async Task<HashSet<Guid>> GetFriendIdsAsync(Guid userId)
+    {
+        var blockedIds = await SocialQueryHelper.GetBlockedIdsAsync(context, userId);
 
-            return await context.FriendRequests
-                .AsNoTracking()
-                .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
-                .Select(fr => new FriendRequestReceivedResponse
-                {
-                    SenderId = fr.SenderId,
-                    SenderFirstName = fr.Sender.FirstName,
-                    SenderLastName = fr.Sender.LastName,
-                    SenderFullName = fr.Sender.FirstName + " " + fr.Sender.LastName,
-                    SenderUserName = fr.Sender.UserName,
-                    SenderAvatarUrl = MappingExtensions.AvatarUrl(fr.Sender.Id, fr.Sender.Avatar),
-                    SentAt = fr.CreatedAt
-                })
-                .ToListAsync();
-        }
+        return await context.UserFriends
+            .AsNoTracking()
+            .Where(uf => uf.UserId == userId && !blockedIds.Contains(uf.FriendId))
+            .Select(uf => uf.FriendId)
+            .ToHashSetAsync();
+    }
 
-        public async Task<List<FriendRequestSentResponse>> GetSentRequestsAsync(Guid userId)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+    public Task<bool> AreFriendsAsync(Guid userId, Guid otherUserId) =>
+        SocialQueryHelper.AreFriendsAsync(context, userId, otherUserId);
 
-            return await context.FriendRequests
-                .AsNoTracking()
-                .Where(fr => fr.SenderId == userId && fr.Status == FriendRequestStatus.Pending)
-                .Select(fr => new FriendRequestSentResponse
-                {
-                    ReceiverId = fr.ReceiverId,
-                    ReceiverFirstName = fr.Receiver.FirstName,
-                    ReceiverLastName = fr.Receiver.LastName,
-                    ReceiverFullName = fr.Receiver.FirstName + " " + fr.Receiver.LastName,
-                    ReceiverUserName = fr.Receiver.UserName,
-                    ReceiverAvatarUrl = MappingExtensions.AvatarUrl(fr.Receiver.Id, fr.Receiver.Avatar),
-                    SentAt = fr.CreatedAt
-                })
-                .ToListAsync();
-        }
+    private List<UserSummaryResponse> WithPresenceAndStatusFilter(List<UserSummaryResponse> users, UserStatus status)
+    {
+        var results = users.Select(u => u with { Status = presence.GetStatus(u.Id.ToString()) });
 
-        public async Task<List<UserSummaryResponse>> GetBlockedUsersAsync(Guid userId)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-
-            var blocked = await context.Blocks
-                .AsNoTracking()
-                .Where(b => b.BlockerId == userId)
-                .Select(b => b.Blocked)
-                .Select(MappingExtensions.ToSummaryResponse)
-                .ToListAsync();
-
-            return blocked.Select(u => u with { Status = _presence.GetStatus(u.Id.ToString()) }).ToList();
-        }
-
-        public async Task<HashSet<Guid>> GetFriendIdsAsync(Guid userId)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var blockedIds = await GetBlockedIdsAsync(context, userId);
-
-            return await context.UserFriends
-                .AsNoTracking()
-                .Where(uf => uf.UserId == userId && !blockedIds.Contains(uf.FriendId))
-                .Select(uf => uf.FriendId)
-                .ToHashSetAsync();
-        }
-
-        private static async Task<HashSet<Guid>> GetBlockedIdsAsync(AppDbContext context, Guid userId)
-        {
-            return await context.Blocks
-                .AsNoTracking()
-                .Where(b => b.BlockerId == userId || b.BlockedId == userId)
-                .Select(b => b.BlockerId == userId ? b.BlockedId : b.BlockerId)
-                .ToHashSetAsync();
-        }
+        return status == UserStatus.All
+            ? [.. results]
+            : [.. results.Where(u => u.Status == status)];
     }
 }

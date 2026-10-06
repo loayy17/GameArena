@@ -5,6 +5,7 @@ import { getSettingFromCookie } from "@/lib/getSettingFromCookie";
 import { localeDirection } from "@/lib/locale";
 
 import { AuthProvider } from "./providers/AuthProvider";
+import { SettingProvider } from "./providers/SettingProvider";
 
 import type { Metadata } from "next";
 
@@ -34,9 +35,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme={theme}
       data-scroll-behavior="smooth"
       className={`${chakraPetch.variable} ${cairo.variable} antialiased h-full`}>
-      <body className="min-h-full">
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+        <body className="min-h-full">
+          <SettingProvider locale={locale} theme={theme}>
+            <AuthProvider>{children}</AuthProvider>
+          </SettingProvider>
+        </body>
     </html>
   );
 }

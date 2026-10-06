@@ -1,153 +1,151 @@
-﻿using backend.DTOs.Requests;
+using backend.Domain;
+using backend.DTOs.Requests;
 using backend.DTOs.Responses;
 using backend.Services.Interface;
+using backend.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Controllers
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class UserController(IUserService users, ICurrentUserService currentUser) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class UserController(
-        IUserService _userService,
-        ICurrentUserService _currentUser) : ControllerBase
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<UserPublicProfileResponse>>> GetUserAsync(Guid id)
     {
-        // User endpoints
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<UserPublicProfileResponse>>> GetUser(Guid id)
-        {
-            var profile = await _userService.GetUserProfileAsync(id, _currentUser.UserId);
-            return Ok(new ApiResponse<UserPublicProfileResponse> { Data = profile });
-        }
+        var profile = await users.GetUserProfileAsync(id, currentUser.UserId);
+        return Ok(new ApiResponse<UserPublicProfileResponse> { Data = profile });
+    }
 
-        [HttpGet("profile")]
-        public async Task<ActionResult<ApiResponse<UserResponse>>> Profile()
-        {
-            var user = await _userService.GetUserByIdAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<UserResponse> { Data = user });
-        }
+    [HttpGet("profile")]
+    public async Task<ActionResult<ApiResponse<UserResponse>>> ProfileAsync()
+    {
+        var user = await users.GetUserByIdAsync(currentUser.UserId);
+        return Ok(new ApiResponse<UserResponse> { Data = user });
+    }
 
-        [HttpPost("search")]
-        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetUsers([FromBody] UserFilterRequest filter)
-        {
-            var users = await _userService.GetUsersAsync(_currentUser.UserId, filter);
-            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = users });
-        }
+    [HttpPost("search")]
+    public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> SearchAsync([FromBody] UserFilterRequest filter)
+    {
+        var found = await users.GetUsersAsync(currentUser.UserId, filter);
+        return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = found });
+    }
 
-        [HttpPut("update-profile")]
-        public async Task<ActionResult<ApiResponse<UserResponse>>> UpdateProfile([FromBody] UpdateProfileRequest request)
-        {
-            var updatedUser = await _userService.UpdateProfileAsync(_currentUser.UserId, request);
-            return Ok(new ApiResponse<UserResponse> { Data = updatedUser });
-        }
+    [HttpGet("leaderboard")]
+    public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetLeaderboardAsync([FromQuery] int limit = 10)
+    {
+        var top = await users.GetLeaderboardAsync(limit);
+        return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = top });
+    }
 
-        [HttpPut("change-password")]
-        public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request)
-        {
-            await _userService.ChangePasswordAsync(_currentUser.UserId, request.OldPassword, request.NewPassword);
-            return Ok(new ApiResponse<object>());
-        }
+    [HttpPut("update-profile")]
+    public async Task<ActionResult<ApiResponse<UserResponse>>> UpdateProfileAsync([FromBody] UpdateProfileRequest request)
+    {
+        var updated = await users.UpdateProfileAsync(currentUser.UserId, request);
+        return Ok(new ApiResponse<UserResponse> { Data = updated });
+    }
 
-        [HttpGet("preferences")]
-        public async Task<ActionResult<ApiResponse<string?>>> GetPreferences()
-        {
-            var preferences = await _userService.GetPreferencesAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<string?> { Data = preferences });
-        }
+    [HttpPut("change-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePasswordAsync([FromBody] ChangePasswordRequest request)
+    {
+        await users.ChangePasswordAsync(currentUser.UserId, request.OldPassword, request.NewPassword);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [HttpPut("preferences")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdatePreferences([FromBody] UserPreferencesRequest request)
-        {
-            await _userService.UpdatePreferencesAsync(_currentUser.UserId, request.Preferences);
-            return Ok(new ApiResponse<object>());
-        }
+    [HttpGet("preferences")]
+    public async Task<ActionResult<ApiResponse<string?>>> GetPreferencesAsync()
+    {
+        var preferences = await users.GetPreferencesAsync(currentUser.UserId);
+        return Ok(new ApiResponse<string?> { Data = preferences });
+    }
 
-        [HttpGet("{id}/avatar")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetAvatar(Guid id)
-        {
-            var avatar = await _userService.GetAvatarAsync(id);
-            if (avatar is null) return NotFound();
-            return File(avatar.Value.Bytes, avatar.Value.ContentType);
-        }
+    [HttpPut("preferences")]
+    public async Task<ActionResult<ApiResponse<object>>> UpdatePreferencesAsync([FromBody] UserPreferencesRequest request)
+    {
+        await users.UpdatePreferencesAsync(currentUser.UserId, request.Preferences);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [HttpPost("avatar")]
-        [RequestSizeLimit(2 * 1024 * 1024)]
-        public async Task<ActionResult<ApiResponse<UserResponse>>> UploadAvatar(IFormFile file)
-        {
-            var user = await _userService.UpdateAvatarAsync(_currentUser.UserId, file);
-            return Ok(new ApiResponse<UserResponse> { Data = user });
-        }
+    [HttpGet("{id}/avatar")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAvatarAsync(Guid id)
+    {
+        var avatar = await users.GetAvatarAsync(id);
 
-        [HttpDelete("avatar")]
-        public async Task<ActionResult<ApiResponse<UserResponse>>> RemoveAvatar()
-        {
-            var user = await _userService.RemoveAvatarAsync(_currentUser.UserId);
-            return Ok(new ApiResponse<UserResponse> { Data = user });
-        }
+        return avatar is null ? NotFound() : File(avatar.Value.Bytes, avatar.Value.ContentType);
+    }
 
-        [HttpDelete("delete-account")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteAccount()
-        {
-            await _userService.DeleteAccountAsync(_currentUser.UserId, _currentUser.UserId);
-            return Ok(new ApiResponse<object>());
-        }
+    [HttpPost("avatar")]
+    [RequestSizeLimit(Constants.AvatarMaxBytes)]
+    public async Task<ActionResult<ApiResponse<UserResponse>>> UploadAvatarAsync(IFormFile file)
+    {
+        var user = await users.UpdateAvatarAsync(currentUser.UserId, file);
+        return Ok(new ApiResponse<UserResponse> { Data = user });
+    }
 
-        [HttpGet("leaderboard")]
-        public async Task<ActionResult<ApiResponse<List<UserSummaryResponse>>>> GetLeaderboard([FromQuery] int limit = 10)
-        {
-            var top = await _userService.GetLeaderboardAsync(limit);
-            return Ok(new ApiResponse<List<UserSummaryResponse>> { Data = top });
-        }
+    [HttpDelete("avatar")]
+    public async Task<ActionResult<ApiResponse<UserResponse>>> RemoveAvatarAsync()
+    {
+        var user = await users.RemoveAvatarAsync(currentUser.UserId);
+        return Ok(new ApiResponse<UserResponse> { Data = user });
+    }
 
-        // Admin and Moderator roles)
-        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
-        [HttpGet("admin/stats")]
-        public async Task<ActionResult<ApiResponse<AdminStatsResponse>>> GetStats()
-        {
-            var stats = await _userService.GetStatsAsync();
-            return Ok(new ApiResponse<AdminStatsResponse> { Data = stats });
-        }
+    [HttpDelete("delete-account")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteAccountAsync()
+    {
+        await users.DeleteAccountAsync(currentUser.UserId, currentUser.UserId);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
-        [HttpGet("admin/users")]
-        public async Task<ActionResult<ApiResponse<List<AdminUserResponse>>>> GetUsersByAdmin([FromQuery] UserFilterRequest? filter)
-        {
-            var users = await _userService.GetUsersByAdminAsync(filter);
-            return Ok(new ApiResponse<List<AdminUserResponse>> { Data = users });
-        }
+    [Authorize(Roles = Constants.StaffRoles)]
+    [HttpGet("admin/stats")]
+    public async Task<ActionResult<ApiResponse<AdminStatsResponse>>> GetStatsAsync()
+    {
+        var stats = await users.GetStatsAsync();
+        return Ok(new ApiResponse<AdminStatsResponse> { Data = stats });
+    }
 
-        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
-        [HttpPost("admin/users/{id}/ban")]
-        public async Task<ActionResult<ApiResponse<object>>> BanUser(Guid id)
-        {
-            await _userService.BanUserAsync(_currentUser.UserId, id);
-            return Ok(new ApiResponse<object>());
-        }
+    [Authorize(Roles = Constants.StaffRoles)]
+    [HttpGet("admin/users")]
+    public async Task<ActionResult<ApiResponse<List<AdminUserResponse>>>> SearchAsAdminAsync([FromQuery] UserFilterRequest? filter)
+    {
+        var found = await users.GetUsersByAdminAsync(filter);
+        return Ok(new ApiResponse<List<AdminUserResponse>> { Data = found });
+    }
 
-        [Authorize(Roles = "Admin,Moderator,SuperAdmin")]
-        [HttpPost("admin/users/{id}/unban")]
-        public async Task<ActionResult<ApiResponse<object>>> UnbanUser(Guid id)
-        {
-            await _userService.UnbanUserAsync(_currentUser.UserId, id);
-            return Ok(new ApiResponse<object>());
-        }
+    [Authorize(Roles = Constants.StaffRoles)]
+    [HttpPost("admin/users/{id}/ban")]
+    public async Task<ActionResult<ApiResponse<object>>> BanUserAsync(Guid id)
+    {
+        await users.BanUserAsync(currentUser.UserId, id);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [Authorize(Roles = "Admin,SuperAdmin")]
-        [HttpPut("admin/users/role")]
-        public async Task<ActionResult<ApiResponse<object>>> SetRole([FromBody] SetRoleRequest request)
-        {
-            await _userService.SetRoleAsync(_currentUser.UserId, request.Id, request.Role);
-            return Ok(new ApiResponse<object>());
-        }
+    [Authorize(Roles = Constants.StaffRoles)]
+    [HttpPost("admin/users/{id}/unban")]
+    public async Task<ActionResult<ApiResponse<object>>> UnbanUserAsync(Guid id)
+    {
+        await users.UnbanUserAsync(currentUser.UserId, id);
+        return Ok(new ApiResponse<object>());
+    }
 
-        [Authorize(Roles = "Admin,SuperAdmin")]
-        [HttpDelete("admin/users/{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteAccountByAdmin(Guid id)
-        {
-            await _userService.DeleteAccountAsync(_currentUser.UserId, id);
-            return Ok(new ApiResponse<object>());
-        }
+    [Authorize(Roles = Constants.RoleAdmins)]
+    [HttpPut("admin/users/role")]
+    public async Task<ActionResult<ApiResponse<object>>> SetRoleAsync([FromBody] SetRoleRequest request)
+    {
+        await users.SetRoleAsync(currentUser.UserId, request.Id, request.Role);
+        return Ok(new ApiResponse<object>());
+    }
+
+    [Authorize(Roles = Constants.RoleAdmins)]
+    [HttpDelete("admin/users/{id}")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteUserAsync(Guid id)
+    {
+        await users.DeleteAccountAsync(currentUser.UserId, id);
+        return Ok(new ApiResponse<object>());
     }
 }
+

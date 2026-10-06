@@ -1,208 +1,299 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 
-import { ConnectionState } from "@/domain/enum/ConnectionState";
+import { ConnectionState } from "@/domain/enum/ConnectionStateEnum";
 import { friendService } from "@/services/def/FriendService";
 import { notificationService } from "@/services/def/NotificationService";
 import { chatService } from "@/services/def/ChatService";
 import { gameService } from "@/services/def/GameService";
-import { apiBase } from "@/app/network";
+import { api, apiBase } from "@/app/network";
 
 import { useAuth } from "./AuthProvider";
 
-import type { HubConnectionStates } from "@/domain/enum/ConnectionState";
-import type { IConnectionProviderProps } from "./def/IProviders";
+import type { HubConnectionStates } from "@/domain/enum/ConnectionStateEnum";
+import type { IProviderProps } from "./def/IProviders";
 import type { HubConnection } from "@microsoft/signalr";
 import type { IConnectionContext } from "@/domain/meta/IConnectionContext";
 import type { TNullable, TOptional } from "@/domain/type/TCommon";
 
-const ConnectionContext = createContext<TOptional<IConnectionContext>>(undefined);
+const ConnectionContext =
+    createContext<TOptional<IConnectionContext>>(undefined);
 
-function createConnection(name: string): HubConnection {
-  return new HubConnectionBuilder()
-    .withUrl(`${apiBase}/${name}`, { withCredentials: true })
-    .withAutomaticReconnect({ nextRetryDelayInMilliseconds: (retryContext) => Math.min(retryContext.elapsedMilliseconds * 1.5, 30000) })
-    .withKeepAliveInterval(15_000)
-    .withServerTimeout(60_000)
-    .configureLogging(process.env.NODE_ENV === "development" ? LogLevel.Information : LogLevel.Error)
-    .build();
+function isUnauthorized(err: unknown): boolean {
+    if (
+        err &&
+        typeof err === "object" &&
+        "statusCode" in err &&
+        (err as { statusCode?: number }).statusCode === 401
+    )
+        return true;
+    return err instanceof Error && /401|unauthorized/i.test(err.message);
 }
 
-export function ConnectionProvider({ children }: IConnectionProviderProps) {
-  const { user } = useAuth();
-  const [gameConnection, setGameConnection] = useState<TNullable<HubConnection>>(null);
-  const [socialConnection, setSocialConnection] = useState<TNullable<HubConnection>>(null);
-  const [socialReconnectKey, setSocialReconnectKey] = useState(0);
+function createConnection(name: string): HubConnection {
+    return new HubConnectionBuilder()
+        .withUrl(`${apiBase}/${name}`, { withCredentials: true })
+        .withAutomaticReconnect({
+            nextRetryDelayInMilliseconds: (retryContext) =>
+                retryContext.previousRetryCount >= 4
+                    ? null
+                    : Math.min(retryContext.elapsedMilliseconds * 1.5, 30000),
+        })
+        .withKeepAliveInterval(15_000)
+        .withServerTimeout(60_000)
+        .configureLogging(
+            process.env.NODE_ENV === "development"
+                ? LogLevel.Information
+                : LogLevel.Error,
+        )
+        .build();
+}
 
-  const [connectionStates, setConnectionStates] = useState<HubConnectionStates>({
-    game: ConnectionState.Disconnected,
-    social: ConnectionState.Disconnected,
-  });
+let refreshPromise: Promise<void> | null = null;
 
-  const gameRef = useRef<TNullable<HubConnection>>(null);
-  const socialRef = useRef<TNullable<HubConnection>>(null);
-  const socialKeyRef = useRef(0);
-  const cancelledRef = useRef(false);
-  const hubGenRef = useRef<Record<keyof HubConnectionStates, number>>({ game: 0, social: 0 });
-  const userId = user?.id;
+function refreshToken(): Promise<void> {
+    if (!refreshPromise) {
+        refreshPromise = api.post("/auth/refresh").then(
+            () => {
+                refreshPromise = null;
+            },
+            (err) => {
+                refreshPromise = null;
+                throw err;
+            },
+        );
+    }
+    return refreshPromise;
+}
 
-  useEffect(() => {
-    socialKeyRef.current = socialReconnectKey;
-  }, [socialReconnectKey]);
+export function ConnectionProvider({ children }: IProviderProps) {
+    const { user } = useAuth();
+    const [gameConnection, setGameConnection] =
+        useState<TNullable<HubConnection>>(null);
+    const [socialConnection, setSocialConnection] =
+        useState<TNullable<HubConnection>>(null);
+    const [socialReconnectKey, setSocialReconnectKey] = useState(0);
 
-  useEffect(() => {
-    if (!userId) return;
-    cancelledRef.current = false;
+    const [connectionStates, setConnectionStates] =
+        useState<HubConnectionStates>({
+            game: ConnectionState.Disconnected,
+            social: ConnectionState.Disconnected,
+        });
 
-    const updateState = (hub: keyof HubConnectionStates, state: ConnectionState) => {
-      setConnectionStates((prev) => ({ ...prev, [hub]: state }));
-    };
-
-    const startHub = async (
-      name: string,
-      hubKey: keyof HubConnectionStates,
-      stateSetter: (conn: TNullable<HubConnection>) => void,
-      ref: React.MutableRefObject<TNullable<HubConnection>>,
-    ) => {
-      const conn = createConnection(name);
-      const gen = ++hubGenRef.current[hubKey];
-
-      conn.onreconnecting(() => {
-        if (ref.current === conn) updateState(hubKey, ConnectionState.Reconnecting);
-      });
-      conn.onreconnected(() => {
-        if (ref.current !== conn) return;
-        updateState(hubKey, ConnectionState.Connected);
-
-        if (name === "socialHub") {
-          setSocialReconnectKey((k) => k + 1);
-        }
-      });
-      conn.onclose(() => {
-        if (ref.current === conn) updateState(hubKey, ConnectionState.Disconnected);
-      });
-
-      const connectWithRetry = async (attempt: number) => {
-        updateState(hubKey, ConnectionState.Connecting);
-
-        try {
-          await conn.start();
-
-          if (cancelledRef.current || gen !== hubGenRef.current[hubKey]) {
-            conn.stop().catch(() => {});
-            return;
-          }
-
-          updateState(hubKey, ConnectionState.Connected);
-          ref.current = conn;
-
-          if (name === "gameHub") {
-            gameService.setConnection(conn);
-          } else if (name === "socialHub") {
-            notificationService.setConnection(conn);
-            friendService.setConnection(conn);
-            chatService.setConnection(conn);
-          }
-
-          stateSetter(conn);
-        } catch (err) {
-          if (cancelledRef.current || gen !== hubGenRef.current[hubKey]) return;
-
-          if (err instanceof Error && err.message.toLowerCase().includes("unauthorized")) {
-            updateState(hubKey, ConnectionState.Disconnected);
-            window.location.replace("/login");
-            return;
-          }
-
-          if (attempt >= 4) {
-            updateState(hubKey, ConnectionState.Disconnected);
-            return;
-          }
-
-          setTimeout(() => void connectWithRetry(attempt + 1), Math.min(1000 * 2 ** attempt, 15000));
-        }
-      };
-
-      void connectWithRetry(0);
-    };
-
-    startHub("gameHub", "game", setGameConnection, gameRef);
-    startHub("socialHub", "social", setSocialConnection, socialRef);
-
-    return () => {
-      cancelledRef.current = true;
-
-      gameService.disconnect();
-      friendService.disconnect();
-      notificationService.disconnect();
-      chatService.disconnect();
-
-      gameRef.current?.stop().catch(() => {});
-      socialRef.current?.stop().catch(() => {});
-      gameRef.current = null;
-      socialRef.current = null;
-      setGameConnection(null);
-      setSocialConnection(null);
-      setSocialReconnectKey(0);
-      socialKeyRef.current = 0;
-
-      setConnectionStates({
-        game: ConnectionState.Disconnected,
-        social: ConnectionState.Disconnected,
-      });
-    };
-  }, [userId]);
-
-  const stopConnections = useCallback(async () => {
-    cancelledRef.current = true;
-    const conns = [gameRef.current, socialRef.current];
-
-    gameService.disconnect();
-    friendService.disconnect();
-    notificationService.disconnect();
-    chatService.disconnect();
-
-    gameRef.current = null;
-    socialRef.current = null;
-    await Promise.all(conns.map((c) => c?.stop().catch(() => {})));
-    setGameConnection(null);
-    setSocialConnection(null);
-    setSocialReconnectKey(0);
-    socialKeyRef.current = 0;
-    setConnectionStates({
-      game: ConnectionState.Disconnected,
-      social: ConnectionState.Disconnected,
+    const gameRef = useRef<TNullable<HubConnection>>(null);
+    const socialRef = useRef<TNullable<HubConnection>>(null);
+    const socialKeyRef = useRef(0);
+    const cancelledRef = useRef(false);
+    const hubGenRef = useRef<Record<keyof HubConnectionStates, number>>({
+        game: 0,
+        social: 0,
     });
-  }, []);
+    const userId = user?.id;
 
-  const value = useMemo<IConnectionContext>(() => {
-    const cs = connectionStates;
-    const isGameConnected = cs.game === ConnectionState.Connected;
-    const isSocialConnected = cs.social === ConnectionState.Connected;
+    useEffect(() => {
+        socialKeyRef.current = socialReconnectKey;
+    }, [socialReconnectKey]);
 
-    return {
-      gameConnection,
-      socialConnection,
-      connectionStates: cs,
-      isGameConnected,
-      isSocialConnected,
-      isGameConnecting: cs.game === ConnectionState.Connecting || cs.game === ConnectionState.Reconnecting,
-      isSocialConnecting: cs.social === ConnectionState.Connecting || cs.social === ConnectionState.Reconnecting,
-      isAllConnected: isGameConnected && isSocialConnected,
-      socialReconnectKey,
-      stopConnections,
-    };
-  }, [gameConnection, socialConnection, connectionStates, socialReconnectKey, stopConnections]);
+    useEffect(() => {
+        if (!userId) return;
+        cancelledRef.current = false;
 
-  return <ConnectionContext.Provider value={value}>{children}</ConnectionContext.Provider>;
+        const updateState = (
+            hub: keyof HubConnectionStates,
+            state: ConnectionState,
+        ) => {
+            setConnectionStates((prev) => ({ ...prev, [hub]: state }));
+        };
+
+        const startHub = async (
+            name: string,
+            hubKey: keyof HubConnectionStates,
+            stateSetter: (conn: TNullable<HubConnection>) => void,
+            ref: React.MutableRefObject<TNullable<HubConnection>>,
+        ) => {
+            const conn = createConnection(name);
+            const gen = ++hubGenRef.current[hubKey];
+
+            conn.onreconnecting(() => {
+                if (ref.current === conn)
+                    updateState(hubKey, ConnectionState.Reconnecting);
+            });
+            conn.onreconnected(() => {
+                if (ref.current !== conn) return;
+                updateState(hubKey, ConnectionState.Connected);
+
+                if (name === "socialHub") {
+                    setSocialReconnectKey((k) => k + 1);
+                }
+            });
+            conn.onclose((err) => {
+                if (ref.current === conn)
+                    updateState(hubKey, ConnectionState.Disconnected);
+                if (err instanceof Error && isUnauthorized(err)) {
+                    window.location.replace("/login");
+                }
+            });
+
+            const connectWithRetry = async (attempt: number) => {
+                updateState(hubKey, ConnectionState.Connecting);
+
+                try {
+                    await conn.start();
+
+                    if (
+                        cancelledRef.current ||
+                        gen !== hubGenRef.current[hubKey]
+                    ) {
+                        conn.stop().catch(() => {});
+                        return;
+                    }
+
+                    updateState(hubKey, ConnectionState.Connected);
+                    ref.current = conn;
+
+                    if (name === "gameHub") {
+                        gameService.setConnection(conn);
+                    } else if (name === "socialHub") {
+                        notificationService.setConnection(conn);
+                        friendService.setConnection(conn);
+                        chatService.setConnection(conn);
+                    }
+
+                    stateSetter(conn);
+                } catch (err) {
+                    if (
+                        cancelledRef.current ||
+                        gen !== hubGenRef.current[hubKey]
+                    )
+                        return;
+
+                    if (isUnauthorized(err)) {
+                        try {
+                            await refreshToken();
+                        } catch {
+                            updateState(hubKey, ConnectionState.Disconnected);
+                            window.location.replace("/login");
+                            return;
+                        }
+                        // Token refreshed; retry the hub start once.
+                    }
+
+                    if (attempt >= 4) {
+                        updateState(hubKey, ConnectionState.Disconnected);
+                        return;
+                    }
+
+                    setTimeout(
+                        () => void connectWithRetry(attempt + 1),
+                        Math.min(1000 * 2 ** attempt, 15000),
+                    );
+                }
+            };
+
+            void connectWithRetry(0);
+        };
+
+        startHub("gameHub", "game", setGameConnection, gameRef);
+        startHub("socialHub", "social", setSocialConnection, socialRef);
+
+        return () => {
+            cancelledRef.current = true;
+
+            gameService.disconnect();
+            friendService.disconnect();
+            notificationService.disconnect();
+            chatService.disconnect();
+
+            gameRef.current?.stop().catch(() => {});
+            socialRef.current?.stop().catch(() => {});
+            gameRef.current = null;
+            socialRef.current = null;
+            setGameConnection(null);
+            setSocialConnection(null);
+            setSocialReconnectKey(0);
+            socialKeyRef.current = 0;
+
+            setConnectionStates({
+                game: ConnectionState.Disconnected,
+                social: ConnectionState.Disconnected,
+            });
+        };
+    }, [userId]);
+
+    const stopConnections = useCallback(async () => {
+        cancelledRef.current = true;
+        const conns = [gameRef.current, socialRef.current];
+
+        gameService.disconnect();
+        friendService.disconnect();
+        notificationService.disconnect();
+        chatService.disconnect();
+
+        gameRef.current = null;
+        socialRef.current = null;
+        await Promise.all(conns.map((c) => c?.stop().catch(() => {})));
+        setGameConnection(null);
+        setSocialConnection(null);
+        setSocialReconnectKey(0);
+        socialKeyRef.current = 0;
+        setConnectionStates({
+            game: ConnectionState.Disconnected,
+            social: ConnectionState.Disconnected,
+        });
+    }, []);
+
+    const value = useMemo<IConnectionContext>(() => {
+        const cs = connectionStates;
+        const isGameConnected = cs.game === ConnectionState.Connected;
+        const isSocialConnected = cs.social === ConnectionState.Connected;
+
+        return {
+            gameConnection,
+            socialConnection,
+            connectionStates: cs,
+            isGameConnected,
+            isSocialConnected,
+            isGameConnecting:
+                cs.game === ConnectionState.Connecting ||
+                cs.game === ConnectionState.Reconnecting,
+            isSocialConnecting:
+                cs.social === ConnectionState.Connecting ||
+                cs.social === ConnectionState.Reconnecting,
+            isAllConnected: isGameConnected && isSocialConnected,
+            socialReconnectKey,
+            stopConnections,
+        };
+    }, [
+        gameConnection,
+        socialConnection,
+        connectionStates,
+        socialReconnectKey,
+        stopConnections,
+    ]);
+
+    return (
+        <ConnectionContext.Provider value={value}>
+            {children}
+        </ConnectionContext.Provider>
+    );
 }
 
 export function useConnections(): IConnectionContext {
-  const ctx = useContext(ConnectionContext);
-  if (!ctx) {
-    throw new Error("useConnections must be used within a ConnectionProvider.");
-  }
-  return ctx;
+    const ctx = useContext(ConnectionContext);
+    if (!ctx) {
+        throw new Error(
+            "useConnections must be used within a ConnectionProvider.",
+        );
+    }
+    return ctx;
 }

@@ -1,10 +1,9 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum UserStatus
 {
-    public enum UserStatus
-    {
-        Offline,
-        Online,
-        InGame,
-        All
-    }
+    Offline,
+    Online,
+    InGame,
+    All
 }

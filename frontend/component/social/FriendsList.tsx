@@ -2,7 +2,7 @@
 
 import { UsersRound } from "lucide-react";
 
-import { GUserRow } from "@/component/user/GUserRow";
+import { GUserRow } from "@/component/common/GUserRow";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { AccentColorEnum } from "@/domain/enum/AccentColorEnum";
 
@@ -13,29 +13,43 @@ import { GIcon } from "../common/GIcon";
 import type { IUserSummary } from "@/domain/meta/IUserSummary";
 import type { IFriendsListProps } from "./def/FriendsList";
 
-function FriendsList<T extends IUserSummary>({ friends, query, unreadCounts, emptyMessage, emptyDescription, actions }: IFriendsListProps<T>) {
-  return (
-    <GCard className="p-0">
-      <GList
-        items={friends}
-        keyExtractor={(friend) => friend.id}
-        listClassName="divide-y divide-border/60"
-        emptyMessage={emptyMessage}
-        emptyDescription={emptyDescription}
-        emptyIcon={<GIcon icon={UsersRound} size={SizeEnum.xl} color={AccentColorEnum.Muted} />}>
-        {(friend) => (
-          <GUserRow
-            user={friend}
-            query={query ?? undefined}
-            unreadCount={unreadCounts?.[friend.id]}
-            className="px-4 py-3"
-            trailing={actions(friend)}
-            href={`/profile/${friend.id}`}
-          />
-        )}
-      </GList>
-    </GCard>
-  );
+function FriendsList<T extends IUserSummary>({
+    friends,
+    query,
+    unreadCounts,
+    emptyMessage,
+    emptyDescription,
+    actions,
+}: IFriendsListProps<T>) {
+    return (
+        <GCard className="p-0">
+            <GList
+                items={friends}
+                keyExtractor={(friend) => friend.id}
+                listClassName="divide-y divide-border/60"
+                emptyMessage={emptyMessage}
+                emptyDescription={emptyDescription}
+                emptyIcon={
+                    <GIcon
+                        icon={UsersRound}
+                        size={SizeEnum.xl}
+                        color={AccentColorEnum.Muted}
+                    />
+                }
+            >
+                {(friend) => (
+                    <GUserRow
+                        user={friend}
+                        query={query ?? undefined}
+                        unreadCount={unreadCounts?.[friend.id]}
+                        className="px-4 py-3"
+                        trailing={actions(friend)}
+                        href={`/profile/${friend.id}`}
+                    />
+                )}
+            </GList>
+        </GCard>
+    );
 }
 
 export { FriendsList };

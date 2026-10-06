@@ -1,11 +1,10 @@
-namespace backend.Enums
+namespace backend.Enums;
+
+public enum FeedbackCategory
 {
-    public enum FeedbackCategory
-    {
-        Bug,
-        Gameplay,
-        UI,
-        Suggestion,
-        Other
-    }
+    Bug,
+    Gameplay,
+    UI,
+    Suggestion,
+    Other
 }

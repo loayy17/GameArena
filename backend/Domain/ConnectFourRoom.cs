@@ -1,155 +1,121 @@
-using backend.Enums;
 using System.Text.Json;
+using backend.Enums;
+using backend.Utils;
 
-namespace backend.Domain
+namespace backend.Domain;
+
+public sealed class ConnectFourRoom : BaseGameRoom
 {
-    public sealed class ConnectFourRoom : BaseGameRoom
+    private const string ActionPlace = "place";
+    private const int FirstPiece = 1;
+    private const int SecondPiece = 2;
+
+    public ConnectFourRoom() : base(GamesKind.ConnectFour) { }
+
+    public int[][] Board { get; set; } = CreateEmptyBoard();
+
+    protected override object GetStatePayloadCore()
     {
-        public const int Cols = 7;
-        public const int Rows = 6;
-        public int[][] Board { get; set; } = Enumerable.Range(0, Cols).Select(_ => new int[Rows]).ToArray();
+        var payload = GetBasePayload();
+        payload["board"] = Board;
+        payload["boardWidth"] = ConnectFourMinimax.Cols;
+        payload["boardHeight"] = ConnectFourMinimax.Rows;
+        payload["winScore"] = 1;
+        payload["tickRateHz"] = 0;
+        return payload;
+    }
 
-        public ConnectFourRoom() : base(GamesKind.ConnectFour) { }
+    protected override void ResetForNewRoundCore()
+    {
+        base.ResetForNewRoundCore();
+        Board = CreateEmptyBoard();
+    }
 
-        protected override object GetStatePayloadCore()
+    protected override void HandleActionCore(string playerId, JsonElement action)
+    {
+        if (WinnerPlayerId != null
+            || !IsFull
+            || playerId != CurrentTurnPlayerId
+            || !IsSeated(playerId)
+            || !TryReadColumn(action, out int col)
+            || !ConnectFourMinimax.TryGetAvailableRow(Board, col, out int row))
         {
-            var p = GetBasePayload();
-            p["board"] = Board;
-            p["boardWidth"] = Cols;
-            p["boardHeight"] = Rows;
-            p["winScore"] = 1;
-            p["tickRateHz"] = 0;
-            return p;
+            return;
         }
 
-        protected override void ResetForNewRoundCore()
+        Board[col][row] = PieceFor(playerId);
+        SettleRound(playerId, col, row);
+    }
+
+    protected override void MakeBotMoveCore()
+    {
+        if (WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
+
+        var botId = GetBotId();
+        if (botId == null || CurrentTurnPlayerId != botId) return;
+
+        int piece = PieceFor(botId);
+        int col = BotDifficulty switch
         {
-            base.ResetForNewRoundCore();
-            Board = Enumerable.Range(0, Cols).Select(_ => new int[Rows]).ToArray();
+            BotDifficulty.Easy => ConnectFourMinimax.GetRandomMove(Board),
+            BotDifficulty.Medium => ConnectFourMinimax.GetTacticalMove(Board, piece),
+            _ => ConnectFourMinimax.GetBestMove(Board, piece),
+        };
+
+        if (col < 0 || !ConnectFourMinimax.TryGetAvailableRow(Board, col, out int row)) return;
+
+        Board[col][row] = piece;
+        SettleRound(botId, col, row);
+    }
+
+    protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
+    {
+        base.OnPlayerDisconnectedCore(disconnectedPlayerId);
+        WinnerSymbol = WinnerPlayerId == Player1Id ? "🔴" : "🟡";
+    }
+
+    private void SettleRound(string playerId, int col, int row)
+    {
+        int piece = PieceFor(playerId);
+        var winLine = ConnectFourMinimax.FindWinLine(Board, col, row, piece);
+
+        if (winLine != null)
+        {
+            WinningCells = [.. winLine.Select(c => $"{c.Col}-{c.Row}")];
+            WinnerSymbol = piece == FirstPiece ? "🔴" : "🟡";
+            CompleteRound(playerId);
+            return;
         }
 
-        private static bool TryParseAction(JsonElement action, out int col)
+        if (!ConnectFourMinimax.HasFreeColumn(Board))
         {
-            col = -1;
-            if (action.ValueKind != JsonValueKind.Object) return false;
-            if (!action.TryGetProperty("type", out var type) || !type.ValueEquals("place")) return false;
-            if (!action.TryGetProperty("col", out var column)) return false;
-            return column.TryGetInt32(out col) && col >= 0 && col < Cols;
+            CompleteRound("");
+            return;
         }
 
-        private void CollectDirection(int col, int row, int dCol, int dRow, int piece, List<(int Col, int Row)> cells)
-        {
-            int currentCol = col + dCol;
-            int currentRow = row + dRow;
-            while (currentCol >= 0 && currentCol < Cols && currentRow >= 0 && currentRow < Rows && Board[currentCol][currentRow] == piece)
-            {
-                cells.Add((currentCol, currentRow));
-                currentCol += dCol;
-                currentRow += dRow;
-            }
-        }
+        SwitchTurn();
+    }
 
-        private string[]? FindWinLine(int col, int row, int piece)
-        {
-            int[][] directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
-            foreach (var direction in directions)
-            {
-                var cells = new List<(int Col, int Row)> { (col, row) };
-                CollectDirection(col, row, direction[0], direction[1], piece, cells);
-                CollectDirection(col, row, -direction[0], -direction[1], piece, cells);
-                if (cells.Count >= 4)
-                    return cells.Select(c => $"{c.Col}-{c.Row}").ToArray();
-            }
-            return null;
-        }
+    private static int[][] CreateEmptyBoard() =>
+        [.. Enumerable.Range(0, ConnectFourMinimax.Cols).Select(_ => new int[ConnectFourMinimax.Rows])];
 
-        private bool TryGetAvailableRow(int col, out int row)
+    private int PieceFor(string playerId) => playerId == Player1Id ? FirstPiece : SecondPiece;
+
+    private bool IsSeated(string playerId) => playerId == Player1Id || playerId == Player2Id;
+
+    private static bool TryReadColumn(JsonElement action, out int col)
+    {
+        col = -1;
+
+        if (action.ValueKind != JsonValueKind.Object
+            || !action.TryGetProperty("type", out var typeProp)
+            || !typeProp.ValueEquals(ActionPlace)
+            || !action.TryGetProperty("col", out var columnProp)
+            || !columnProp.TryGetInt32(out col))
         {
-            for (row = Rows - 1; row >= 0; row--)
-                if (Board[col][row] == 0) return true;
-            row = -1;
             return false;
         }
 
-        private bool IsBoardFull()
-        {
-            for (int col = 0; col < Cols; col++)
-                if (Board[col][0] == 0) return false;
-            return true;
-        }
-
-        protected override void HandleActionCore(string playerId, JsonElement action)
-        {
-            if (WinnerPlayerId != null
-                || !IsFull
-                || playerId != CurrentTurnPlayerId
-                || (playerId != Player1Id && playerId != Player2Id)
-                || !TryParseAction(action, out int col)
-                || !TryGetAvailableRow(col, out int row))
-                return;
-
-            int piece = playerId == Player1Id ? 1 : 2;
-            Board[col][row] = piece;
-
-            var winLine = FindWinLine(col, row, piece);
-            if (winLine != null)
-            {
-                WinningCells = winLine;
-                WinnerSymbol = piece == 1 ? "🔴" : "🟡";
-                CompleteRound(playerId);
-                return;
-            }
-
-            if (IsBoardFull())
-            {
-                CompleteRound("");
-                return;
-            }
-
-            SwitchTurn();
-        }
-
-        protected override void MakeBotMoveCore()
-        {
-            if (!IsBotGame || WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
-            var botId = GetBotId();
-            if (botId == null || CurrentTurnPlayerId != botId) return;
-            int piece = botId == Player1Id ? 1 : 2;
-
-            List<int> availableColumns = [];
-            for (int col = 0; col < Cols; col++)
-                if (Board[col][0] == 0)
-                    availableColumns.Add(col);
-
-            if (availableColumns.Count == 0) return;
-            int randomCol = availableColumns[Random.Shared.Next(availableColumns.Count)];
-            if (!TryGetAvailableRow(randomCol, out int row))
-                return;
-
-            Board[randomCol][row] = piece;
-
-            var winLine = FindWinLine(randomCol, row, piece);
-            if (winLine != null)
-            {
-                WinningCells = winLine;
-                WinnerSymbol = piece == 1 ? "🔴" : "🟡";
-                CompleteRound(botId);
-                return;
-            }
-
-            if (IsBoardFull())
-            {
-                CompleteRound("");
-                return;
-            }
-
-            SwitchTurn();
-        }
-
-        protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
-        {
-            base.OnPlayerDisconnectedCore(disconnectedPlayerId);
-            WinnerSymbol = WinnerPlayerId == Player1Id ? "🔴" : "🟡";
-        }
+        return col >= 0 && col < ConnectFourMinimax.Cols;
     }
 }

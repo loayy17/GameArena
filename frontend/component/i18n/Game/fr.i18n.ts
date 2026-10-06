@@ -45,10 +45,13 @@ const fr = {
     invite: "Inviter",
     searchError: "Échec de la recherche d'un match. Veuillez réessayer.",
     createLobbyError: "Échec de la création du lobby. Veuillez réessayer.",
+    difficulty: "Difficulté de l'IA",
+    difficultyLevels: { easy: "Facile", medium: "Moyen", hard: "Difficile" },
   },
   waiting: {
     subtitle: "En attente de l'acceptation de l'invitation ou de la connexion de l'adversaire...",
     startVsAI: "Commencer la partie (contre l'IA)",
+    aiLevel: "Niveau de l'IA : {level}",
     inviteFriend: "Inviter un ami",
     cancelMatch: "Annuler le match",
     cancelTitle: "Annuler ce match ?",

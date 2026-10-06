@@ -44,10 +44,13 @@ const en = {
     invite: "Invite",
     searchError: "Failed to find a match. Please try again.",
     createLobbyError: "Failed to create lobby. Please try again.",
+    difficulty: "AI difficulty",
+    difficultyLevels: { easy: "Easy", medium: "Medium", hard: "Hard" },
   },
   waiting: {
     subtitle: "Waiting for opponent to accept invite or join...",
     startVsAI: "Start Game (vs AI)",
+    aiLevel: "AI level: {level}",
     inviteFriend: "Invite Friend",
     cancelMatch: "Cancel Match",
     cancelTitle: "Cancel this match?",

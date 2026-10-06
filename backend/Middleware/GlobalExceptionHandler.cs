@@ -1,21 +1,26 @@
+using backend.DTOs.Responses;
+using backend.Enums;
 using backend.Utils;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace backend.Middleware
-{
-    public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler
-    {
-        public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
-        {
-            if (exception is AppException appException)
-                _logger.LogWarning("Request failed with application error ${ErrorCode}", appException.ErrorCode);
-            else
-                _logger.LogError(exception, "Unhandled exception");
+namespace backend.Middleware;
 
-            var error = ErrorHelper.GetErrorResponse(exception);
-            context.Response.StatusCode = error.StatusCode;
-            await context.Response.WriteAsJsonAsync(error.Value, cancellationToken);
-            return true;
-        }
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+{
+    public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
+    {
+        var app = exception as AppException;
+        if (app is null) logger.LogError(exception, "Unhandled exception");
+        else logger.LogWarning("Request failed with {ErrorCode}", app.ErrorCode);
+
+        context.Response.StatusCode = app?.StatusCode ?? 500;
+        await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+        {
+            Success = false,
+            ErrorCode = app?.ErrorCode ?? ErrorCode.ServerError,
+            Data = null
+        }, cancellationToken);
+
+        return true;
     }
 }

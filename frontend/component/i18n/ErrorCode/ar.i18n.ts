@@ -30,7 +30,6 @@ const ar: THashMap<string, number> = {
   [ErrorCodeEnum.YouBlockedUser]: "لقد قمت بحظر هذا المستخدم",
   [ErrorCodeEnum.RequestAlreadyProcessed]: "تمت معالجة طلب الصداقة بالفعل",
   [ErrorCodeEnum.RoomNotFound]: "غرفة اللعب غير موجودة",
-  [ErrorCodeEnum.PlayerNotFound]: "اللاعب غير موجود",
   [ErrorCodeEnum.InvalidGameType]: "نوع لعبة غير صالح",
   [ErrorCodeEnum.InvalidRoomId]: "معرف الغرفة غير صالح",
   [ErrorCodeEnum.InvalidRequest]: "طلب غير صالح",

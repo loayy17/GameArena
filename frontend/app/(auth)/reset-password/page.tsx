@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle, KeyRound } from "lucide-react";
 
 import { AuthFrame } from "@/component/auth/AuthFrame";
-import { PasswordField } from "@/component/auth/PasswordField";
+import { PasswordField } from "@/component/common/PasswordField";
 import { OtpForm } from "@/component/auth/OtpForm";
 import { GAlert } from "@/component/common/GAlert";
 import { GButton } from "@/component/common/GButton";

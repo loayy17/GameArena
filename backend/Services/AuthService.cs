@@ -5,163 +5,158 @@ using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Services.Interface;
 using backend.Utils;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace backend.Services
+namespace backend.Services;
+
+public class AuthService(
+    AppDbContext context,
+    ITokenService tokens,
+    IPasswordHasher<User> passwordHasher,
+    IEmailVerificationService emailVerification) : IAuthService
 {
-    public class AuthService(AppDbContext _context, IConfiguration _configuration, IEmailVerificationService _emailVerificationService) : IAuthService
+    public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-        public async Task<AuthResponse> LoginAsync(LoginRequest request)
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password)) throw new AppException(ErrorCode.ValidationError);
+
+        var user = await context.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email)
+            ?? throw new AppException(ErrorCode.InvalidCredentials);
+
+        EnsureCanSignIn(user);
+
+        if (passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) != PasswordVerificationResult.Success) throw new AppException(ErrorCode.InvalidCredentials);
+
+        return await IssueAsync(user);
+    }
+
+    public async Task<AuthResponse> LoginByVerifiedEmailAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
+
+        var user = await context.Users
+            .FirstOrDefaultAsync(u => u.Email == email)
+            ?? throw new AppException(ErrorCode.InvalidCredentials);
+
+        EnsureCanSignIn(user);
+        return await IssueAsync(user);
+    }
+
+    public async Task RegisterAsync(RegisterRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email)
+            || string.IsNullOrWhiteSpace(request.Password)
+            || string.IsNullOrWhiteSpace(request.FirstName)
+            || string.IsNullOrWhiteSpace(request.UserName)
+            || string.IsNullOrWhiteSpace(request.LastName))
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                throw new AppException(ErrorCode.ValidationError);
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == request.Email) ?? throw new AppException(ErrorCode.InvalidCredentials);
-
-            if (user.IsBanned)
-                throw new AppException(ErrorCode.UserBanned);
-
-            if (!user.IsVerified)
-                throw new AppException(ErrorCode.EmailNotVerified);
-
-            var validPassword = AuthHelper.VerifyPassword(user, user.PasswordHash, request.Password);
-            if (!validPassword) throw new AppException(ErrorCode.InvalidCredentials);
-
-            return await IssueAuthResponseAsync(user);
+            throw new AppException(ErrorCode.ValidationError);
         }
 
-        public async Task<AuthResponse> LoginByVerifiedEmailAsync(string email)
+        var user = new User
         {
-            if (string.IsNullOrWhiteSpace(email))
-                throw new AppException(ErrorCode.ValidationError);
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email)
-                ?? throw new AppException(ErrorCode.InvalidCredentials);
-            if (user.IsBanned)
-                throw new AppException(ErrorCode.UserBanned);
-            if (!user.IsVerified)
-                throw new AppException(ErrorCode.EmailNotVerified);
-            return await IssueAuthResponseAsync(user);
-        }
+            UserName = request.UserName,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Role = UserRole.User,
+            IsVerified = false,
+            Rank = 0
+        };
 
-        public async Task RegisterAsync(RegisterRequest request)
+        user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
+        context.Users.Add(user);
+
+        try
         {
-            if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password) ||
-                string.IsNullOrWhiteSpace(request.FirstName) ||
-                string.IsNullOrWhiteSpace(request.UserName) ||
-                string.IsNullOrWhiteSpace(request.LastName))
-                throw new AppException(ErrorCode.ValidationError);
-
-            var user = new User
-            {
-                UserName = request.UserName,
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Role = UserRole.User,
-                IsVerified = false
-            };
-            user.PasswordHash = AuthHelper.HashPassword(user, request.Password);
-
-            _context.Users.Add(user);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg)
-            {
-                if (pg.ConstraintName?.Contains("Email") == true)
-                    throw new AppException(ErrorCode.EmailAlreadyExists);
-                if (pg.ConstraintName?.Contains("UserName") == true)
-                    throw new AppException(ErrorCode.UsernameAlreadyExists);
-                throw;
-            }
-            await _emailVerificationService.GenerateAndSendOtpAsync(user.Email, OtpPurpose.EmailVerification);
+            await context.SaveChangesAsync();
         }
-
-        public async Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg)
         {
-            var tokenHash = AuthHelper.Hash(rawRefreshToken);
-            var storedToken = await _context.RefreshTokens
-                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash) ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
-
-            if (storedToken.ExpiresAt <= DateTime.UtcNow) throw new AppException(ErrorCode.TokenExpired);
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == storedToken.UserId)
-                ?? throw new AppException(ErrorCode.UserNotFound);
-
-            if (user.IsBanned) throw new AppException(ErrorCode.UserBanned);
-            if (!user.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
-            _context.RefreshTokens.Remove(storedToken);
-            return await IssueAuthResponseAsync(user);
+            if (pg.ConstraintName?.Contains("Email") == true) throw new AppException(ErrorCode.EmailAlreadyExists);
+            if (pg.ConstraintName?.Contains("UserName") == true) throw new AppException(ErrorCode.UsernameAlreadyExists);
+            throw;
         }
+        await emailVerification.GenerateAndSendOtpAsync(user.Email, OtpPurpose.EmailVerification);
+    }
 
-        public async Task RevokeRefreshTokenAsync(string rawToken)
+    public async Task<AuthResponse> RefreshAccessTokenAsync(string rawRefreshToken)
+    {
+        var stored = await FindRefreshTokenAsync(rawRefreshToken);
+
+        if (stored.ExpiresAt <= DateTime.UtcNow) throw new AppException(ErrorCode.TokenExpired);
+
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == stored.UserId)
+            ?? throw new AppException(ErrorCode.UserNotFound);
+
+        EnsureCanSignIn(user);
+        context.RefreshTokens.Remove(stored);
+        return await IssueAsync(user);
+    }
+
+    public async Task RevokeRefreshTokenAsync(string rawToken)
+    {
+        context.RefreshTokens.Remove(await FindRefreshTokenAsync(rawToken));
+        await context.SaveChangesAsync();
+    }
+
+    public async Task ForgotPasswordAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
+
+        if (!await context.Users.AnyAsync(u => u.Email == email)) return;
+
+        await emailVerification.GenerateAndSendOtpAsync(email, OtpPurpose.PasswordReset);
+    }
+
+    public async Task ResetPasswordAsync(string email, string otp, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword)) throw new AppException(ErrorCode.ValidationError);
+
+        await emailVerification.VerifyOtpAsync(email, otp, OtpPurpose.PasswordReset);
+
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email)
+            ?? throw new AppException(ErrorCode.EmailNotFound);
+
+        user.PasswordHash = passwordHasher.HashPassword(user, newPassword);
+
+        await context.RefreshTokens.Where(t => t.UserId == user.Id).ExecuteDeleteAsync();
+        await context.SaveChangesAsync();
+    }
+
+    private static void EnsureCanSignIn(User user)
+    {
+        if (user.IsBanned) throw new AppException(ErrorCode.UserBanned);
+        if (!user.IsVerified) throw new AppException(ErrorCode.EmailNotVerified);
+    }
+
+    private async Task<RefreshToken> FindRefreshTokenAsync(string rawToken)
+    {
+        var hash = tokens.Hash(rawToken);
+
+        return await context.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == hash)
+            ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
+    }
+
+    private async Task<AuthResponse> IssueAsync(User user)
+    {
+        var refreshToken = tokens.CreateRefreshToken();
+
+        context.RefreshTokens.Add(new RefreshToken
         {
-            var tokenHash = AuthHelper.Hash(rawToken);
-            var storedToken = await _context.RefreshTokens
-                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash) ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
+            UserId = user.Id,
+            TokenHash = tokens.Hash(refreshToken),
+            ExpiresAt = DateTime.UtcNow.AddDays(Constants.RefreshTokenDays)
+        });
 
-            _context.RefreshTokens.Remove(storedToken);
-            await _context.SaveChangesAsync();
-        }
-        public async Task ForgotPasswordAsync(string email)
+        await context.SaveChangesAsync();
+
+        return new AuthResponse
         {
-            if (string.IsNullOrWhiteSpace(email)) throw new AppException(ErrorCode.ValidationError);
-
-            if (!await _context.Users.AnyAsync(u => u.Email == email))
-                return;
-
-            await _emailVerificationService.GenerateAndSendOtpAsync(email, OtpPurpose.PasswordReset);
-        }
-
-        public async Task ResetPasswordAsync(string email, string otp, string newPassword)
-        {
-            if (string.IsNullOrWhiteSpace(newPassword))
-                throw new AppException(ErrorCode.ValidationError);
-
-            await _emailVerificationService.VerifyOtpAsync(email, otp, OtpPurpose.PasswordReset);
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new AppException(ErrorCode.EmailNotFound);
-
-            user.PasswordHash = AuthHelper.HashPassword(user, newPassword);
-            await RevokeAllRefreshTokensAsync(user.Id);
-            await _context.SaveChangesAsync();
-        }
-
-        private async Task<AuthResponse> IssueAuthResponseAsync(User user)
-        {
-            var accessToken = AuthHelper.CreateToken(user, _configuration);
-            var refreshToken = AuthHelper.GenerateRefreshTokenString();
-            await SaveNewRefreshToken(user.Id, refreshToken);
-            return new AuthResponse
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            };
-        }
-
-        private async Task RevokeAllRefreshTokensAsync(Guid userId)
-        {
-            await _context.RefreshTokens
-                .Where(t => t.UserId == userId)
-                .ExecuteDeleteAsync();
-        }
-        private async Task SaveNewRefreshToken(Guid userId, string rawRefreshToken)
-        {
-            var tokenHash = AuthHelper.Hash(rawRefreshToken);
-
-            _context.RefreshTokens.Add(new RefreshToken
-            {
-                UserId = userId,
-                TokenHash = tokenHash,
-                ExpiresAt = DateTime.UtcNow.AddDays(7)
-            });
-
-            await _context.SaveChangesAsync();
-        }
+            AccessToken = tokens.CreateAccessToken(user),
+            RefreshToken = refreshToken
+        };
     }
 }

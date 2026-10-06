@@ -1,10 +1,9 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum FriendRequestStatus
 {
-    public enum FriendRequestStatus
-    {
-        Pending,
-        Accepted,
-        Rejected,
-        Cancelled
-    }
+    Pending,
+    Accepted,
+    Rejected,
+    Cancelled
 }

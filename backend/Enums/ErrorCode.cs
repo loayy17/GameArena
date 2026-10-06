@@ -1,59 +1,48 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum ErrorCode
 {
-    public enum ErrorCode
-    {
-        None = 0,
+    None = 0,
 
+    InvalidCredentials = 1001,
+    Unauthorized = 1002,
+    TokenExpired = 1003,
+    EmailNotVerified = 1004,
+    RefreshTokenInvalid = 1005,
+    UserBanned = 1006,
+    Forbidden = 1007,
 
-        InvalidCredentials = 1001,
-        Unauthorized = 1002,
-        TokenExpired = 1003,
-        EmailNotVerified = 1004,
-        RefreshTokenInvalid = 1005,
-        UserBanned = 1006,
-        Forbidden = 1007,
+    OtpInvalid = 2001,
+    OtpExpired = 2002,
+    EmailNotFound = 2004,
+    EmailAlreadyExists = 2005,
+    EmailAlreadyVerified = 2006,
+    UsernameAlreadyExists = 2007,
+    RateLimited = 2008,
 
+    UserNotFound = 3001,
 
-        OtpInvalid = 2001,
-        OtpExpired = 2002,
-        EmailNotFound = 2004,
-        EmailAlreadyExists = 2005,
-        EmailAlreadyVerified = 2006,
-        UsernameAlreadyExists = 2007,
-        RateLimited = 2008,
+    RequestAlreadyExists = 4001,
+    AlreadyFriends = 4002,
+    ReceiverHasAlreadySentRequest = 4003,
+    FriendRequestNotFound = 4004,
+    IsNotFriend = 4005,
+    AlreadyBlocked = 4006,
+    NotBlocked = 4007,
+    CannotSelfBlock = 4008,
+    UserBlockedYou = 4009,
+    YouBlockedUser = 4010,
+    RequestAlreadyProcessed = 4011,
 
+    RoomNotFound = 5001,
+    InvalidGameType = 5004,
+    InvalidRoomId = 5005,
 
+    InvalidRequest = 6001,
+    InvalidAvatar = 6002,
 
-        UserNotFound = 3001,
+    FeedbackNotFound = 7001,
 
-
-        RequestAlreadyExists = 4001,
-        AlreadyFriends = 4002,
-        ReceiverHasAlreadySentRequest = 4003,
-        FriendRequestNotFound = 4004,
-        IsNotFriend = 4005,
-        RequestAlreadyProcessed = 4011,
-
-
-        AlreadyBlocked = 4006,
-        NotBlocked = 4007,
-        CannotSelfBlock = 4008,
-        UserBlockedYou = 4009,
-        YouBlockedUser = 4010,
-
-
-        RoomNotFound = 5001,
-        PlayerNotFound = 5002,
-        InvalidGameType = 5004,
-        InvalidRoomId = 5005,
-
-
-        InvalidRequest = 6001,
-        InvalidAvatar = 6002,
-
-        FeedbackNotFound = 7001,
-
-        ValidationError = 9001,
-        ServerError = 9002
-    }
+    ValidationError = 9001,
+    ServerError = 9002
 }

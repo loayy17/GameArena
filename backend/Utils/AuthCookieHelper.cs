@@ -1,56 +1,45 @@
 using backend.DTOs.Responses;
+using backend.Services.Interface;
+using backend.Utils;
 
 namespace backend.Utils;
 
-public static class AuthCookieHelper
+public sealed class AuthCookieHelper(IConfiguration configuration) : IAuthCookieHelper
 {
-    public static void SetAuthCookies(HttpResponse response, AuthResponse auth)
+    public void Issue(HttpResponse response, AuthResponse auth)
     {
-        var config = response.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
-        var secure = config.GetValue("Cookies:Secure", true);
-        var sameSite = ParseSameSite(config["Cookies:SameSite"]) ?? SameSiteMode.None;
+        response.Cookies.Append(Constants.Access, auth.AccessToken, BuildOptions(
+            DateTime.UtcNow.AddMinutes(Constants.AccessTokenMinutes)));
 
-        response.Cookies.Append(
-            "access_token",
-            auth.AccessToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = secure,
-                SameSite = sameSite,
-                Path = "/",
-                Expires = DateTime.UtcNow.AddMinutes(15)
-            });
-
-        response.Cookies.Append(
-            "refresh_token",
-            auth.RefreshToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = secure,
-                SameSite = sameSite,
-                Path = "/",
-                Expires = DateTime.UtcNow.AddDays(7)
-            });
+        response.Cookies.Append(Constants.Refresh, auth.RefreshToken, BuildOptions(
+            DateTime.UtcNow.AddDays(Constants.RefreshTokenDays)));
     }
 
-    public static void ClearAuthCookies(HttpResponse response)
+    public void Clear(HttpResponse response)
     {
-        var config = response.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var options = BuildOptions(null);
+        response.Cookies.Delete(Constants.Access, options);
+        response.Cookies.Delete(Constants.Refresh, options);
+    }
 
-        var options = new CookieOptions
+    private CookieOptions BuildOptions(DateTime? expires)
+    {
+        var cookie = new CookieOptions
         {
             HttpOnly = true,
-            Secure = config.GetValue("Cookies:Secure", true),
-            SameSite = ParseSameSite(config["Cookies:SameSite"]) ?? SameSiteMode.None,
+            Secure = configuration.GetValue("Cookies:Secure", true),
+            SameSite = ParseSameSite() ?? SameSiteMode.None,
             Path = "/"
         };
 
-        response.Cookies.Delete("access_token", options);
-        response.Cookies.Delete("refresh_token", options);
+        if (expires.HasValue)
+            cookie.Expires = expires.Value;
+
+        return cookie;
     }
 
-    private static SameSiteMode? ParseSameSite(string? value) =>
-        Enum.TryParse<SameSiteMode>(value, ignoreCase: true, out var mode) ? mode : null;
+    private SameSiteMode? ParseSameSite() =>
+        Enum.TryParse<SameSiteMode>(configuration["Cookies:SameSite"], ignoreCase: true, out var mode)
+            ? mode
+            : null;
 }

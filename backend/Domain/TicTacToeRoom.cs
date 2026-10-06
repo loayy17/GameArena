@@ -2,102 +2,122 @@ using System.Text.Json;
 using backend.Enums;
 using backend.Utils;
 
-namespace backend.Domain
+namespace backend.Domain;
+
+public class TicTacToeRoom : BaseGameRoom
 {
-    public class TicTacToeRoom : BaseGameRoom
+    private const string EmptyCell = ".";
+    private const string ActionMakeMove = "MAKE_MOVE";
+    private static readonly string[] FreshBoard = [.. Enumerable.Repeat(EmptyCell, 9)];
+    public TicTacToeRoom() : base(GamesKind.TicTacToe) { }
+    public string[] Board { get; set; } = [.. FreshBoard];
+
+    protected override object GetStatePayloadCore()
     {
-        public TicTacToeRoom() : base(GamesKind.TicTacToe) { }
-        public string[] Board { get; set; } = [.. Enumerable.Repeat(".", 9)];
+        var payload = GetBasePayload();
+        payload["board"] = Board;
+        payload["boardWidth"] = 3;
+        payload["boardHeight"] = 3;
+        payload["winScore"] = 0;
+        payload["tickRateHz"] = 0;
+        return payload;
+    }
 
-        protected override object GetStatePayloadCore()
+    protected override void ResetForNewRoundCore()
+    {
+        base.ResetForNewRoundCore();
+        Board = [.. FreshBoard];
+    }
+
+    protected override void HandleActionCore(string playerId, JsonElement action)
+    {
+        if (!TryReadCell(action, out int cell)) return;
+
+        if (WinnerPlayerId != null
+            || !IsFull
+            || playerId != CurrentTurnPlayerId
+            || !IsSeated(playerId)
+            || cell < 0
+            || cell > 8
+            || Board[cell] != EmptyCell)
+            return;
+
+        Board[cell] = playerId == Player1Id ? "X" : "O";
+        SettleRound(playerId, Board[cell]);
+    }
+
+    protected override void MakeBotMoveCore()
+    {
+        var botId = CurrentBotTurn();
+        if (botId == null) return;
+        var botSymbol = botId == Player1Id ? "X" : "O";
+        int move = BotDifficulty switch
         {
-            var p = GetBasePayload();
-            p["board"] = Board;
-            p["boardWidth"] = 3;
-            p["boardHeight"] = 3;
-            p["winScore"] = 0;
-            p["tickRateHz"] = 0;
-            return p;
+            BotDifficulty.Easy => RandomFreeCell(),
+            BotDifficulty.Medium => RandomHelper.CoinFlip()
+                ? RandomFreeCell()
+                : TicTacToeMinimax.GetBestMove(Board, botSymbol),
+            _ => TicTacToeMinimax.GetBestMove(Board, botSymbol),
+        };
+
+        if (move < 0) return;
+        Board[move] = botSymbol;
+        SettleRound(botId, botSymbol);
+    }
+
+    protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
+    {
+        base.OnPlayerDisconnectedCore(disconnectedPlayerId);
+        WinnerSymbol = WinnerPlayerId == Player1Id ? "X" : "O";
+    }
+
+    private void SettleRound(string playerId, string symbol)
+    {
+        var winLine = GameHelper.FindWinLineTicTacToe(Board);
+        if (winLine != null)
+        {
+            WinningCells = [.. winLine.Select(i => i.ToString())];
+            WinnerSymbol = symbol;
+            CompleteRound(playerId);
+            return;
         }
 
-        protected override void ResetForNewRoundCore()
+        if (Board.All(x => x != EmptyCell))
         {
-            base.ResetForNewRoundCore();
-            Board = [.. Enumerable.Repeat(".", 9)];
+            CompleteRound("");
+            return;
         }
 
-        protected override void HandleActionCore(string playerId, JsonElement action)
-        {
-            if (action.ValueKind != JsonValueKind.Object
-                || !action.TryGetProperty("type", out var typeProp)
-                || typeProp.GetString() != "MAKE_MOVE"
-                || !action.TryGetProperty("cell", out var cellProp))
-                return;
+        SwitchTurn();
+    }
 
-            var cell = cellProp.GetInt32();
+    private static bool TryReadCell(JsonElement action, out int cell)
+    {
+        cell = -1;
 
-            if (
-                WinnerPlayerId != null
-                || !IsFull
-                || playerId != CurrentTurnPlayerId
-                || (playerId != Player1Id && playerId != Player2Id)
-                || cell < 0
-                || cell > 8
-                || Board[cell] != "."
-            )
-                return;
+        if (action.ValueKind != JsonValueKind.Object
+            || !action.TryGetProperty("type", out var typeProp)
+            || typeProp.GetString() != ActionMakeMove
+            || !action.TryGetProperty("cell", out var cellProp))
+            return false;
+        return cellProp.TryGetInt32(out cell);
+    }
 
-            Board[cell] = playerId == Player1Id ? "X" : "O";
+    private bool IsSeated(string playerId) => playerId == Player1Id || playerId == Player2Id;
+    private string? CurrentBotTurn()
+    {
+        if (CurrentTurnPlayerId == null) return null;
 
-            var winLine = GameHelper.FindWinLineTicTacToe(Board);
-            if (winLine != null)
-            {
-                WinningCells = winLine.Select(i => i.ToString()).ToArray();
-                WinnerSymbol = Board[cell];
-                CompleteRound(playerId);
-                return;
-            }
+        var botId = GetBotId();
+        return botId != null && CurrentTurnPlayerId == botId ? botId : null;
+    }
 
-            if (Board.All(x => x != "."))
-            {
-                CompleteRound("");
-                return;
-            }
+    private int RandomFreeCell()
+    {
+        var free = new List<int>();
+        for (int i = 0; i < Board.Length; i++)
+            if (Board[i] == EmptyCell) free.Add(i);
 
-            SwitchTurn();
-        }
-
-        protected override void MakeBotMoveCore()
-        {
-            if (WinnerPlayerId != null || CurrentTurnPlayerId == null) return;
-            var botId = GetBotId();
-            if (botId == null || CurrentTurnPlayerId != botId) return;
-            var botSymbol = botId == Player1Id ? "X" : "O";
-            var botMove = TicTacToeMinimax.GetBestMove(Board, botSymbol);
-            if (botMove < 0) return;
-            Board[botMove] = botSymbol;
-            var winLine = GameHelper.FindWinLineTicTacToe(Board);
-            if (winLine != null)
-            {
-                WinningCells = winLine.Select(i => i.ToString()).ToArray();
-                WinnerSymbol = Board[botMove];
-                CompleteRound(botId);
-                return;
-            }
-
-            if (Board.All(x => x != "."))
-            {
-                CompleteRound("");
-                return;
-            }
-
-            SwitchTurn();
-        }
-
-        protected override void OnPlayerDisconnectedCore(string disconnectedPlayerId)
-        {
-            base.OnPlayerDisconnectedCore(disconnectedPlayerId);
-            WinnerSymbol = WinnerPlayerId == Player1Id ? "X" : "O";
-        }
+        return RandomHelper.Pick(free);
     }
 }

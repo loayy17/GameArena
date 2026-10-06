@@ -1,236 +1,255 @@
-using backend.Enums;
 using System.Text.Json;
+using backend.Enums;
+using backend.Utils;
 
-namespace backend.Domain
+namespace backend.Domain;
+
+public class PingPongRoom : BaseGameRoom
 {
-    public class PingPongRoom : BaseGameRoom
+    private const int WinScore = 5;
+    private const int BoardWidthPx = 600;
+    private const int BoardHeightPx = 400;
+    private const int PaddleWidthPx = 12;
+    private const int BallSizePx = 12;
+
+    private const float PaddleMargin = 0.01f;
+    private const float InitialBallSpeed = 0.012f;
+    private const float BallHitSpeedRamp = 1.05f;
+    private const float MaxBallSpeed = 0.03f;
+    private const float PaddleWidth = (float)PaddleWidthPx / BoardWidthPx;
+    private const float BallRadius = BallSizePx / (2f * BoardWidthPx);
+    private const float Paddle1Left = PaddleMargin;
+    private const float Paddle1Right = PaddleMargin + PaddleWidth;
+    private const float Paddle2Right = 1f - PaddleMargin;
+    private const float Paddle2Left = Paddle2Right - PaddleWidth;
+    private const float BallContactPlane1 = Paddle1Right - BallRadius;
+    private const float BallContactPlane2 = Paddle2Left + BallRadius;
+
+    private const string ActionMovePaddle = "MOVE_PADDLE";
+    private const string ActionSetPaddle = "SET_PADDLE";
+    private const string DirectionUp = "UP";
+    private const string DirectionDown = "DOWN";
+
+    public PingPongRoom() : base(GamesKind.PingPong) { }
+
+    public override bool NeedsGameLoop => true;
+
+    public float BallPX { get; set; } = 0.5f;
+    public float BallPY { get; set; } = 0.5f;
+    public float BallVX { get; set; } = InitialBallSpeed;
+    public float BallVY { get; set; } = 0.006f;
+
+    public float PadYP1 { get; set; } = 0.4f;
+    public float PadHP1 { get; set; } = 0.2f;
+    public float PadVP1 { get; set; } = 0.035f;
+    public float PadYP2 { get; set; } = 0.4f;
+    public float PadHP2 { get; set; } = 0.2f;
+    public float PadVP2 { get; set; } = 0.035f;
+
+    protected override object GetStatePayloadCore()
     {
-        public PingPongRoom() : base(GamesKind.PingPong) { }
+        var payload = GetBasePayload();
+        payload["boardWidth"] = BoardWidthPx;
+        payload["boardHeight"] = BoardHeightPx;
+        payload["ball"] = new { x = BallPX * BoardWidthPx, y = BallPY * BoardHeightPx, vx = BallVX, vy = BallVY };
+        payload["ballSize"] = BallSizePx;
+        payload["player1Paddle"] = new { x = Paddle1Left * BoardWidthPx, y = PadYP1 * BoardHeightPx, height = PadHP1 * BoardHeightPx };
+        payload["player2Paddle"] = new { x = Paddle2Left * BoardWidthPx, y = PadYP2 * BoardHeightPx, height = PadHP2 * BoardHeightPx };
+        payload["paddleWidth"] = PaddleWidthPx;
+        payload["player1Score"] = Score[0];
+        payload["player2Score"] = Score[1];
+        payload["winScore"] = WinScore;
+        payload["tickRateHz"] = 1000 / TickIntervalMs;
+        return payload;
+    }
 
-        public float BallPX { get; set; } = 0.5f;
-        public float BallPY { get; set; } = 0.5f;
-        public float BallVX { get; set; } = InitialBallSpeed;
-        public float BallVY { get; set; } = 0.006f;
+    protected override void ResetForNewRoundCore()
+    {
+        base.ResetForNewRoundCore();
 
-        public float PadYP1 { get; set; } = 0.4f;
-        public float PadHP1 { get; set; } = 0.2f;
-        public float PadVP1 { get; set; } = 0.035f;
-        public float PadYP2 { get; set; } = 0.4f;
-        public float PadHP2 { get; set; } = 0.2f;
-        public float PadVP2 { get; set; } = 0.035f;
+        Score[0] = 0;
+        Score[1] = 0;
+        PadYP1 = 0.4f;
+        PadHP1 = 0.2f;
+        PadVP1 = 0.035f;
+        PadYP2 = 0.4f;
+        PadHP2 = 0.2f;
+        PadVP2 = 0.035f;
 
-        private const int WinScore = 5;
-        private const float PaddleMargin = 0.01f;
-        private const float InitialBallSpeed = 0.012f;
-        private const float BallHitSpeedRamp = 1.05f;
-        private const float MaxBallSpeed = 0.03f;
-        private const int PaddleWidthPx = 12;
-        private const int BallSizePx = 12;
-        private const float PaddleWidth = (float)PaddleWidthPx / BoardWidthPx;
-        private const float BallRadius = BallSizePx / (2f * BoardWidthPx);
-        private const float Paddle1Left = PaddleMargin;
-        private const float Paddle1Right = PaddleMargin + PaddleWidth;
-        private const float Paddle2Right = 1f - PaddleMargin;
-        private const float Paddle2Left = Paddle2Right - PaddleWidth;
-        private const float BallContactPlane1 = Paddle1Right - BallRadius;
-        private const float BallContactPlane2 = Paddle2Left + BallRadius;
+        ResetBall();
+    }
 
-        private const string ActionMovePaddle = "MOVE_PADDLE";
-        private const string ActionSetPaddle = "SET_PADDLE";
-        private const string DirectionUp = "UP";
-        private const string DirectionDown = "DOWN";
+    protected override void TickCore()
+    {
+        AdvanceBall();
+        MakeBotMoveCore();
+    }
 
+    protected override void MakeBotMoveCore()
+    {
+        if (!IsBotGame || IsFinished || !HasStarted) return;
 
-        private const int BoardWidthPx = 600;
-        private const int BoardHeightPx = 400;
+        bool botIsP1 = Player1Id == Constants.BotPlayerId;
+        if (!botIsP1 && Player2Id != Constants.BotPlayerId) return;
 
-        private void ResetBall()
+        float paddleHeight = botIsP1 ? PadHP1 : PadHP2;
+        float currentY = botIsP1 ? PadYP1 : PadYP2;
+
+        bool ballComing = botIsP1 ? BallVX < 0 : BallVX > 0;
+        float plane = botIsP1 ? BallContactPlane1 : BallContactPlane2;
+        float targetY = ballComing ? PredictBallY(plane) - paddleHeight / 2f : 0.5f - paddleHeight / 2f;
+
+        float moved = Math.Clamp(MoveToward(currentY, targetY, BotSpeed), 0, 1 - paddleHeight);
+
+        if (botIsP1) PadYP1 = moved;
+        else PadYP2 = moved;
+    }
+
+    private float BotSpeed => BotDifficulty switch
+    {
+        BotDifficulty.Easy => 0.011f,
+        BotDifficulty.Hard => 0.026f,
+        _ => 0.02f,
+    };
+
+    private float PredictBallY(float plane)
+    {
+        if (BotDifficulty == BotDifficulty.Easy)
+            return BallPY;
+
+        float timeToPlane = (plane - BallPX) / BallVX;
+        float projected = BallPY + BallVY * timeToPlane;
+
+        return BotDifficulty == BotDifficulty.Hard ? ReflectIntoBounds(projected) : projected;
+    }
+
+    protected override void HandleActionCore(string playerId, JsonElement action)
+    {
+        if (Player1Id != playerId && Player2Id != playerId) return;
+
+        if (action.ValueKind != JsonValueKind.Object
+            || !action.TryGetProperty("type", out var typeProp))
+            return;
+
+        bool isPlayerOne = playerId == Player1Id;
+
+        if (typeProp.ValueEquals(ActionSetPaddle)
+            && action.TryGetProperty("y", out var yProp)
+            && yProp.TryGetSingle(out var targetY))
         {
-            BallPX = 0.5f;
-            BallPY = 0.5f;
-            BallVX = (Random.Shared.Next(2) == 0 ? 1f : -1f) * InitialBallSpeed;
-            BallVY = (float)(Random.Shared.NextDouble() * 0.01 - 0.005);
+            if (isPlayerOne) PadYP1 = Math.Clamp(targetY, 0, 1 - PadHP1);
+            else PadYP2 = Math.Clamp(targetY, 0, 1 - PadHP2);
+
+            return;
         }
 
-        public override bool NeedsGameLoop => true;
-
-        protected override void TickCore()
+        if (!typeProp.ValueEquals(ActionMovePaddle)
+            || !action.TryGetProperty("direction", out var directionProp))
         {
-            AdvanceBall();
-            MakeBotMoveCore();
+            return;
         }
 
-        private void AdvanceBall()
+        bool isUp = directionProp.ValueEquals(DirectionUp);
+        if (!isUp && !directionProp.ValueEquals(DirectionDown)) return;
+
+        if (isPlayerOne) PadYP1 = Nudge(PadYP1, PadVP1, PadHP1, isUp);
+        else PadYP2 = Nudge(PadYP2, PadVP2, PadHP2, isUp);
+    }
+
+    private void AdvanceBall()
+    {
+        if (WinnerPlayerId != null || !HasStarted) return;
+
+        float previousX = BallPX;
+        BallPX += BallVX;
+        BallPY += BallVY;
+
+        if (BallPY <= 0 || BallPY >= 1)
         {
-            if (WinnerPlayerId != null || !HasStarted) return;
-
-            float previousX = BallPX;
-            BallPX += BallVX;
-            BallPY += BallVY;
-
-            if (BallPY <= 0 || BallPY >= 1)
-            {
-                BallVY = -BallVY;
-                BallPY = Math.Clamp(BallPY, BallRadius, 1f - BallRadius);
-            }
-
-            float paddleTop1 = PadYP1;
-            float paddleBottom1 = PadYP1 + PadHP1;
-            if (BallVX < 0 && previousX > BallContactPlane1 && BallPX <= BallContactPlane1 && BallPY >= paddleTop1 && BallPY <= paddleBottom1)
-            {
-                BallVX = Math.Min(Math.Abs(BallVX) * BallHitSpeedRamp, MaxBallSpeed);
-                BallPX = BallContactPlane1;
-                float hitPos = (BallPY - PadYP1) / PadHP1;
-                BallVY = (hitPos - 0.5f) * 0.02f;
-            }
-
-            float paddleTop2 = PadYP2;
-            float paddleBottom2 = PadYP2 + PadHP2;
-            if (BallVX > 0 && previousX < BallContactPlane2 && BallPX >= BallContactPlane2 && BallPY >= paddleTop2 && BallPY <= paddleBottom2)
-            {
-                BallVX = -Math.Min(Math.Abs(BallVX) * BallHitSpeedRamp, MaxBallSpeed);
-                BallPX = BallContactPlane2;
-                float hitPos = (BallPY - PadYP2) / PadHP2;
-                BallVY = (hitPos - 0.5f) * 0.02f;
-            }
-
-            if (BallPX >= 1)
-            {
-                Score[0]++;
-                if (Score[0] >= WinScore)
-                {
-                    CompleteRound(Player1Id);
-                    return;
-                }
-                ResetBall();
-            }
-
-            if (BallPX <= 0)
-            {
-                Score[1]++;
-                if (Score[1] >= WinScore)
-                {
-                    CompleteRound(Player2Id);
-                    return;
-                }
-                ResetBall();
-            }
+            BallVY = -BallVY;
+            BallPY = Math.Clamp(BallPY, BallRadius, 1f - BallRadius);
         }
 
-        protected override void MakeBotMoveCore()
+        if (BouncesOffPaddle1(previousX)) return;
+
+        if (BouncesOffPaddle2(previousX)) return;
+
+        ScoreMiss();
+    }
+
+    private bool BouncesOffPaddle1(float previousX)
+    {
+        if (BallVX >= 0 || previousX <= BallContactPlane1 || BallPX > BallContactPlane1) return false;
+
+        if (BallPY < PadYP1 || BallPY > PadYP1 + PadHP1) return false;
+
+        BallVX = Math.Min(Math.Abs(BallVX) * BallHitSpeedRamp, MaxBallSpeed);
+        BallPX = BallContactPlane1;
+        BallVY = DeflectFromPaddle1();
+        return true;
+    }
+
+    private bool BouncesOffPaddle2(float previousX)
+    {
+        if (BallVX <= 0 || previousX >= BallContactPlane2 || BallPX < BallContactPlane2) return false;
+
+        if (BallPY < PadYP2 || BallPY > PadYP2 + PadHP2) return false;
+
+        BallVX = -Math.Min(Math.Abs(BallVX) * BallHitSpeedRamp, MaxBallSpeed);
+        BallPX = BallContactPlane2;
+        BallVY = DeflectFromPaddle2();
+        return true;
+    }
+
+    private void ScoreMiss()
+    {
+        if (BallPX >= 1) ScorePoint(0);
+        else if (BallPX <= 0)
         {
-            if (!IsBotGame || IsFinished || !HasStarted) return;
-
-            bool botIsP1 = Player1Id == "__BOT__";
-            bool botIsP2 = Player2Id == "__BOT__";
-            if (!botIsP1 && !botIsP2) return;
-
-            float botPaddleY = botIsP1 ? PadYP1 : PadYP2;
-            float paddleHeight = botIsP1 ? PadHP1 : PadHP2;
-
-            float targetY;
-            bool ballComing = botIsP1 ? BallVX < 0 : BallVX > 0;
-            if (ballComing)
-            {
-                float plane = botIsP1 ? BallContactPlane1 : BallContactPlane2;
-                float timeToPlane = (plane - BallPX) / BallVX;
-                float predictedBallY = BallPY + BallVY * timeToPlane;
-                targetY = predictedBallY - paddleHeight / 2f;
-            }
-            else
-            {
-                targetY = 0.5f - paddleHeight / 2f;
-            }
-
-            const float speed = 0.02f;
-
-            float diff = targetY - botPaddleY;
-            if (Math.Abs(diff) < speed)
-                botPaddleY = targetY;
-            else if (diff > 0)
-                botPaddleY += speed;
-            else
-                botPaddleY -= speed;
-
-            botPaddleY = Math.Clamp(botPaddleY, 0, 1 - paddleHeight);
-
-            if (botIsP1)
-                PadYP1 = botPaddleY;
-            else
-                PadYP2 = botPaddleY;
+            ScorePoint(1);
         }
+    }
 
-        protected override object GetStatePayloadCore()
-        {
-            var p = GetBasePayload();
-            p["boardWidth"] = BoardWidthPx;
-            p["boardHeight"] = BoardHeightPx;
-            p["ball"] = new { x = BallPX * BoardWidthPx, y = BallPY * BoardHeightPx, vx = BallVX, vy = BallVY };
-            p["ballSize"] = BallSizePx;
-            p["player1Paddle"] = new { x = Paddle1Left * BoardWidthPx, y = PadYP1 * BoardHeightPx, height = PadHP1 * BoardHeightPx };
-            p["player2Paddle"] = new { x = Paddle2Left * BoardWidthPx, y = PadYP2 * BoardHeightPx, height = PadHP2 * BoardHeightPx };
-            p["paddleWidth"] = PaddleWidthPx;
-            p["player1Score"] = Score[0];
-            p["player2Score"] = Score[1];
-            p["winScore"] = WinScore;
-            p["tickRateHz"] = 1000 / TickIntervalMs;
-            return p;
-        }
+    private void ScorePoint(int playerIndex)
+    {
+        Score[playerIndex]++;
 
-        protected override void ResetForNewRoundCore()
+        if (Score[playerIndex] < WinScore)
         {
-            base.ResetForNewRoundCore();
-            Score[0] = 0;
-            Score[1] = 0;
-            PadYP1 = 0.4f;
-            PadHP1 = 0.2f;
-            PadVP1 = 0.035f;
-            PadYP2 = 0.4f;
-            PadHP2 = 0.2f;
-            PadVP2 = 0.035f;
             ResetBall();
+            return;
         }
 
-        protected override void HandleActionCore(string playerId, JsonElement action)
-        {
-            if (Player1Id != playerId && Player2Id != playerId) return;
+        CompleteRound(playerIndex == 0 ? Player1Id : Player2Id);
+    }
 
-            if (action.ValueKind != JsonValueKind.Object
-                || !action.TryGetProperty("type", out var typeProp))
-                return;
+    private float DeflectFromPaddle1() => ((BallPY - PadYP1) / PadHP1 - 0.5f) * 0.02f;
 
-            bool isPlayerOne = playerId == Player1Id;
+    private float DeflectFromPaddle2() => ((BallPY - PadYP2) / PadHP2 - 0.5f) * 0.02f;
 
-            if (typeProp.ValueEquals(ActionSetPaddle)
-                && action.TryGetProperty("y", out var yProp)
-                && yProp.TryGetSingle(out var targetY))
-            {
-                if (isPlayerOne)
-                    PadYP1 = Math.Clamp(targetY, 0, 1 - PadHP1);
-                else
-                    PadYP2 = Math.Clamp(targetY, 0, 1 - PadHP2);
-                return;
-            }
+    private void ResetBall()
+    {
+        BallPX = 0.5f;
+        BallPY = 0.5f;
+        BallVX = (Random.Shared.Next(2) == 0 ? 1f : -1f) * InitialBallSpeed;
+        BallVY = (float)(Random.Shared.NextDouble() * 0.01 - 0.005);
+    }
 
-            if (!typeProp.ValueEquals(ActionMovePaddle)
-                || !action.TryGetProperty("direction", out var directionProp))
-                return;
+    private static float Nudge(float position, float velocity, float height, bool up) =>
+        up ? Math.Max(0, position - velocity) : Math.Min(1 - height, position + velocity);
 
-            bool isUp = directionProp.ValueEquals(DirectionUp);
-            if (!isUp && !directionProp.ValueEquals(DirectionDown)) return;
+    private static float MoveToward(float current, float target, float maxStep)
+    {
+        float delta = target - current;
 
-            if (isPlayerOne)
-            {
-                PadYP1 = isUp
-                    ? Math.Max(0, PadYP1 - PadVP1)
-                    : Math.Min(1 - PadHP1, PadYP1 + PadVP1);
-            }
-            else
-            {
-                PadYP2 = isUp
-                    ? Math.Max(0, PadYP2 - PadVP2)
-                    : Math.Min(1 - PadHP2, PadYP2 + PadVP2);
-            }
-        }
+        if (Math.Abs(delta) < maxStep) return target;
+
+        return current + Math.Sign(delta) * maxStep;
+    }
+
+    private static float ReflectIntoBounds(float y)
+    {
+        y = Math.Abs(y) % 2f;
+        return y > 1f ? 2f - y : y;
     }
 }

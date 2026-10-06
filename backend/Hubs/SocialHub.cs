@@ -2,118 +2,106 @@ using backend.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace backend.Hubs
+namespace backend.Hubs;
+
+[Authorize]
+public class SocialHub(
+    IUserPresenceService presence,
+    INotificationService notifications,
+    ISocialReadService socialRead,
+    IChatService chat,
+    ILogger<SocialHub> logger) : Hub
 {
-    [Authorize]
-    public class SocialHub(
-        IUserPresenceService _presence,
-        INotificationService _notificationService,
-        ISocialReadService _socialReadService,
-        IChatService _chatService,
-        ILogger<SocialHub> _logger) : Hub
+    public override async Task OnConnectedAsync()
     {
-        private Guid? CurrentUserId =>
-            Context.UserIdentifier is { Length: > 0 } id && Guid.TryParse(id, out var guid) ? guid : null;
-
-        private Guid GetUserId() =>
-            CurrentUserId ?? throw new HubException("Unauthorized");
-
-        public override async Task OnConnectedAsync()
+        if (CurrentUserId is { } userId)
         {
-            if (CurrentUserId is { } userId)
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
+            if (presence.AddConnection(userId.ToString())) await BroadcastPresenceAsync(userId, "friend:online");
+            try
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
-                var isFirstConnection = _presence.AddConnection(userId.ToString());
-
-                if (isFirstConnection)
-                {
-                    var friendIds = await _socialReadService.GetFriendIdsAsync(userId);
-                    foreach (var friendId in friendIds)
-                    {
-                        await Clients.Group($"user:{friendId}").SendAsync("friend:online", new { userId = userId.ToString() });
-                    }
-                }
-
-                try
-                {
-                    await _notificationService.SendSocialDataAsync(userId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to send social data to user {UserId} on connect", userId);
-                }
+                await notifications.SendSocialDataAsync(userId);
             }
-
-            await base.OnConnectedAsync();
-        }
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
-        {
-            if (CurrentUserId is { } userId)
+            catch (Exception ex)
             {
-                var isLastConnection = _presence.RemoveConnection(userId.ToString());
-
-                if (isLastConnection)
-                {
-                    var friendIds = await _socialReadService.GetFriendIdsAsync(userId);
-                    foreach (var friendId in friendIds)
-                    {
-                        await Clients.Group($"user:{friendId}").SendAsync("friend:offline", new { userId = userId.ToString() });
-                    }
-                }
+                logger.LogWarning(ex, "Could not send social data to user {UserId} on connect", userId);
             }
-
-            await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendPrivateMessage(Guid receiverId, string message)
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (CurrentUserId is { } userId
+            && presence.RemoveConnection(userId.ToString()))
         {
-            var senderId = GetUserId();
-            var msg = await _chatService.CreatePrivateMessageAsync(senderId, receiverId, message);
-            await Clients.User(receiverId.ToString()).SendAsync("chat:private", msg);
-            await Clients.User(senderId.ToString()).SendAsync("chat:private", msg);
+            await BroadcastPresenceAsync(userId, "friend:offline");
         }
 
-        public async Task SendTyping(Guid receiverId)
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task SendPrivateMessage(Guid receiverId, string message)
+    {
+        var senderId = GetUserId();
+        var sent = await chat.CreatePrivateMessageAsync(senderId, receiverId, message);
+        await Clients.User(receiverId.ToString()).SendAsync("chat:private", sent);
+        await Clients.User(senderId.ToString()).SendAsync("chat:private", sent);
+    }
+
+    public async Task SendTyping(Guid receiverId)
+    {
+        var senderId = GetUserId();
+        if (!await socialRead.AreFriendsAsync(senderId, receiverId)) return;
+        await Clients.Group($"user:{receiverId}").SendAsync("chat:typing", new { senderId, receiverId });
+    }
+
+    public Task RequestCounters() => notifications.SendCountersAsync(GetUserId());
+
+    public Task RequestFriends() => notifications.SendFriendsAsync(GetUserId());
+
+    public Task RequestFriendRequests() => notifications.SendFriendRequestsAsync(GetUserId());
+
+    public Task RequestBlocked() => notifications.SendBlockedAsync(GetUserId());
+
+    public async Task RequestNotifications(int limit = 50)
+    {
+        var userId = GetUserId();
+        var list = await notifications.GetNotificationsAsync(userId, limit);
+        await Clients.Caller.SendAsync("notification:list", list);
+    }
+
+    public Task MarkNotificationRead(Guid notificationId) =>
+        MutateThenResendAsync(userId => notifications.MarkNotificationAsReadAsync(userId, notificationId));
+
+    public Task MarkAllNotificationsRead() =>
+        MutateThenResendAsync(userId => notifications.MarkAllNotificationsAsReadAsync(userId));
+
+    public Task DeleteNotification(Guid notificationId) =>
+        MutateThenResendAsync(userId => notifications.DeleteNotificationAsync(userId, notificationId));
+
+    private Guid? CurrentUserId =>
+        Guid.TryParse(Context.UserIdentifier, out var id) ? id : null;
+
+    private Guid GetUserId() =>
+        CurrentUserId ?? throw new HubException("Unauthorized");
+
+    private async Task BroadcastPresenceAsync(Guid userId, string eventName)
+    {
+        var friendIds = await socialRead.GetFriendIdsAsync(userId);
+
+        foreach (var friendId in friendIds)
         {
-            var senderId = GetUserId();
-            var friendIds = await _socialReadService.GetFriendIdsAsync(senderId);
-            if (!friendIds.Contains(receiverId)) return;
-            await Clients.Group($"user:{receiverId}").SendAsync("chat:typing", new { senderId, receiverId });
+            await Clients.Group($"user:{friendId}").SendAsync(eventName, new { userId = userId.ToString() });
         }
+    }
 
-        public async Task RequestCounters()
-            => await _notificationService.SendCountersAsync(GetUserId());
-
-        public async Task RequestFriends()
-            => await _notificationService.SendFriendsAsync(GetUserId());
-
-        public async Task RequestFriendRequests()
-            => await _notificationService.SendFriendRequestsAsync(GetUserId());
-
-        public async Task RequestBlocked()
-            => await _notificationService.SendBlockedAsync(GetUserId());
-
-        public async Task RequestNotifications(int limit = 50)
-        {
-            var list = await _notificationService.GetNotificationsAsync(GetUserId(), limit);
-            await Clients.Caller.SendAsync("notification:list", list);
-        }
-
-        public async Task MarkNotificationRead(Guid notificationId)
-            => await MutateAndResendNotifications(GetUserId(), () => _notificationService.MarkNotificationAsReadAsync(GetUserId(), notificationId));
-
-        public async Task MarkAllNotificationsRead()
-            => await MutateAndResendNotifications(GetUserId(), () => _notificationService.MarkAllNotificationsAsReadAsync(GetUserId()));
-
-        public async Task DeleteNotification(Guid notificationId)
-            => await MutateAndResendNotifications(GetUserId(), () => _notificationService.DeleteNotificationAsync(GetUserId(), notificationId));
-
-        private async Task MutateAndResendNotifications(Guid userId, Func<Task> mutation)
-        {
-            await mutation();
-            var list = await _notificationService.GetNotificationsAsync(userId);
-            await Clients.Caller.SendAsync("notification:list", list);
-        }
+    private async Task MutateThenResendAsync(Func<Guid, Task> mutation)
+    {
+        var userId = GetUserId();
+        await mutation(userId);
+        var list = await notifications.GetNotificationsAsync(userId);
+        await Clients.Caller.SendAsync("notification:list", list);
     }
 }

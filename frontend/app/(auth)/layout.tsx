@@ -8,7 +8,7 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { useTranslation } from "@/hooks/useSetting";
 import { GSpinner } from "@/component/common/GSpinner";
 import { GCard } from "@/component/common/GCard";
-import { LangTheme } from "@/component/LangTheme/LangTheme";
+import { LangTheme } from "@/component/common/LangTheme";
 import { GBrandText } from "@/component/common/GBrandText";
 import { SizeEnum } from "@/domain/enum/SizeEnum";
 import { CardVariantEnum } from "@/domain/enum/CardVariantEnum";

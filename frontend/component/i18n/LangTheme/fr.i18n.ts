@@ -4,9 +4,9 @@ const fr = {
   french: "Français",
   light: "Clair",
   dark: "Sombre",
+  system: "Système",
+  theme: "Thème",
   languages: "Langues",
-  switchToLight: "Passer au mode clair",
-  switchToDark: "Passer au mode sombre",
 };
 
 export { fr };

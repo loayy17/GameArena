@@ -1,11 +1,10 @@
-﻿namespace backend.Enums
+namespace backend.Enums;
+
+public enum GamesKind
 {
-    public enum GamesKind
-    {
-        TicTacToe,
-        PingPong,
-        Snake,
-        RockPaperScissors,
-        ConnectFour,
-    }
+    TicTacToe,
+    PingPong,
+    Snake,
+    RockPaperScissors,
+    ConnectFour,
 }

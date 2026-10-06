@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-if (!apiUrl) throw new Error("NEXT_PUBLIC_API_URL is required (see .env.example at the repository root)");
-const apiOrigin = new URL(apiUrl);
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -10,7 +8,9 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
-    remotePatterns: [{ protocol: apiOrigin.protocol.replace(":", "") as "http" | "https", hostname: apiOrigin.hostname }],
+    remotePatterns: apiUrl
+      ? [{ protocol: new URL(apiUrl).protocol.replace(":", "") as "http" | "https", hostname: new URL(apiUrl).hostname }]
+      : undefined,
   },
 };
 

@@ -44,10 +44,13 @@ const ar = {
     invite: "دعوة",
     searchError: "تعذر العثور على مباراة. حاول مرة أخرى.",
     createLobbyError: "تعذر إنشاء اللوبي. حاول مرة أخرى.",
+    difficulty: "مستوى الذكاء الاصطناعي",
+    difficultyLevels: { easy: "سهل", medium: "متوسط", hard: "صعب" },
   },
   waiting: {
     subtitle: "في انتظار قبول الخصم للدعوة أو الانضمام...",
     startVsAI: "ابدأ اللعبة (ضد الذكاء الاصطناعي)",
+    aiLevel: "مستوى الذكاء الاصطناعي: {level}",
     inviteFriend: "دعوة صديق",
     cancelMatch: "إلغاء المباراة",
     cancelTitle: "إلغاء هذه المباراة؟",

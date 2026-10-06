@@ -37,8 +37,6 @@ namespace backend.Migrations
 
                     b.HasIndex("BlockedId");
 
-                    b.HasIndex("BlockerId", "BlockedId");
-
                     b.ToTable("Blocks");
                 });
 

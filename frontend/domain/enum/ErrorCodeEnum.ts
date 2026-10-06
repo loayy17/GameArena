@@ -34,7 +34,6 @@ enum ErrorCodeEnum {
   RequestAlreadyProcessed = 4011,
 
   RoomNotFound = 5001,
-  PlayerNotFound = 5002,
   InvalidGameType = 5004,
   InvalidRoomId = 5005,
 

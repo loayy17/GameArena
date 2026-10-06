@@ -1,4 +1,4 @@
-﻿using backend.DTOs.Requests;
+using backend.DTOs.Requests;
 using backend.DTOs.Responses;
 using backend.Enums;
 using backend.Services.Interface;
@@ -6,65 +6,64 @@ using backend.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace backend.Controllers
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[EnableRateLimiting("SessionPolicy")]
+public class AuthController(IAuthService auth, IAuthCookieHelper cookies) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
     [EnableRateLimiting("AuthPolicy")]
-    public class AuthController(IAuthService _authService) : ControllerBase
+    [HttpPost("register")]
+    public async Task<ActionResult<ApiResponse<object>>> RegisterAsync(RegisterRequest request)
     {
-        [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<object>>> Register(RegisterRequest request)
-        {
-            await _authService.RegisterAsync(request);
+        await auth.RegisterAsync(request);
+        return Ok(new ApiResponse<object>());
+    }
 
-            return Ok(new ApiResponse<object>());
-        }
+    [EnableRateLimiting("AuthPolicy")]
+    [HttpPost("login")]
+    public async Task<ActionResult<ApiResponse<object>>> LoginAsync(LoginRequest request)
+    {
+        cookies.Issue(Response, await auth.LoginAsync(request));
+        return Ok(new ApiResponse<object>());
+    }
 
-        [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<object>>> Login(LoginRequest request)
-        {
-            var response = await _authService.LoginAsync(request) ?? throw new AppException(ErrorCode.InvalidCredentials);
+    [HttpPost("logout")]
+    public async Task<ActionResult<ApiResponse<object>>> LogoutAsync()
+    {
+        var refreshToken = Request.Cookies[Constants.Refresh]
+            ?? throw new AppException(ErrorCode.Unauthorized);
 
-            AuthCookieHelper.SetAuthCookies(Response, response);
+        await auth.RevokeRefreshTokenAsync(refreshToken);
+        cookies.Clear(Response);
 
-            return Ok(new ApiResponse<object>());
-        }
+        return Ok(new ApiResponse<object>());
+    }
 
-        [HttpPost("logout")]
-        public async Task<ActionResult<ApiResponse<object>>> Logout()
-        {
-            var refreshToken = Request.Cookies["refresh_token"] ?? throw new AppException(ErrorCode.Unauthorized);
-            await _authService.RevokeRefreshTokenAsync(refreshToken);
-            AuthCookieHelper.ClearAuthCookies(Response);
-            return Ok(new ApiResponse<object>());
-        }
+    [HttpPost("refresh")]
+    public async Task<ActionResult<ApiResponse<object>>> RefreshAsync()
+    {
+        var refreshToken = Request.Cookies[Constants.Refresh]
+            ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
 
-        [HttpPost("refresh")]
-        public async Task<ActionResult<ApiResponse<object>>> Refresh()
-        {
-            var refreshToken = Request.Cookies["refresh_token"]
-                ?? throw new AppException(ErrorCode.RefreshTokenInvalid);
+        cookies.Issue(Response, await auth.RefreshAccessTokenAsync(refreshToken));
+        return Ok(new ApiResponse<object>());
+    }
 
-            var response = await _authService.RefreshAccessTokenAsync(refreshToken);
-            AuthCookieHelper.SetAuthCookies(Response, response);
+    [EnableRateLimiting("AuthPolicy")]
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ForgotPasswordAsync(ForgotPasswordRequest request)
+    {
+        await auth.ForgotPasswordAsync(request.Email);
+        return Ok(new ApiResponse<object>());
+    }
 
-            return Ok(new ApiResponse<object>());
-        }
-
-        [HttpPost("forgot-password")]
-        public async Task<ActionResult<ApiResponse<object>>> ForgotPassword(ForgotPasswordRequest request)
-        {
-            await _authService.ForgotPasswordAsync(request.Email);
-            return Ok(new ApiResponse<object>());
-        }
-
-        [HttpPost("reset-password")]
-        public async Task<ActionResult<ApiResponse<object>>> ResetPassword(ResetPasswordRequest request)
-        {
-            await _authService.ResetPasswordAsync(request.Email, request.Otp, request.NewPassword);
-
-            return Ok(new ApiResponse<object>());
-        }
+    [EnableRateLimiting("AuthPolicy")]
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        await auth.ResetPasswordAsync(request.Email, request.Otp, request.NewPassword);
+        return Ok(new ApiResponse<object>());
     }
 }
